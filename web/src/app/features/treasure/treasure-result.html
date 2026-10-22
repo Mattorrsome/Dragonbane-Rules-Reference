@@ -1,0 +1,16 @@
+<article class="dragonbox treasure-result">
+  <h2>{{ result().entry.name }} ({{ result().entry.roll }})</h2>
+  <p class="multiline">{{ result().entry.effectText }}</p>
+  @if (lines().length) {
+    <ul class="dice-lines">
+      @for (line of lines(); track $index) {
+        <li [style.margin-left.rem]="line.depth * 1.5">
+          {{ line.text }}@if (line.link; as link) {<a routerLink="/equipment" [queryParams]="link.queryParams">{{ link.text }}</a>}{{ line.suffix }}
+        </li>
+      }
+    </ul>
+  }
+  @if (spellsLink(); as params) {
+    <p><a routerLink="/spells" [queryParams]="params">Show matching spells</a></p>
+  }
+</article>

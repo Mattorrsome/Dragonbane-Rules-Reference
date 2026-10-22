@@ -147,6 +147,10 @@
   font-style: italic;
 }
 
+.school-title {
+    color: var(--accent);
+}
+
 /*
  * Narrow screens: each row of a `.stack` table becomes a card. The first cell (`.row-title`) is the heading and
  * every other cell shows its column name from `data-label`. No sideways scrolling and nothing is cut off.
@@ -256,4 +260,60 @@
 :focus-visible {
   outline: 3px solid var(--demon-green);
   outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The style's buttons are drawn for the green hero; on the parchment they need the inverse colours to stay legible. */
+.page-scroll {
+  .btn-primary {
+    background: var(--demon-green);
+    border-color: var(--demon-green);
+    color: var(--bone-white);
+
+    &:hover {
+      background: var(--demon-green-dark);
+      color: var(--bone-white);
+    }
+  }
+
+  .btn-secondary {
+    border-color: var(--demon-green);
+    color: var(--demon-green);
+
+    &:hover {
+      background: var(--demon-green);
+      color: var(--bone-white);
+    }
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-small {
+  padding: 0.2rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.treasure-result {
+  margin: var(--spacing-sm) 0;
+
+  h2 {
+    margin-top: 0;
+  }
+
+  .dice-lines {
+    margin: 0;
+  }
 }

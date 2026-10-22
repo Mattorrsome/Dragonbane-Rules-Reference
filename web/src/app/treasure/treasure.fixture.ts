@@ -1,6 +1,6 @@
 import { TreasureEntryDto, TreasureOutcomeDto, TreasureRollDto } from '../api/models';
 
-/** Hand-built treasure DTOs in the API's shape (entries 10, 26, 30, 35, 36, 37). */
+/** Hand-built treasure DTOs in the API's shape (entries 10, 26, 30, 31, 35, 36, 37). */
 const roll = (r: Partial<TreasureRollDto> & Pick<TreasureRollDto, 'label' | 'dieSides' | 'purpose'>): TreasureRollDto => ({
   sequence: 1, diceCount: 1, modifier: 0, multiplier: 1, coin: null, outcomes: [], ...r,
 });
@@ -30,6 +30,16 @@ export const TREASURE: readonly TreasureEntryDto[] = [
       outcome(1, 'sling', { equipmentItemId: 30 }), outcome(2, 'short bow', { equipmentItemId: 31 }),
       outcome(3, 'longbow', { equipmentItemId: 32 }), outcome(4, 'light crossbow', { equipmentItemId: 33 }),
       outcome(5, 'heavy crossbow', { equipmentItemId: 34 }), outcome(6, 'hand crossbow', { equipmentItemId: 35 }),
+    ],
+  })]),
+  entry(31, 'Mastercrafted weapon', [roll({
+    label: 'weapon', dieSides: 6, purpose: 'Pick', outcomes: [
+      outcome(1, 'dagger', { equipmentItemId: 11, isMastercrafted: true }),
+      outcome(2, 'short sword', { equipmentItemId: 13, isMastercrafted: true }),
+      outcome(3, 'battleaxe', { equipmentItemId: 19, isMastercrafted: true }),
+      outcome(4, 'broadsword', { equipmentItemId: 14, isMastercrafted: true }),
+      outcome(5, 'heavy warhammer', { equipmentItemId: 25, isMastercrafted: true }),
+      outcome(6, 'longsword', { equipmentItemId: 15, isMastercrafted: true }),
     ],
   })]),
   entry(35, 'Grimoire', [
