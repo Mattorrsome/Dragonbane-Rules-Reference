@@ -63,3 +63,15 @@ One entry per significant technical decision. Template:
 - Decision: `Recipe.SupplyId` (and `CostPerDoseCopper`) are nullable.
 - Alternatives: Invent a placeholder supply row.
 - Why: A placeholder would be made-up data; null says "not given" truthfully.
+
+## Cost unit stored as verbatim suffix (2026-10-22)
+- Context: Costs carry units and qualifiers: "200/day", "500/shift or more", "200 x potency", "2500, varies".
+- Decision: Store integer copper, the suffix exactly as written in `CostUnit`, and an `CostOrMore` flag.
+- Alternatives: A unit enum (day/km/shift/potency); keep the whole cost as text.
+- Why: The front end needs exact copper to price and the suffix only to re-attach after calculation. An enum would add a mapping for every new suffix the source invents.
+
+## Hand-written table parser instead of Markdig (2026-10-22)
+- Context: The sources are simple pipe tables under `#` headings with a little prose.
+- Decision: A small line-by-line parser (`MarkdownDocument`).
+- Alternatives: Markdig with its pipe-table extension.
+- Why: About 50 lines, no dependency, and it hands back exactly the heading/columns/rows/note shape the importers need instead of an AST to walk.
