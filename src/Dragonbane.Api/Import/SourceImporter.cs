@@ -5,6 +5,26 @@ namespace Dragonbane.Api.Import;
 
 public static class SourceImporter
 {
+    /// <summary>
+    /// Builds the database next to <paramref name="databasePath"/> and swaps it in only when the whole import succeeds,
+    /// so a failed import never leaves a half-built file for the API to serve.
+    /// </summary>
+    public static async Task ImportToFileAsync(string databasePath, string sourceDirectory, CancellationToken ct)
+    {
+        var building = databasePath + ".building";
+        try
+        {
+            await using (var db = new DragonbaneDbContext(
+                new DbContextOptionsBuilder<DragonbaneDbContext>().UseSqlite($"Data Source={building};Pooling=False").Options))
+                await RebuildAsync(db, sourceDirectory, ct);
+            File.Move(building, databasePath, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(building);
+        }
+    }
+
     /// <summary>Drops and recreates the database, then imports every section from the markdown in dependency order.</summary>
     public static async Task RebuildAsync(DragonbaneDbContext db, string sourceDirectory, CancellationToken ct)
     {

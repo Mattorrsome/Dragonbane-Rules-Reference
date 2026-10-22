@@ -16,9 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 if (args is ["import", ..])
 {
     var paths = builder.Configuration.GetSection("Dragonbane").Get<DragonbaneOptions>()!.Resolve(builder.Environment);
-    await using var importDb = new DragonbaneDbContext(
-        new DbContextOptionsBuilder<DragonbaneDbContext>().UseSqlite($"Data Source={paths.DatabasePath}").Options);
-    await SourceImporter.RebuildAsync(importDb, paths.SourceMaterialPath, CancellationToken.None);
+    await SourceImporter.ImportToFileAsync(paths.DatabasePath, paths.SourceMaterialPath, CancellationToken.None);
     Console.WriteLine($"Imported {paths.SourceMaterialPath} into {paths.DatabasePath}");
     return;
 }

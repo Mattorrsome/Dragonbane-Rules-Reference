@@ -2,7 +2,7 @@
   <h1 class="chapter-title">Spells</h1>
 
   <div class="filters">
-    <app-search-box label="Search spells" [value]="search() ?? ''" (valueChange)="setFilter({ search: $event || null })" />
+    <app-search-box label="Search spells" [value]="search() ?? ''" (valueChange)="setFilter({ search: $event.trim() ? $event : null })" />
 
     <div class="select-filter">
       <label for="spell-school">School</label>

@@ -26,10 +26,10 @@ export class TreasurePage {
   /** The full table: the D40 always rolls against all 40 entries, whatever the search shows. */
   protected readonly all = httpResource<TreasureEntryDto[]>(() => '/api/treasure');
   private readonly searched = httpResource<TreasureEntryDto[]>(() => {
-    const search = this.search();
+    const search = this.search()?.trim();
     return search ? { url: '/api/treasure', params: { search } } : undefined;
   });
-  protected readonly entries = computed(() => (this.search() ? this.searched : this.all));
+  protected readonly entries = computed(() => (this.search()?.trim() ? this.searched : this.all));
 
   private readonly equipment = httpResource<EquipmentItemDto[]>(() => '/api/equipment');
   protected readonly items = computed(() => new Map((this.equipment.value() ?? []).map(i => [i.id, i])));

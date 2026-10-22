@@ -21,7 +21,8 @@ export class SearchBox implements OnDestroy {
   protected onInput(event: Event): void {
     const text = (event.target as HTMLInputElement).value;
     clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.value.set(text.trim()), 250);
+    // Untrimmed: the value is written back to the input, so trimming here would eat a space typed before a pause.
+    this.timer = setTimeout(() => this.value.set(text), 250);
   }
 
   ngOnDestroy(): void {

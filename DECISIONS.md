@@ -225,3 +225,9 @@ One entry per significant technical decision. Template:
 - Decision: `npm run e2e` runs Playwright with `@axe-core/playwright` (WCAG 2.0/2.1 A and AA tags) on all five sections at 1280×800 and 375×812, plus keyboard and live-region checks. The overflow check also counts table boxes that scroll and elements reaching past the scroll's edge, because `.page-scroll` clips with `overflow: hidden` and a page-width check alone missed clipped content (proved with an injected probe). Playwright starts the API (serving the committed database) and the dev server, or reuses running ones.
 - Alternatives: Lighthouse CI; axe in jsdom unit tests; manual audits.
 - Why: Real browser layout is needed for contrast and overflow; jsdom has neither. One command gates every page at both target widths.
+
+## Safe import and a guard against a stale committed database (2026-10-22)
+- Context: Final review. An import that failed part-way left a half-built `dragonbane.db` that the API would serve; and with the database committed, a markdown edit without `-- import` would ship stale data silently.
+- Decision: `SourceImporter.ImportToFileAsync` builds into `dragonbane.db.building` and moves it over the real file only on success. `CommittedDatabaseTests` compares every table of the committed file with a fresh import and fails with the import command when they differ.
+- Alternatives: One transaction around the importers (they save as they go so later importers can look up generated ids); a pre-commit hook.
+- Why: A temp-file swap gives all-or-nothing without restructuring the importers, and the test runs wherever `dotnet test` runs, so "data is never edited in two places" stays enforced.
