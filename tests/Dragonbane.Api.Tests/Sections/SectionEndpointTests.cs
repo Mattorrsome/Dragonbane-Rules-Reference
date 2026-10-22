@@ -123,4 +123,13 @@ public class SectionEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Contains("/api/currency-rates", doc);
         Assert.Contains("\"Trick\"", doc);
     }
+
+    [Fact]
+    public async Task OpenApi_types_integers_as_numbers_only()
+    {
+        var doc = await _client.GetFromJsonAsync<JsonElement>("/openapi/v1.json");
+
+        var id = doc.GetProperty("components").GetProperty("schemas").GetProperty("SkillDto").GetProperty("properties").GetProperty("id");
+        Assert.Equal("integer", id.GetProperty("type").GetString());
+    }
 }

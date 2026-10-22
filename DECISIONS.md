@@ -141,3 +141,27 @@ One entry per significant technical decision. Template:
 - Decision: One `GlossaryDto<TEntity>` constrained to a new `IGlossaryEntity` interface, which compiles cleanly with the static abstract `Projection`.
 - Alternatives: Three identical DTO records.
 - Why: One definition instead of three copies. OpenAPI names them `GlossaryDtoOfSupply` and so on.
+
+## Zoneless Angular with signals and httpResource (2026-10-22)
+- Context: Angular 22 defaults to zoneless change detection; the app is read-mostly lookup screens.
+- Decision: Standalone components, `OnPush`, signals for state, `httpResource` for API reads, lazy-loaded routes per section.
+- Alternatives: Zone.js with RxJS services and the async pipe; NgRx.
+- Why: Current Angular practice, less runtime, and `httpResource` gives loading/error/value signals without hand-written subscriptions. Five read-only pages need no store library.
+
+## openapi-typescript types only, no generated client (2026-10-22)
+- Context: TypeScript models must come from the API's OpenAPI description.
+- Decision: `npm run gen:api` runs `openapi-typescript` over `web/openapi/Dragonbane.Api.json` into `schema.d.ts`; `api/models.ts` re-exports friendly aliases. Calls use `httpResource`/`HttpClient` directly. `openapi-typescript` declares a TypeScript 5 peer; an npm `overrides` entry lets it use the project's TypeScript 6 (it only runs at codegen time).
+- Alternatives: NSwag or openapi-generator Angular clients; hand-written interfaces.
+- Why: Types catch contract drift at compile time; a generated client would add services and code for GETs that are one line each. The API also sets strict JSON number handling so OpenAPI types ints as `number`, not `number | string`.
+
+## Dev proxy instead of CORS (2026-10-22)
+- Context: In development the Angular dev server (4200) and API (5080) run on different ports.
+- Decision: `npm start` serves with `proxy.conf.json`, forwarding `/api` to `http://localhost:5080`. The API has no CORS policy.
+- Alternatives: Enable CORS on the API for localhost:4200.
+- Why: The front end always calls relative `/api/...`, exactly as it will when served from the same origin in production, and the API stays free of dev-only configuration.
+
+## Coin standard in localStorage with safe fallback (2026-10-22)
+- Context: The chosen coin standard should survive a reload, but storage may be blocked (private mode, policies).
+- Decision: `CoinStandardStore` keeps a signal, reads/writes `dragonbane.coinStandard` inside try/catch, ignores unknown stored values and defaults to `gold`.
+- Alternatives: No persistence; a cookie; server-side preference.
+- Why: One small store covers it; when storage throws the app keeps working for the session instead of breaking.

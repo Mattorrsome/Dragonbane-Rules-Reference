@@ -1,0 +1,39 @@
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="navbar">
+  <div class="nav-content">
+    <a class="nav-brand" routerLink="/">Dragonbane Reference</a>
+    <nav class="nav-links" aria-label="Sections">
+      @for (section of sections; track section.path) {
+        <a [routerLink]="section.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ section.label }}</a>
+      }
+    </nav>
+    <div class="coin-standard">
+      <label for="coin-standard">Coin standard</label>
+      <select id="coin-standard" (change)="onStandardChange($event)">
+        @for (standard of standards; track standard.value) {
+          <option [value]="standard.value" [selected]="standard.value === coins.standard()">{{ standard.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+  <div class="page-scroll">
+    <main id="main" class="main-content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-content">
+    <p class="footer-disclaimer">
+      Unofficial fan reference. Not affiliated with, sponsored by or endorsed by Fria Ligan AB.
+      Dragonbane is a trademark of Fria Ligan AB.
+    </p>
+    <div class="footer-links">
+      <p>Styles inspired by “Dragonbane Template” by Sibling Dex. “Old Scroll Texture” by Esther Sanz (CC BY 3.0).</p>
+    </div>
+  </div>
+</footer>

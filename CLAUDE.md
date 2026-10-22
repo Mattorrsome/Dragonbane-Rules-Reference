@@ -4,12 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-API done (`Dragonbane.slnx`: `src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`). Angular app (`web/`) not yet scaffolded.
+API done (`Dragonbane.slnx`: `src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`). Angular app in `web/` (shell scaffolded, section pages in progress).
 
 - Build: `dotnet build` (also writes `web/openapi/Dragonbane.Api.json`; use `--no-incremental` to force regeneration)
 - Test: `dotnet test` (one class: `dotnet test --filter <ClassName>`)
 - Build the database: `dotnet run --project src/Dragonbane.Api -- import` (rebuilds `src/Dragonbane.Api/dragonbane.db` from `Source Material/`; run after any markdown change. The file is committed and is what gets deployed to servers.)
-- Run: `dotnet run --project src/Dragonbane.Api` (serves `dragonbane.db` read-only, never imports; refuses to start if the file is missing; OpenAPI at `/openapi/v1.json`)
+- Run: `dotnet run --project src/Dragonbane.Api` (serves `dragonbane.db` read-only, never imports; refuses to start if the file is missing; OpenAPI at `/openapi/v1.json`; listens on http://localhost:5080)
+- Web (from `web/`): `npm start` (dev server on :4200, proxies `/api` to :5080; start the API first), `npx ng test --watch=false`, `npx ng build`
+- Regenerate API types: `dotnet build src/Dragonbane.Api --no-incremental`, then in `web/` run `npm run gen:api`
 
 - `Initial_Brainstorming.md`: the user's original requirements.
 - `docs/superpowers/specs/2026-10-22-dragonbane-reference-design.md`: the agreed design. **Read it before any build work.** It is the source of truth for goals, non-goals, anti-goals and the schema.

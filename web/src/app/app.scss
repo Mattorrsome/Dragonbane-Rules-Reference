@@ -1,0 +1,51 @@
+.nav-content {
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+}
+
+.nav-links {
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+
+  a.active {
+    color: #fff;
+    text-decoration: underline;
+    text-decoration-color: var(--dragon-red-light);
+    text-underline-offset: 0.3em;
+  }
+}
+
+.coin-standard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--parchment);
+  font-size: 0.95rem;
+
+  select {
+    font: inherit;
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    border: 2px solid var(--parchment-darker);
+    background: var(--bone-white);
+    color: var(--ink);
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+
+  &:focus {
+    left: var(--spacing-sm);
+    top: var(--spacing-sm);
+    z-index: 200;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--bone-white);
+    color: var(--ink);
+  }
+}
+
+main:focus {
+  outline: none;
+}

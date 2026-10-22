@@ -25,7 +25,12 @@ if (args is ["import", ..])
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
-builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.ConfigureHttpJsonOptions(o =>
+{
+    o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    // Web defaults accept numbers as strings, which makes OpenAPI type every int as "integer | string".
+    o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+});
 builder.Services.Configure<DragonbaneOptions>(builder.Configuration.GetSection("Dragonbane"));
 builder.Services.AddDbContext<DragonbaneDbContext>((sp, o) =>
     o.UseSqlite($"Data Source={sp.GetRequiredService<IOptions<DragonbaneOptions>>().Value.Resolve(builder.Environment).DatabasePath};Mode=ReadOnly"));
