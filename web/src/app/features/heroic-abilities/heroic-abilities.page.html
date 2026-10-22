@@ -11,7 +11,7 @@
     <p class="status" aria-live="polite">
       @if (abilities.isLoading()) { Loading… } @else { {{ abilities.value()?.length ?? 0 }} heroic abilities }
     </p>
-    <div class="table-wrap">
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Heroic abilities table">
       <table class="data-table">
         <caption>Heroic abilities</caption>
         <thead>

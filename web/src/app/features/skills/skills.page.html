@@ -22,7 +22,7 @@
     <p class="status" aria-live="polite">
       @if (skills.isLoading()) { Loading… } @else { {{ skills.value()?.length ?? 0 }} skills }
     </p>
-    <div class="table-wrap">
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Skills table">
       <table class="data-table">
         <caption>Skills</caption>
         <thead>

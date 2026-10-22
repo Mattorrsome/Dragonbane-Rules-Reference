@@ -1,5 +1,12 @@
 /* App-wide pieces shared by every section page, built from the parchment tokens in dragonbane.css. */
 
+/* The parchment style caps the scroll at 640px; reference tables need laptop width (see DECISIONS.md). */
+@media (min-width: 1024px) {
+  .page-scroll {
+    max-width: var(--max-width);
+  }
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;

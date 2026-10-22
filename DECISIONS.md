@@ -183,3 +183,9 @@ One entry per significant technical decision. Template:
 - Decision: An Angular `InjectionToken<() => number>` named `RANDOM` defaults to `Math.random`; `seededRandom(seed)` (mulberry32) can be provided instead. `DiceRoller` maps it to faces 1..sides. Treasure resolution is pure functions over a `DiceRoller`, so tests pass a queued fake.
 - Alternatives: `crypto.getRandomValues`; a seedable RNG library.
 - Why: A five-line PRNG is enough for tabletop dice and adds no dependency; the token keeps production code free of test switches.
+
+## Wider parchment scroll on laptops (2026-10-22)
+- Context: The parchment style caps the scroll at 640px, which suits prose pages. At 1280px the skills table wrapped descriptions every few words and left most of the screen empty; the spec is laptop-first.
+- Decision (user's call after a browser preview): from 1024px wide, `.page-scroll` uses the style's own `--max-width` (1100px). Below that it keeps 640px.
+- Alternatives: Keep 640px and rely on horizontal table scroll; drop the scroll texture on wide screens.
+- Why: The texture is drawn at `background-size: 100% auto` and held up in the preview; tables become readable without losing the rulebook look.
