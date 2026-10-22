@@ -4,6 +4,7 @@ import { MagicSchoolDto, SpellDto, SpellKind } from '../../api/models';
 import { definedOnly } from '../../shared/http';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
+import { sentenceCase } from '../../shared/text';
 
 /** One source sub-table, e.g. "Animism Magic Tricks". */
 interface SpellGroup {
@@ -34,6 +35,7 @@ export class SpellsPage {
   readonly rank = input<string>();
   readonly kind = input<string>();
 
+  protected readonly sentenceCase = sentenceCase;
   protected readonly ranks = [0, 1, 2, 3, 4, 5, 6];
   protected readonly kinds = KIND_ORDER;
   protected readonly schools = httpResource<MagicSchoolDto[]>(() => '/api/magic-schools');

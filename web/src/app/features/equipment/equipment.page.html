@@ -53,7 +53,7 @@
     @for (section of sections(); track section.category.id) {
       <h2>{{ section.category.name }}</h2>
       <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="section.category.name + ' table'">
-        <table class="data-table stack">
+        <table class="data-table stack" [class.stack-lg]="section.isWeapon">
           <caption>{{ section.category.name }}</caption>
           <thead>
             <tr>

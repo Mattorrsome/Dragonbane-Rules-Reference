@@ -41,8 +41,8 @@
   }
 }
 
-/* The parchment style caps the scroll at 640px; reference tables need laptop width (see DECISIONS.md). */
-@media (min-width: 1024px) {
+/* The parchment style caps the scroll at 640px; from tablet width it grows fluidly to the page max (see DECISIONS.md). */
+@media (min-width: 768px) {
   .page-scroll {
     max-width: var(--max-width);
   }
@@ -121,8 +121,9 @@
   letter-spacing: 0.02em;
 }
 
-.data-table td {
-  overflow-wrap: anywhere;
+/* Let the parchment show through; header band and borders keep the rows readable. */
+.data-table {
+  background: none;
 }
 
 /* Author display rules (e.g. stacked table rows) must not un-hide [hidden] elements. */
@@ -144,61 +145,71 @@
 
 .sub-row td {
   font-style: italic;
-  background: var(--parchment);
 }
 
 /*
  * Narrow screens: each row of a `.stack` table becomes a card. The first cell (`.row-title`) is the heading and
  * every other cell shows its column name from `data-label`. No sideways scrolling and nothing is cut off.
+ * `.stack` tables stack below 768px; the widest ones (8-column spells, 10-column weapons) add `.stack-lg` and
+ * stack below 1024px, because their unbreakable words need ~770px.
  * ponytail: relies on browsers keeping table semantics under display:block (current Chrome/Firefox/Safari do);
  * add explicit role="table|row|cell" attributes if an older browser must be supported.
  */
+@mixin stacked-rows {
+  border: none;
+  background: none;
+
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  tbody,
+  tr,
+  td {
+    display: block;
+  }
+
+  tr {
+    margin-bottom: var(--spacing-sm);
+    border: 2px solid var(--parchment-darker);
+    border-radius: 2px;
+  }
+
+  td {
+    border-bottom: none;
+    padding: 0.2rem 0.6rem;
+  }
+
+  td.row-title {
+    font-family: var(--font-display);
+    color: var(--accent);
+    padding-top: 0.5rem;
+  }
+
+  td[data-label]::before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+    color: var(--ink-light);
+  }
+
+  tr.sub-row {
+    margin-top: calc(-1 * var(--spacing-sm));
+  }
+}
+
 @media (max-width: 767.98px) {
   .data-table.stack {
-    border: none;
-    background: none;
+    @include stacked-rows;
+  }
+}
 
-    thead {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-    }
-
-    tbody,
-    tr,
-    td {
-      display: block;
-    }
-
-    tr {
-      margin-bottom: var(--spacing-sm);
-      background: var(--parchment-dark);
-      border: 2px solid var(--parchment-darker);
-      border-radius: 2px;
-    }
-
-    td {
-      border-bottom: none;
-      padding: 0.2rem 0.6rem;
-    }
-
-    td.row-title {
-      font-family: var(--font-display);
-      color: var(--accent);
-      padding-top: 0.5rem;
-    }
-
-    td[data-label]::before {
-      content: attr(data-label) ': ';
-      font-weight: 600;
-      color: var(--ink-light);
-    }
-
-    tr.sub-row {
-      margin-top: calc(-1 * var(--spacing-sm));
-    }
+@media (max-width: 1023.98px) {
+  .data-table.stack.stack-lg {
+    @include stacked-rows;
   }
 }
 

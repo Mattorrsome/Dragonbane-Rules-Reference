@@ -186,7 +186,7 @@ One entry per significant technical decision. Template:
 
 ## Wider parchment scroll on laptops (2026-10-22)
 - Context: The parchment style caps the scroll at 640px, which suits prose pages. At 1280px the skills table wrapped descriptions every few words and left most of the screen empty; the spec is laptop-first.
-- Decision (user's call after a browser preview): from 1024px wide, `.page-scroll` uses the style's own `--max-width` (1100px). Below that it keeps 640px.
+- Decision (user's call after a browser preview): from 768px wide, `.page-scroll` grows fluidly up to the style's own `--max-width` (1100px). Below that it keeps 640px.
 - Alternatives: Keep 640px and rely on horizontal table scroll; drop the scroll texture on wide screens.
 - Why: The texture is drawn at `background-size: 100% auto` and held up in the preview; tables become readable without losing the rulebook look.
 
@@ -201,3 +201,9 @@ One entry per significant technical decision. Template:
 - Decision (user's call): tables with class `stack` turn each row into a card under 768px. The first cell (`.row-title`) is the heading; every other cell shows its column name from a `data-label` attribute. The header row stays in the DOM but is visually hidden. Used by Skills, Heroic Abilities, Spells and Equipment.
 - Alternatives: Horizontal scrolling with visible scrollbars or fade hints; hiding low-priority columns; a separate card component per page.
 - Why: Nothing is hidden or cut off, there is one shared CSS rule, and the markup stays a real table. The ceiling: some older browsers drop table semantics under `display: block`, and explicit ARIA roles are the upgrade path (marked with `ponytail:` in styles.scss).
+
+## Table typography: whole words, sentence-case spell names, no table fill (2026-10-22)
+- Context: User review. Breaking words mid-word to fit columns split single-word cells; spell names are ALL CAPS in the source while other tables use sentence case; the table's parchment-dark fill hid the scroll texture.
+- Decision: Cells wrap only at spaces. Spell names display in sentence case ("MAGIC SEAL" → "Magic seal") via `sentenceCase()` at render time; descriptions and prerequisites stay as written and the database keeps the source text. `.data-table` has no background; the header band and row borders remain. Wide tables (8-column spells, 10-column weapons) need ~770px of unbreakable words, so they stack as cards below 1024px; other tables stack below 768px.
+- Alternatives: CSS `text-transform` for names (screen readers may spell out the all-caps DOM text); changing the import (display data would no longer match the source).
+- Why: Whole words read better, display casing matches the other sections without touching source data, and the two stacking breakpoints leave no table overflowing at any width (measured at 375–1280px).

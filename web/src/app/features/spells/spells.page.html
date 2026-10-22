@@ -59,7 +59,7 @@
       @for (group of section.groups; track group.kind) {
         <h3>{{ group.title }}</h3>
         <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="group.title + ' table'">
-          <table class="data-table stack">
+          <table class="data-table stack" [class.stack-lg]="group.kind !== 'Trick'">
             <caption>{{ group.title }}</caption>
             <thead>
               @if (group.kind === 'Trick') {
@@ -86,14 +86,14 @@
               @for (spell of group.spells; track spell.id) {
                 @if (group.kind === 'Trick') {
                   <tr>
-                    <td class="row-title">{{ spell.name }}</td>
+                    <td class="row-title">{{ sentenceCase(spell.name) }}</td>
                     <td data-label="Casting Time">{{ spell.castingTime }}</td>
                     <td data-label="Requirement">{{ spell.requirementText }}</td>
                     <td data-label="Description" class="multiline">{{ spell.description }}</td>
                   </tr>
                 } @else {
                   <tr>
-                    <td class="row-title">{{ spell.name }}</td>
+                    <td class="row-title">{{ sentenceCase(spell.name) }}</td>
                     <td data-label="Rank">{{ spell.rank }}</td>
                     <td data-label="Prerequisite">{{ spell.ranked?.prerequisite }}</td>
                     <td data-label="Requirement">{{ spell.requirementText }}</td>

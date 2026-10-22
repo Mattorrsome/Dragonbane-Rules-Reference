@@ -55,6 +55,13 @@ describe('SpellsPage', () => {
     expect(cells).toEqual(['Fetch', 'Action', 'Gesture', 'Make a loose object float to you.']);
   });
 
+  it('shows upper-case spell names in sentence case', async () => {
+    const host = await renderWith([dispel, { ...heal, name: 'MAGIC SEAL' }]);
+
+    const names = [...host.querySelectorAll('td.row-title')].map(td => td.textContent?.trim());
+    expect(names).toEqual(['Dispel', 'Magic seal']);
+  });
+
   it('query params drive request', () => {
     const fixture = TestBed.createComponent(SpellsPage);
     fixture.componentRef.setInput('schoolId', '3');
