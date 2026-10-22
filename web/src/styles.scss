@@ -111,8 +111,18 @@
   }
 }
 
-.data-table td.wide {
-  min-width: 20rem;
+/* Denser cells than the parchment default (1rem) so 8-column spell tables fit a laptop-width scroll. */
+.data-table th,
+.data-table td {
+  padding: 0.5rem 0.6rem;
+}
+
+.data-table th {
+  letter-spacing: 0.02em;
+}
+
+.data-table td {
+  overflow-wrap: anywhere;
 }
 
 .choice-group {
