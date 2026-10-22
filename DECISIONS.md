@@ -189,3 +189,9 @@ One entry per significant technical decision. Template:
 - Decision (user's call after a browser preview): from 1024px wide, `.page-scroll` uses the style's own `--max-width` (1100px). Below that it keeps 640px.
 - Alternatives: Keep 640px and rely on horizontal table scroll; drop the scroll texture on wide screens.
 - Why: The texture is drawn at `background-size: 100% auto` and held up in the preview; tables become readable without losing the rulebook look.
+
+## Seamless parchment scroll (2026-10-22)
+- Context: `scroll.webp` (600×1682) has torn, darkened top and bottom edges, so `repeat-y` drew a brown band every texture height on long pages.
+- Decision (user request): split it once into `scroll-top.webp` (rows 0–240), `scroll-tile.webp` (rows 240–1442, last 120 rows cross-faded into rows 120–240 so the tile wraps onto its own start) and `scroll-bottom.webp` (rows 1442–1682, alpha faded in over its first 80 rows). `.page-scroll` draws the top cap as its background, the tile on `::before` and the bottom cap on `::after`, both behind content. Offsets are percentage margins (relative to width), so the pieces stay aligned at any width. The original `scroll.webp` was removed.
+- Alternatives: Stretch one image to the page height; keep the seams; generate the pieces at build time.
+- Why: Torn edges stay at the real top and bottom of the scroll, the middle repeats without a visible join, and the three files are smaller than the original. It was a one-off split with sharp in a scratch folder, so the app gains no image dependency.

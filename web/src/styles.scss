@@ -1,5 +1,46 @@
 /* App-wide pieces shared by every section page, built from the parchment tokens in dragonbane.css. */
 
+/*
+ * Seamless scroll (see DECISIONS.md). scroll.webp has torn top/bottom edges, so repeat-y showed a seam every
+ * texture height. It is split into a top cap, a loop-safe middle tile and a bottom cap whose top fades out.
+ * Each piece is 600px wide and 240px (caps) tall, drawn at 100% width, so heights are 240/600 = 40% of the
+ * width; absolute-position margins in % are relative to width, which keeps the pieces aligned at any width.
+ */
+.page-scroll {
+  isolation: isolate;
+  background-image: url('/scroll-top.webp');
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: top center;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-size: 100% auto;
+  }
+
+  /* Middle tile: starts where the top cap ends, runs under the faded part of the bottom cap. */
+  &::before {
+    margin: 40% 0 26.6667%;
+    background-image: url('/scroll-tile.webp');
+    background-repeat: repeat-y;
+    background-position: top center;
+  }
+
+  /* Bottom cap, painted over the tile end. */
+  &::after {
+    top: auto;
+    aspect-ratio: 600 / 240;
+    background-image: url('/scroll-bottom.webp');
+    background-repeat: no-repeat;
+    background-position: bottom center;
+  }
+}
+
 /* The parchment style caps the scroll at 640px; reference tables need laptop width (see DECISIONS.md). */
 @media (min-width: 1024px) {
   .page-scroll {
