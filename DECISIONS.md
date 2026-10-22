@@ -165,3 +165,15 @@ One entry per significant technical decision. Template:
 - Decision: `CoinStandardStore` keeps a signal, reads/writes `dragonbane.coinStandard` inside try/catch, ignores unknown stored values and defaults to `gold`.
 - Alternatives: No persistence; a cookie; server-side preference.
 - Why: One small store covers it; when storage throws the app keeps working for the session instead of breaking.
+
+## Business logic as pure functions (2026-10-22)
+- Context: Pricing, coins and mastercrafting are rules, not state.
+- Decision: Plain exported functions in `web/src/app/money/` (`quote`, `formatPrice`, `formatCoins`, `toDisplayCopper`, `mastercraft`), unit-tested directly. Angular DI is used only where there is state (coin standard) or randomness (dice).
+- Alternatives: Injectable services for every rule.
+- Why: Pure functions need no TestBed, can't hide state, and compose freely in `computed()` signals.
+
+## Exact copper, one rounding at display (2026-10-22)
+- Context: Selling at 10% and bartering can produce fractions of a copper; the spec forbids rounding before display or showing fractions.
+- Decision: `quote` multiplies the integer base by the sell-rate and barter percentages and divides once by 10 000, returning exact copper. `toDisplayCopper` is the only rounding: floor, minimum 1. Buying always uses rate 100.
+- Alternatives: Round after each step; decimal library.
+- Why: Integer products are exact in doubles at these sizes, so one division keeps full precision and the "round down once, never below 1 copper" rule lives in one function.
