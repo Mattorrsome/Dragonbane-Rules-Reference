@@ -1,1 +1,78 @@
-/* You can add global styles to this file, and also import other style files */
+/* App-wide pieces shared by every section page, built from the parchment tokens in dragonbane.css. */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.search-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 14rem;
+}
+
+.search-box label,
+.choice-group legend {
+  font-family: var(--font-display);
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.search-box input,
+.filters select {
+  font: inherit;
+  padding: 0.3rem 0.5rem;
+  border: 2px solid var(--parchment-darker);
+  border-radius: 2px;
+  background: var(--bone-white);
+  color: var(--ink);
+}
+
+.choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem var(--spacing-sm);
+  border: 2px solid var(--parchment-darker);
+  border-radius: 2px;
+  padding: 0.25rem var(--spacing-xs) 0.4rem;
+  margin: 0;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+}
+
+.status {
+  font-style: italic;
+  color: var(--ink-light);
+  margin: 0;
+}
+
+.data-table caption {
+  /* Visible to screen readers; the chapter title already names the table on screen. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.data-table td {
+  vertical-align: top;
+}
+
+.multiline {
+  white-space: pre-line;
+}
+
+:focus-visible {
+  outline: 3px solid var(--demon-green);
+  outline-offset: 2px;
+}

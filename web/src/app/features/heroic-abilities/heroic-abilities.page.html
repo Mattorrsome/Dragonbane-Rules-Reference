@@ -1,0 +1,38 @@
+<section class="section">
+  <h1 class="chapter-title">Heroic Abilities</h1>
+
+  <div class="filters">
+    <app-search-box label="Search heroic abilities" [value]="search() ?? ''" (valueChange)="setFilter({ search: $event || null })" />
+  </div>
+
+  @if (abilities.error()) {
+    <p class="status" role="alert">The heroic abilities could not be loaded. Is the API running?</p>
+  } @else {
+    <p class="status" aria-live="polite">
+      @if (abilities.isLoading()) { Loading… } @else { {{ abilities.value()?.length ?? 0 }} heroic abilities }
+    </p>
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption>Heroic abilities</caption>
+        <thead>
+          <tr>
+            <th scope="col">Ability</th>
+            <th scope="col">Prerequisite</th>
+            <th scope="col">WP</th>
+            <th scope="col">Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ability of abilities.value() ?? []; track ability.id) {
+            <tr>
+              <td>{{ ability.name }}</td>
+              <td>{{ ability.prerequisite }}</td>
+              <td>{{ ability.wp }}</td>
+              <td class="multiline">{{ ability.effect }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,49 @@
+<section class="section">
+  <h1 class="chapter-title">Skills</h1>
+
+  <div class="filters">
+    <app-search-box label="Search skills" [value]="search() ?? ''" (valueChange)="setFilter({ search: $event || null })" />
+
+    <fieldset class="choice-group">
+      <legend>Type</legend>
+      <label><input type="radio" name="skill-type" [checked]="!typeId()" (change)="setFilter({ typeId: null })" /> All</label>
+      @for (type of types.value() ?? []; track type.id) {
+        <label>
+          <input type="radio" name="skill-type" [checked]="typeId() === '' + type.id" (change)="setFilter({ typeId: type.id })" />
+          {{ type.name }}
+        </label>
+      }
+    </fieldset>
+  </div>
+
+  @if (skills.error()) {
+    <p class="status" role="alert">The skills could not be loaded. Is the API running?</p>
+  } @else {
+    <p class="status" aria-live="polite">
+      @if (skills.isLoading()) { Loading… } @else { {{ skills.value()?.length ?? 0 }} skills }
+    </p>
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption>Skills</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">Attribute</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (skill of skills.value() ?? []; track skill.id) {
+            <tr>
+              <td>{{ skill.name }}</td>
+              <td>{{ skill.type }}</td>
+              <td>{{ skill.attribute }}{{ skill.attributeNote ? ' (' + skill.attributeNote + ')' : '' }}</td>
+              <td class="multiline">{{ skill.description }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
