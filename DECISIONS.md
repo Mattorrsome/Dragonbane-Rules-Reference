@@ -177,3 +177,9 @@ One entry per significant technical decision. Template:
 - Decision: `quote` multiplies the integer base by the sell-rate and barter percentages and divides once by 10 000, returning exact copper. `toDisplayCopper` is the only rounding: floor, minimum 1. Buying always uses rate 100.
 - Alternatives: Round after each step; decimal library.
 - Why: Integer products are exact in doubles at these sizes, so one division keeps full precision and the "round down once, never below 1 copper" rule lives in one function.
+
+## Injectable RANDOM token with mulberry32 seeding (2026-10-22)
+- Context: Dice must be random at the table but reproducible in tests, per the spec's "injectable and seedable RNG".
+- Decision: An Angular `InjectionToken<() => number>` named `RANDOM` defaults to `Math.random`; `seededRandom(seed)` (mulberry32) can be provided instead. `DiceRoller` maps it to faces 1..sides. Treasure resolution is pure functions over a `DiceRoller`, so tests pass a queued fake.
+- Alternatives: `crypto.getRandomValues`; a seedable RNG library.
+- Why: A five-line PRNG is enough for tabletop dice and adds no dependency; the token keeps production code free of test switches.
