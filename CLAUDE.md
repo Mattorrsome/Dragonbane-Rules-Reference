@@ -13,6 +13,7 @@ All five sections built: API in `Dragonbane.slnx` (`src/Dragonbane.Api`, `tests/
 - Web (from `web/`): `npm start` (dev server on :4200, proxies `/api` to :5080; start the API first), `npx ng test --watch=false`, `npx ng build`
 - Accessibility/responsive gate (from `web/`): `npm run e2e` (Playwright + axe on all sections at 1280×800 and 375×812; starts or reuses the API and dev server). Stop a running API before `dotnet test`, which otherwise cannot overwrite the locked exe.
 - Regenerate API types: `dotnet build src/Dragonbane.Api --no-incremental`, then in `web/` run `npm run gen:api`
+- If `ng test` dies at start with "Worker exited unexpectedly with signal SIGTERM", a long-running `npm start` dev server has gone stale after many file changes (e.g. a branch checkout). Restart the dev server; the tests themselves are fine.
 - Full check before a commit: `dotnet test`, then in `web/`: `npx ng test --watch=false && npx ng build && npm run e2e`
 
 - `Initial_Brainstorming.md`: the user's original requirements.
