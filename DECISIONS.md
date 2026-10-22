@@ -93,3 +93,15 @@ One entry per significant technical decision. Template:
 - Decision: Store `CastingTime = "Action"` and requirement `Gesture` on every trick.
 - Alternatives: "1 action"; null with a front-end default.
 - Why: "Action" matches the vocabulary of the spells' Casting Time column, so tricks and spells read the same in one table.
+
+## Treasure seed in C# (2026-10-22)
+- Context: Treasure effects mix dice, picks, nested rolls and coin values in free text; the spec forbids parsing that text at runtime.
+- Decision: A hand-curated `TreasureSeed` dictionary in C#, keyed by roll number. The importer validates it against the markdown (every key has a row, every row but 37 has a key, picks have one outcome per face, item/school/coin names exist) and fails the import otherwise.
+- Alternatives: A JSON/YAML seed file; a text parser run once at import.
+- Why: Compile-checked records with named arguments catch typos at build time, and validation catches drift between the seed and the markdown on every start. A parser would be the fragile string logic the spec rules out, just moved earlier.
+
+## Roll/outcome tree schema (2026-10-22)
+- Context: Entries roll dice; a pick outcome may roll again (bottle: healing potion 3D6 HP).
+- Decision: `TreasureRoll` belongs to either an entry or an outcome, enforced by check constraint `CK_TreasureRoll_OneParent`; outcomes hang off rolls. Depth is capped at two by the importer.
+- Alternatives: Separate entry-roll and outcome-roll tables; a JSON dice spec.
+- Why: One roll shape serves both levels, the constraint keeps every roll owned exactly once, and JSON columns are an anti-goal.

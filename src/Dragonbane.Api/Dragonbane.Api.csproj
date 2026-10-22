@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dragonbane.Api.Tests" />
+  </ItemGroup>
+
 </Project>
