@@ -1,0 +1,113 @@
+<section class="section">
+  <h1 class="chapter-title">Spells</h1>
+
+  <div class="filters">
+    <app-search-box label="Search spells" [value]="search() ?? ''" (valueChange)="setFilter({ search: $event || null })" />
+
+    <div class="select-filter">
+      <label for="spell-school">School</label>
+      <select id="spell-school" (change)="onSelect('schoolId', $event)">
+        <option value="" [selected]="!schoolId()">All schools</option>
+        @for (school of schools.value() ?? []; track school.id) {
+          <option [value]="school.id" [selected]="schoolId() === '' + school.id">{{ school.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="select-filter">
+      <label for="spell-rank">Rank</label>
+      <select id="spell-rank" (change)="onSelect('rank', $event)">
+        <option value="" [selected]="!rank()">Any rank</option>
+        @for (r of ranks; track r) {
+          <option [value]="r" [selected]="rank() === '' + r">{{ r === 0 ? '0 (tricks)' : r }}</option>
+        }
+      </select>
+    </div>
+
+    <fieldset class="choice-group">
+      <legend>Kind</legend>
+      <label><input type="radio" name="spell-kind" [checked]="!kind()" (change)="setFilter({ kind: null })" /> All</label>
+      @for (k of kinds; track k) {
+        <label><input type="radio" name="spell-kind" [checked]="kind() === k" (change)="setFilter({ kind: k })" /> {{ k }}</label>
+      }
+    </fieldset>
+  </div>
+
+  <details class="glossary">
+    <summary>Schools of Magic</summary>
+    <dl>
+      @for (school of schools.value() ?? []; track school.id) {
+        <dt>{{ school.name }}</dt>
+        <dd>{{ school.description }}</dd>
+      }
+    </dl>
+  </details>
+
+  @if (spells.error()) {
+    <p class="status" role="alert">The spells could not be loaded. Is the API running?</p>
+  } @else {
+    <p class="status" aria-live="polite">
+      @if (spells.isLoading()) { Loading… } @else { {{ spells.value()?.length ?? 0 }} spells }
+    </p>
+
+    @for (section of sections(); track section.name) {
+      <h2 class="school-title">{{ section.name }}</h2>
+      @if (section.school?.note; as note) {
+        <p class="dragonbox multiline">{{ note }}</p>
+      }
+
+      @for (group of section.groups; track group.kind) {
+        <h3>{{ group.title }}</h3>
+        <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="group.title + ' table'">
+          <table class="data-table">
+            <caption>{{ group.title }}</caption>
+            <thead>
+              @if (group.kind === 'Trick') {
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Casting Time</th>
+                  <th scope="col">Requirement</th>
+                  <th scope="col">Description</th>
+                </tr>
+              } @else {
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Prerequisite</th>
+                  <th scope="col">Requirement</th>
+                  <th scope="col">Casting Time</th>
+                  <th scope="col">Range</th>
+                  <th scope="col">Duration</th>
+                  <th scope="col">Description</th>
+                </tr>
+              }
+            </thead>
+            <tbody>
+              @for (spell of group.spells; track spell.id) {
+                @if (group.kind === 'Trick') {
+                  <tr>
+                    <td>{{ spell.name }}</td>
+                    <td>{{ spell.castingTime }}</td>
+                    <td>{{ spell.requirementText }}</td>
+                    <td class="multiline">{{ spell.description }}</td>
+                  </tr>
+                } @else {
+                  <tr>
+                    <td>{{ spell.name }}</td>
+                    <td>{{ spell.rank }}</td>
+                    <td>{{ spell.ranked?.prerequisite }}</td>
+                    <td>{{ spell.requirementText }}</td>
+                    <td>{{ spell.castingTime }}</td>
+                    <td>{{ spell.ranked?.range }}</td>
+                    <td>{{ spell.ranked?.duration }}</td>
+                    <td class="multiline wide">{{ spell.description }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</section>

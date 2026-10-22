@@ -80,6 +80,41 @@
   color: var(--ink);
 }
 
+.select-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-family: var(--font-display);
+    color: var(--accent);
+    font-size: 0.9rem;
+  }
+}
+
+.glossary {
+  margin: var(--spacing-sm) 0;
+
+  summary {
+    cursor: pointer;
+    font-family: var(--font-display);
+    color: var(--accent);
+  }
+
+  dt {
+    font-weight: 600;
+    margin-top: var(--spacing-xs);
+  }
+
+  dd {
+    margin: 0 0 0 var(--spacing-sm);
+  }
+}
+
+.data-table td.wide {
+  min-width: 20rem;
+}
+
 .choice-group {
   display: flex;
   flex-wrap: wrap;
