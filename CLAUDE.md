@@ -4,19 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-API done (`Dragonbane.slnx`: `src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`). Angular app in `web/` (shell scaffolded, section pages in progress).
+All five sections built: API in `Dragonbane.slnx` (`src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`), Angular app in `web/`.
 
 - Build: `dotnet build` (also writes `web/openapi/Dragonbane.Api.json`; use `--no-incremental` to force regeneration)
 - Test: `dotnet test` (one class: `dotnet test --filter <ClassName>`)
 - Build the database: `dotnet run --project src/Dragonbane.Api -- import` (rebuilds `src/Dragonbane.Api/dragonbane.db` from `Source Material/`; run after any markdown change. The file is committed and is what gets deployed to servers.)
 - Run: `dotnet run --project src/Dragonbane.Api` (serves `dragonbane.db` read-only, never imports; refuses to start if the file is missing; OpenAPI at `/openapi/v1.json`; listens on http://localhost:5080)
 - Web (from `web/`): `npm start` (dev server on :4200, proxies `/api` to :5080; start the API first), `npx ng test --watch=false`, `npx ng build`
+- Accessibility/responsive gate (from `web/`): `npm run e2e` (Playwright + axe on all sections at 1280×800 and 375×812; starts or reuses the API and dev server). Stop a running API before `dotnet test`, which otherwise cannot overwrite the locked exe.
 - Regenerate API types: `dotnet build src/Dragonbane.Api --no-incremental`, then in `web/` run `npm run gen:api`
+- Full check before a commit: `dotnet test`, then in `web/`: `npx ng test --watch=false && npx ng build && npm run e2e`
 
 - `Initial_Brainstorming.md`: the user's original requirements.
 - `docs/superpowers/specs/2026-10-22-dragonbane-reference-design.md`: the agreed design. **Read it before any build work.** It is the source of truth for goals, non-goals, anti-goals and the schema.
 - `Source Material/*.md`: the Dragonbane source tables. They are the source of truth for display data.
-- `DECISIONS.md` (to be created at the repo root): one entry per significant technical decision covering context, decision, alternatives considered and why. Update it whenever you make a decision.
+- `DECISIONS.md` (repo root): one entry per significant technical decision covering context, decision, alternatives considered and why. Update it whenever you make a decision.
 
 ## What it is
 
@@ -70,13 +72,10 @@ When a plan is ready, STOP and ask exactly:
 If I reply with anything other than "2", use executing-plans with batch size = 1.
 ## CodeGraph (applies to every agent, including BMad agents and subagents)
 
-`.codegraph/` exists (initialised 2026-10-22), but the index is empty: the repo holds only
-markdown, which CodeGraph doesn't index. Until source code exists, use Read/Grep/Glob.
-
-Once there is code, use `codegraph_explore` (or the `codegraph explore` shell command)
-BEFORE grep/find/reading files to locate code, and always pass
-`projectPath: "C:\Projects\Dragonbane"` explicitly. If results come back empty after
-scaffolding, the index may need refreshing; ask the user rather than re-indexing yourself.
+`.codegraph/` (initialised 2026-10-22) indexes the C# and TypeScript source. Use `codegraph_explore`
+(or the `codegraph explore` shell command) BEFORE grep/find/reading files to locate code, and always pass
+`projectPath: "C:\Projects\Dragonbane"` explicitly. Markdown, SCSS and HTML templates are not indexed:
+use Read/Grep/Glob for those. If results look stale, ask the user rather than re-indexing yourself.
 
 ## Agent modes (applies to every agent, including subagents)
 

@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "gen:api": "openapi-typescript openapi/Dragonbane.Api.json -o src/app/api/schema.d.ts"
+    "gen:api": "openapi-typescript openapi/Dragonbane.Api.json -o src/app/api/schema.d.ts",
+    "e2e": "playwright test"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
@@ -25,6 +26,8 @@
     "@angular/build": "^22.2.3",
     "@angular/cli": "^22.2.3",
     "@angular/compiler-cli": "^22.2.0",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "jsdom": "^30.0.0",
     "openapi-typescript": "^7.13.0",
     "prettier": "^3.8.1",

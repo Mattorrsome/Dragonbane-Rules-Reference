@@ -207,3 +207,21 @@ One entry per significant technical decision. Template:
 - Decision: Cells wrap only at spaces. Spell names display in sentence case ("MAGIC SEAL" → "Magic seal") via `sentenceCase()` at render time; descriptions and prerequisites stay as written and the database keeps the source text. `.data-table` has no background; the header band and row borders remain. Wide tables (8-column spells, 10-column weapons) need ~770px of unbreakable words, so they stack as cards below 1024px; other tables stack below 768px.
 - Alternatives: CSS `text-transform` for names (screen readers may spell out the all-caps DOM text); changing the import (display data would no longer match the source).
 - Why: Whole words read better, display casing matches the other sections without touching source data, and the two stacking breakpoints leave no table overflowing at any width (measured at 375–1280px).
+
+## Filters live in the URL (2026-10-22)
+- Context: Lookups at the table get shared, bookmarked and reloaded.
+- Decision: Every filter (search, type, school, rank, kind, category) is a query parameter bound to component `input()`s via `withComponentInputBinding`; changes call `router.navigate` with `replaceUrl`. Data comes from `httpResource` keyed on those inputs. Price options and the treasure result stay in page signals.
+- Alternatives: Component-local signals; a shared filter store.
+- Why: Reload and links reproduce the view with no extra code; `replaceUrl` keeps typing from flooding history.
+
+## Treasure results show every die (2026-10-22)
+- Context: Players should trust the roll; the spec bans parsing effect text.
+- Decision: A result lists the entry's effect text, then every die with its arithmetic ("2D6 → 3 + 4 = 7 × 10 = 70 silver (7 gold)"), item links with base or mastercrafted prices, and for a grimoire a link to the matching spells. Only the latest result is kept, in one `aria-live="polite"` region. Found coins and gems ignore the equipment price controls. Inside the parchment scroll the style's buttons use inverse colours, because the originals are drawn for the green hero and were illegible on parchment.
+- Alternatives: Show totals only; keep a roll history.
+- Why: Transparent arithmetic is what makes a digital roll acceptable at the table; history was a non-goal.
+
+## Playwright + axe as the accessibility gate (2026-10-22)
+- Context: The repo must be AXE-clean and WCAG AA, laptop-first but usable at 375px.
+- Decision: `npm run e2e` runs Playwright with `@axe-core/playwright` (WCAG 2.0/2.1 A and AA tags) on all five sections at 1280×800 and 375×812, plus keyboard and live-region checks. The overflow check also counts table boxes that scroll and elements reaching past the scroll's edge, because `.page-scroll` clips with `overflow: hidden` and a page-width check alone missed clipped content (proved with an injected probe). Playwright starts the API (serving the committed database) and the dev server, or reuses running ones.
+- Alternatives: Lighthouse CI; axe in jsdom unit tests; manual audits.
+- Why: Real browser layout is needed for contrast and overflow; jsdom has neither. One command gates every page at both target widths.
