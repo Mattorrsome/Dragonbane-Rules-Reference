@@ -1,4 +1,5 @@
 using Dragonbane.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dragonbane.Api.Import;
 
@@ -21,5 +22,9 @@ public static class SourceImporter
         SpellsImporter.Import(Read("Dragonbane_Spell_Tables.md"), db);
         TreasureImporter.Import(Read("Dragonbane_Treasure_Table.md"), db);
         db.ChangeTracker.Clear();
+
+        // Leave one self-contained file (no -wal/-shm sidecars) that can be copied to a server and opened read-only.
+        await db.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=DELETE", ct);
+        await db.Database.ExecuteSqlRawAsync("VACUUM", ct);
     }
 }

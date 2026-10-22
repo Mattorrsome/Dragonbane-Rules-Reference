@@ -142,7 +142,7 @@ The markdown files are the source of truth for display data. An importer loads t
 ## Left to the builder
 - Exact Angular and .NET project structure, state management approach, UI component library (if any) consistent with the parchment style.
 - Search implementation (e.g. SQLite FTS5 vs simple case-insensitive matching).
-- When the importer runs (startup vs build step) and how it detects changed markdown.
+- ~~When the importer runs~~ — decided by the user (2026-10-22): an explicit import command builds the SQLite file locally; the API serves it read-only and the file is deployed to servers. No change detection.
 - Random number source for dice (must be injectable/seedable for tests).
 - Testing tools and depth beyond: unit tests for all pricing/coin/dice/treasure logic, API tests for the endpoints.
 - Folder layout for the solution, as long as `DECISIONS.md` sits at `C:\Projects\Dragonbane\`.

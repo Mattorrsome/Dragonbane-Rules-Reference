@@ -4,7 +4,7 @@
 
 **Goal:** Build a lookup app for the Dragonbane RPG table: an ASP.NET minimal API serves SQLite data imported from the markdown sources, and an Angular front end holds all the pricing, coin, dice and treasure logic.
 
-**Architecture:** On startup the API rebuilds a SQLite database from `Source Material/*.md` plus a hand-curated treasure seed. EF Core maps it with TPT inheritance. One generic `MapSection<TEntity, TDto, TFilter>` helper produces every typed list and detail route. At build time the API writes its OpenAPI document into `web/openapi/`, and `openapi-typescript` turns it into TypeScript types. The Angular app (standalone, zoneless, signals, `httpResource`) renders the five sections. Its business logic lives in pure, unit-tested TypeScript.
+**Architecture:** An explicit `dotnet run --project src/Dragonbane.Api -- import` command builds a SQLite database from `Source Material/*.md` plus a hand-curated treasure seed; the API serves that prebuilt file read-only (amended after Task 7 at the user's request). EF Core maps it with TPT inheritance. One generic `MapSection<TEntity, TDto, TFilter>` helper produces every typed list and detail route. At build time the API writes its OpenAPI document into `web/openapi/`, and `openapi-typescript` turns it into TypeScript types. The Angular app (standalone, zoneless, signals, `httpResource`) renders the five sections. Its business logic lives in pure, unit-tested TypeScript.
 
 **Tech Stack:** .NET 10 (SDK 10.0.402), ASP.NET Core minimal APIs, EF Core 10 + SQLite, xUnit + `Microsoft.AspNetCore.Mvc.Testing`; Angular 22 (CLI 22.2.x) with the default Vitest runner, `openapi-typescript`, Playwright + `@axe-core/playwright`; Node 24.
 
@@ -42,7 +42,7 @@
 DECISIONS.md                         decision log (Task 1, appended throughout)
 Dragonbane.slnx
 src/Dragonbane.Api/
-  Program.cs                         host, config, startup import, MapSection lines
+  Program.cs                         host, config, import command, MapSection lines
   Data/DragonbaneDbContext.cs        DbSets + TPT / junction config
   Data/Entities/*.cs                 one file per aggregate: Magic.cs, Equipment.cs, Skills.cs, Treasure.cs, Currency.cs
   Import/MarkdownDocument.cs         pipe-table + heading parser
@@ -701,7 +701,7 @@ web/                                 Angular workspace
 - Modify: `web/package.json` (`"e2e": "playwright test"`), `CLAUDE.md` (e2e command, remove "Pre-code"), `DECISIONS.md`
 
 **Interfaces:**
-- Playwright `webServer`: `[ { command: 'dotnet run --project ../src/Dragonbane.Api', url: 'http://localhost:5080/api/currency-rates' }, { command: 'npm start', url: 'http://localhost:4200' } ]`, with `reuseExistingServer: true`.
+- Playwright `webServer`: `[ { command: 'dotnet run --project ../src/Dragonbane.Api -- import && dotnet run --project ../src/Dragonbane.Api', url: 'http://localhost:5080/api/currency-rates' }, { command: 'npm start', url: 'http://localhost:4200' } ]`, with `reuseExistingServer: true`.
 
 - [ ] **Step 1: Install** `@playwright/test` and `@axe-core/playwright` as dev dependencies, then run `npx playwright install chromium`.
 - [ ] **Step 2: Write tests** in `a11y.spec.ts`:

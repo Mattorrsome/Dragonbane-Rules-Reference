@@ -8,7 +8,8 @@ API done (`Dragonbane.slnx`: `src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`)
 
 - Build: `dotnet build` (also writes `web/openapi/Dragonbane.Api.json`; use `--no-incremental` to force regeneration)
 - Test: `dotnet test` (one class: `dotnet test --filter <ClassName>`)
-- Run: `dotnet run --project src/Dragonbane.Api` (rebuilds `src/Dragonbane.Api/dragonbane.db` from `Source Material/` on every start; OpenAPI at `/openapi/v1.json`)
+- Build the database: `dotnet run --project src/Dragonbane.Api -- import` (rebuilds `src/Dragonbane.Api/dragonbane.db` from `Source Material/`; run after any markdown change. The file is what gets deployed to servers.)
+- Run: `dotnet run --project src/Dragonbane.Api` (serves `dragonbane.db` read-only, never imports; refuses to start if the file is missing; OpenAPI at `/openapi/v1.json`)
 
 - `Initial_Brainstorming.md`: the user's original requirements.
 - `docs/superpowers/specs/2026-10-22-dragonbane-reference-design.md`: the agreed design. **Read it before any build work.** It is the source of truth for goals, non-goals, anti-goals and the schema.

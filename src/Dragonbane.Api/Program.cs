@@ -12,12 +12,23 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// `dotnet run -- import` rebuilds the database from the markdown, then exits. The API itself never imports.
+if (args is ["import", ..])
+{
+    var paths = builder.Configuration.GetSection("Dragonbane").Get<DragonbaneOptions>()!.Resolve(builder.Environment);
+    await using var importDb = new DragonbaneDbContext(
+        new DbContextOptionsBuilder<DragonbaneDbContext>().UseSqlite($"Data Source={paths.DatabasePath}").Options);
+    await SourceImporter.RebuildAsync(importDb, paths.SourceMaterialPath, CancellationToken.None);
+    Console.WriteLine($"Imported {paths.SourceMaterialPath} into {paths.DatabasePath}");
+    return;
+}
+
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.Configure<DragonbaneOptions>(builder.Configuration.GetSection("Dragonbane"));
 builder.Services.AddDbContext<DragonbaneDbContext>((sp, o) =>
-    o.UseSqlite($"Data Source={sp.GetRequiredService<IOptions<DragonbaneOptions>>().Value.Resolve(builder.Environment).DatabasePath}"));
+    o.UseSqlite($"Data Source={sp.GetRequiredService<IOptions<DragonbaneOptions>>().Value.Resolve(builder.Environment).DatabasePath};Mode=ReadOnly"));
 
 var app = builder.Build();
 
@@ -45,13 +56,11 @@ app.MapGet("/api/currency-rates", async (DragonbaneDbContext db, CancellationTok
     TypedResults.Ok(await db.CurrencyRates.OrderBy(r => r.CopperValue).Select(r => new CurrencyRateDto(r.Name, r.CopperValue)).ToArrayAsync(ct)))
     .WithTags("currency-rates");
 
-// Build-time OpenAPI generation launches the app through GetDocument.Insider; it needs routes, not data.
-if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
-{
-    using var scope = app.Services.CreateScope();
-    var options = scope.ServiceProvider.GetRequiredService<IOptions<DragonbaneOptions>>().Value.Resolve(app.Environment);
-    await SourceImporter.RebuildAsync(scope.ServiceProvider.GetRequiredService<DragonbaneDbContext>(), options.SourceMaterialPath, app.Lifetime.ApplicationStopping);
-}
+// Fail fast on a missing database. Build-time OpenAPI generation (GetDocument.Insider) needs routes, not data.
+var databasePath = app.Services.GetRequiredService<IOptions<DragonbaneOptions>>().Value.Resolve(app.Environment).DatabasePath;
+if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider" && !File.Exists(databasePath))
+    throw new FileNotFoundException(
+        $"Database not found at {databasePath}. Build it with: dotnet run --project src/Dragonbane.Api -- import", databasePath);
 
 app.Run();
 

@@ -106,11 +106,11 @@ One entry per significant technical decision. Template:
 - Alternatives: Separate entry-roll and outcome-roll tables; a JSON dice spec.
 - Why: One roll shape serves both levels, the constraint keeps every roll owned exactly once, and JSON columns are an anti-goal.
 
-## Rebuild the database from markdown on every start (2026-10-22)
-- Context: The markdown is the only source of truth and the data is read-only (~900 rows).
-- Decision: On startup, `SourceImporter.RebuildAsync` deletes and recreates the SQLite file and re-imports everything. No migrations, no change detection.
-- Alternatives: EF migrations plus an import step that runs when file hashes change; a build-time import shipped as a file.
-- Why: The import runs in well under a second, so a fresh rebuild is simpler than tracking changes and can never drift from the markdown. Migrations would version a schema nobody edits by hand.
+## Explicit import command; API serves a prebuilt read-only database (2026-10-22)
+- Context: The markdown is the only source of truth and changes only deliberately. Rebuilding on every API start (the first approach) did work nobody asked for and made servers depend on the markdown files.
+- Decision (user's call): `dotnet run --project src/Dragonbane.Api -- import` deletes and rebuilds `dragonbane.db` from `Source Material/`, then exits. The importer leaves one self-contained file (journal mode DELETE, vacuumed, no -wal/-shm). The API opens it with `Mode=ReadOnly`, never imports, and refuses to start when the file is missing. Deployment copies the built file to dev/prod.
+- Alternatives: Rebuild on every start; rebuild when markdown hashes change; EF migrations; a separate importer console project.
+- Why: Servers serve exactly the data that was built and checked locally, and read-only mode enforces "data is never edited in two places". The import stays a full rebuild (well under a second), so no migrations or change detection. A command in the API project reuses its config and importers without a second project.
 
 ## MapSection takes a third type parameter for typed filters (2026-10-22)
 - Context: The spec sketched `MapSection<TEntity, TDto>`, but sections filter on different fields (skill type, school/rank/kind, category).
