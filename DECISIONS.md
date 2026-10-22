@@ -75,3 +75,9 @@ One entry per significant technical decision. Template:
 - Decision: A small line-by-line parser (`MarkdownDocument`).
 - Alternatives: Markdig with its pipe-table extension.
 - Why: About 50 lines, no dependency, and it hands back exactly the heading/columns/rows/note shape the importers need instead of an AST to walk.
+
+## Skill type "Secondary" kept from source (2026-10-22)
+- Context: The design spec calls the third skill type "Magic"; `Dragonbane_Skills_Table.md` says "Secondary".
+- Decision: Import skill types exactly as written: Core, Weapon, Secondary.
+- Alternatives: Rename to "Magic" in the importer.
+- Why: The markdown is the source of truth for display data; renaming would be hand-edited data in a second place. Flagged to the user.
