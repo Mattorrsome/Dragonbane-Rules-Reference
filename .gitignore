@@ -1,6 +1,7 @@
 bin/
 obj/
 *.db
+!src/Dragonbane.Api/dragonbane.db
 *.db-shm
 *.db-wal
 node_modules/

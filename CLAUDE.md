@@ -8,7 +8,7 @@ API done (`Dragonbane.slnx`: `src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`)
 
 - Build: `dotnet build` (also writes `web/openapi/Dragonbane.Api.json`; use `--no-incremental` to force regeneration)
 - Test: `dotnet test` (one class: `dotnet test --filter <ClassName>`)
-- Build the database: `dotnet run --project src/Dragonbane.Api -- import` (rebuilds `src/Dragonbane.Api/dragonbane.db` from `Source Material/`; run after any markdown change. The file is what gets deployed to servers.)
+- Build the database: `dotnet run --project src/Dragonbane.Api -- import` (rebuilds `src/Dragonbane.Api/dragonbane.db` from `Source Material/`; run after any markdown change. The file is committed and is what gets deployed to servers.)
 - Run: `dotnet run --project src/Dragonbane.Api` (serves `dragonbane.db` read-only, never imports; refuses to start if the file is missing; OpenAPI at `/openapi/v1.json`)
 
 - `Initial_Brainstorming.md`: the user's original requirements.

@@ -108,7 +108,7 @@ One entry per significant technical decision. Template:
 
 ## Explicit import command; API serves a prebuilt read-only database (2026-10-22)
 - Context: The markdown is the only source of truth and changes only deliberately. Rebuilding on every API start (the first approach) did work nobody asked for and made servers depend on the markdown files.
-- Decision (user's call): `dotnet run --project src/Dragonbane.Api -- import` deletes and rebuilds `dragonbane.db` from `Source Material/`, then exits. The importer leaves one self-contained file (journal mode DELETE, vacuumed, no -wal/-shm). The API opens it with `Mode=ReadOnly`, never imports, and refuses to start when the file is missing. Deployment copies the built file to dev/prod.
+- Decision (user's call): `dotnet run --project src/Dragonbane.Api -- import` deletes and rebuilds `dragonbane.db` from `Source Material/`, then exits. The importer leaves one self-contained file (journal mode DELETE, vacuumed, no -wal/-shm). The API opens it with `Mode=ReadOnly`, never imports, and refuses to start when the file is missing. The built file is committed to git and deployment copies it to dev/prod.
 - Alternatives: Rebuild on every start; rebuild when markdown hashes change; EF migrations; a separate importer console project.
 - Why: Servers serve exactly the data that was built and checked locally, and read-only mode enforces "data is never edited in two places". The import stays a full rebuild (well under a second), so no migrations or change detection. A command in the API project reuses its config and importers without a second project.
 
