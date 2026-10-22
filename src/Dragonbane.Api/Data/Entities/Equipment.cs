@@ -13,21 +13,21 @@ public class EquipmentCategory : INamedEntity
     public string? Note { get; set; }
 }
 
-public class Supply : INamedEntity
+public class Supply : IGlossaryEntity
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
 }
 
-public class WeaponTerm : INamedEntity
+public class WeaponTerm : IGlossaryEntity
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
 }
 
-public class WeaponFeature : INamedEntity
+public class WeaponFeature : IGlossaryEntity
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";

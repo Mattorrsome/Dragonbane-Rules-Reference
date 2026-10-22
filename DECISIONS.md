@@ -105,3 +105,39 @@ One entry per significant technical decision. Template:
 - Decision: `TreasureRoll` belongs to either an entry or an outcome, enforced by check constraint `CK_TreasureRoll_OneParent`; outcomes hang off rolls. Depth is capped at two by the importer.
 - Alternatives: Separate entry-roll and outcome-roll tables; a JSON dice spec.
 - Why: One roll shape serves both levels, the constraint keeps every roll owned exactly once, and JSON columns are an anti-goal.
+
+## Rebuild the database from markdown on every start (2026-10-22)
+- Context: The markdown is the only source of truth and the data is read-only (~900 rows).
+- Decision: On startup, `SourceImporter.RebuildAsync` deletes and recreates the SQLite file and re-imports everything. No migrations, no change detection.
+- Alternatives: EF migrations plus an import step that runs when file hashes change; a build-time import shipped as a file.
+- Why: The import runs in well under a second, so a fresh rebuild is simpler than tracking changes and can never drift from the markdown. Migrations would version a schema nobody edits by hand.
+
+## MapSection takes a third type parameter for typed filters (2026-10-22)
+- Context: The spec sketched `MapSection<TEntity, TDto>`, but sections filter on different fields (skill type, school/rank/kind, category).
+- Decision: `MapSection<TEntity, TDto, TFilter>` where `TFilter` is an `[AsParameters]` record implementing `ISectionFilter<TEntity>`. DTOs supply their EF projection through a static abstract `Projection`.
+- Alternatives: A loose `IDictionary<string,string>` of filters; per-section endpoints.
+- Why: Typed filters give 400s for bad values and named, typed query parameters in OpenAPI, so the generated TypeScript knows each section's filters. Still one line per section.
+
+## LIKE with escaping instead of FTS5 (2026-10-22)
+- Context: Search covers a few hundred rows at most, on name plus description/effect.
+- Decision: `EF.Functions.Like(column, SearchPattern.Contains(term), "\\")`, escaping `\`, `%` and `_` so user text matches literally. SQLite LIKE is case-insensitive for ASCII.
+- Alternatives: SQLite FTS5; client-side filtering.
+- Why: FTS5 needs virtual tables and its own query syntax, which makes characters such as `'` and `-` special. Scanning a few hundred rows is instant.
+
+## Build-time OpenAPI document (2026-10-22)
+- Context: The front end's TypeScript types are generated from the API description.
+- Decision: `Microsoft.Extensions.ApiDescription.Server` writes `web/openapi/Dragonbane.Api.json` on every API build. Startup skips the import when the entry assembly is `GetDocument.Insider`, so a build never touches the database.
+- Alternatives: Fetch `/openapi/v1.json` from a running API when generating types.
+- Why: Type generation then needs no running server, and the contract is committed beside the code that consumes it.
+
+## No paging (2026-10-22)
+- Context: The largest section is spells, with 316 rows.
+- Decision: List routes return every matching row.
+- Alternatives: Skip/take or cursor paging.
+- Why: 316 small rows is one fast response; paging would add UI and API complexity for no gain at the table.
+
+## Generic GlossaryDto<TEntity> for glossaries (2026-10-22)
+- Context: Supplies, weapon terms and weapon features share the shape (Id, Name, Description).
+- Decision: One `GlossaryDto<TEntity>` constrained to a new `IGlossaryEntity` interface, which compiles cleanly with the static abstract `Projection`.
+- Alternatives: Three identical DTO records.
+- Why: One definition instead of three copies. OpenAPI names them `GlossaryDtoOfSupply` and so on.

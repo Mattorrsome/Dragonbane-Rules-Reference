@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-API scaffolded (`Dragonbane.slnx`: `src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`). Angular app (`web/`) not yet scaffolded.
+API done (`Dragonbane.slnx`: `src/Dragonbane.Api`, `tests/Dragonbane.Api.Tests`). Angular app (`web/`) not yet scaffolded.
 
-- Build: `dotnet build`
+- Build: `dotnet build` (also writes `web/openapi/Dragonbane.Api.json`; use `--no-incremental` to force regeneration)
 - Test: `dotnet test` (one class: `dotnet test --filter <ClassName>`)
+- Run: `dotnet run --project src/Dragonbane.Api` (rebuilds `src/Dragonbane.Api/dragonbane.db` from `Source Material/` on every start; OpenAPI at `/openapi/v1.json`)
 
 - `Initial_Brainstorming.md`: the user's original requirements.
 - `docs/superpowers/specs/2026-10-22-dragonbane-reference-design.md`: the agreed design. **Read it before any build work.** It is the source of truth for goals, non-goals, anti-goals and the schema.
