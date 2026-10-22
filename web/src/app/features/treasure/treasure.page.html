@@ -15,7 +15,7 @@
   @if (entries().error()) {
     <p class="status" role="alert">The treasure table could not be loaded. Is the API running?</p>
   } @else {
-    <p class="status">
+    <p class="status" aria-live="polite">
       @if (entries().isLoading()) { Loading… } @else { {{ entries().value()?.length ?? 0 }} treasures }
     </p>
     <div class="table-wrap" tabindex="0" role="region" aria-label="Treasure table">

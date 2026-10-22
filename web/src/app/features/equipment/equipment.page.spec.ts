@@ -119,6 +119,16 @@ describe('EquipmentPage', () => {
     expect(row.querySelector('button')).toBeNull();
   });
 
+  it('shows the source placeholder for an unpriced item', async () => {
+    items.push({ ...weapon(4, 'Unarmed', 0, '-', null, null), costCopper: null });
+    const page = await render();
+    items.pop();
+
+    expect(page.cost('Unarmed')).toBe('-');
+    await page.sell('50');
+    expect(page.cost('Unarmed')).toBe('-');
+  });
+
   it('shows the category note and never renders currency exchange', async () => {
     const page = await render();
 

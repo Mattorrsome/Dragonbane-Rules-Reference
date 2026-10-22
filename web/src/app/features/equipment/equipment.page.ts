@@ -95,7 +95,8 @@ export class EquipmentPage {
   });
 
   protected cell(column: Column, item: EquipmentItemDto, category: EquipmentCategoryDto): string {
-    if (column.cost) return this.price(item, item.costCopper, category, isBasePrice(this.options()));
+    // No price in the source (Unarmed, blunt objects): show its own placeholder, whatever the price options.
+    if (column.cost) return item.costCopper === null ? item.costText : this.price(item, item.costCopper, category, isBasePrice(this.options()));
     const value = column.value(item);
     return value === null || value === undefined || value === '' ? '-' : String(value);
   }

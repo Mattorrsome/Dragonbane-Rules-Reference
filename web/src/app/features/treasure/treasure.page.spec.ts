@@ -109,6 +109,12 @@ describe('TreasurePage', () => {
     expect(page.live().textContent).not.toContain('Silver coins effect');
   });
 
+  it('announces the result count like the other sections', async () => {
+    const page = await render();
+
+    expect(page.host.querySelector('p.status')?.getAttribute('aria-live')).toBe('polite');
+  });
+
   it('rolls D40 for the whole table', async () => {
     const page = await render();
     faces.push(26, 5);
