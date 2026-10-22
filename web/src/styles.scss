@@ -125,6 +125,83 @@
   overflow-wrap: anywhere;
 }
 
+/* Author display rules (e.g. stacked table rows) must not un-hide [hidden] elements. */
+[hidden] {
+  display: none !important;
+}
+
+.link-button {
+  margin-left: 0.4rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sub-row td {
+  font-style: italic;
+  background: var(--parchment);
+}
+
+/*
+ * Narrow screens: each row of a `.stack` table becomes a card. The first cell (`.row-title`) is the heading and
+ * every other cell shows its column name from `data-label`. No sideways scrolling and nothing is cut off.
+ * ponytail: relies on browsers keeping table semantics under display:block (current Chrome/Firefox/Safari do);
+ * add explicit role="table|row|cell" attributes if an older browser must be supported.
+ */
+@media (max-width: 767.98px) {
+  .data-table.stack {
+    border: none;
+    background: none;
+
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    tbody,
+    tr,
+    td {
+      display: block;
+    }
+
+    tr {
+      margin-bottom: var(--spacing-sm);
+      background: var(--parchment-dark);
+      border: 2px solid var(--parchment-darker);
+      border-radius: 2px;
+    }
+
+    td {
+      border-bottom: none;
+      padding: 0.2rem 0.6rem;
+    }
+
+    td.row-title {
+      font-family: var(--font-display);
+      color: var(--accent);
+      padding-top: 0.5rem;
+    }
+
+    td[data-label]::before {
+      content: attr(data-label) ': ';
+      font-weight: 600;
+      color: var(--ink-light);
+    }
+
+    tr.sub-row {
+      margin-top: calc(-1 * var(--spacing-sm));
+    }
+  }
+}
+
 .choice-group {
   display: flex;
   flex-wrap: wrap;

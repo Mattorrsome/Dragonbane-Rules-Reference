@@ -1,0 +1,94 @@
+<section class="section">
+  <h1 class="chapter-title">Equipment</h1>
+
+  <div class="filters">
+    <app-search-box label="Search equipment" [value]="search() ?? ''" (valueChange)="setFilter({ search: $event || null })" />
+
+    <div class="select-filter">
+      <label for="equipment-category">Category</label>
+      <select id="equipment-category" (change)="onCategory($event)">
+        <option value="" [selected]="!categoryId()">All categories</option>
+        @for (category of categories.value() ?? []; track category.id) {
+          <option [value]="category.id" [selected]="categoryId() === '' + category.id">{{ category.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="filters">
+    <app-price-controls [(options)]="options" />
+  </div>
+
+  <details class="glossary">
+    <summary>Supply and Weapon Terms</summary>
+    <dl>
+      @for (entry of supplies.value() ?? []; track entry.id) {
+        <dt>{{ entry.name }}</dt>
+        <dd>{{ entry.description }}</dd>
+      }
+      @for (entry of weaponTerms.value() ?? []; track entry.id) {
+        <dt>{{ entry.name }}</dt>
+        <dd>{{ entry.description }}</dd>
+      }
+    </dl>
+  </details>
+
+  <details class="glossary">
+    <summary>Weapon Features</summary>
+    <dl>
+      @for (entry of weaponFeatures.value() ?? []; track entry.id) {
+        <dt>{{ entry.name }}</dt>
+        <dd>{{ entry.description }}</dd>
+      }
+    </dl>
+  </details>
+
+  @if (items.error()) {
+    <p class="status" role="alert">The equipment could not be loaded. Is the API running?</p>
+  } @else {
+    <p class="status" aria-live="polite">
+      @if (items.isLoading()) { Loading… } @else { {{ items.value()?.length ?? 0 }} items }
+    </p>
+
+    @for (section of sections(); track section.category.id) {
+      <h2>{{ section.category.name }}</h2>
+      <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="section.category.name + ' table'">
+        <table class="data-table stack">
+          <caption>{{ section.category.name }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ section.category.nameHeader }}</th>
+              @for (column of section.columns; track column.header) {
+                <th scope="col">{{ column.header }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of section.items; track item.id) {
+              <tr>
+                <td class="row-title">
+                  {{ item.name }}
+                  @if (section.isWeapon && item.costCopper !== null) {
+                    <button type="button" class="link-button" [attr.aria-expanded]="expanded().has(item.id)"
+                      [attr.aria-controls]="'mastercrafted-' + item.id" (click)="toggle(item.id)">Mastercrafted</button>
+                  }
+                </td>
+                @for (column of section.columns; track column.header) {
+                  <td [attr.data-label]="column.header" [class.multiline]="!column.cost">{{ cell(column, item, section.category) }}</td>
+                }
+              </tr>
+              @if (section.isWeapon && item.costCopper !== null) {
+                <tr class="sub-row" [id]="'mastercrafted-' + item.id" [hidden]="!expanded().has(item.id)">
+                  <td [attr.colspan]="section.columns.length + 1">Mastercrafted {{ item.name }}: {{ mastercrafted(item, section.category) }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (section.category.note; as note) {
+        <p class="dragonbox multiline">{{ note }}</p>
+      }
+    }
+  }
+</section>

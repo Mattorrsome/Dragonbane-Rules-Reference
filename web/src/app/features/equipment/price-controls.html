@@ -1,0 +1,29 @@
+<fieldset class="choice-group">
+  <legend>Price</legend>
+  <label><input type="radio" name="price-mode" value="buy" [checked]="options().mode === 'buy'" (change)="setMode('buy')" /> Buy</label>
+  <label><input type="radio" name="price-mode" value="sell" [checked]="options().mode === 'sell'" (change)="setMode('sell')" /> Sell</label>
+</fieldset>
+
+@if (options().mode === 'sell') {
+  <div class="select-filter">
+    <label for="sell-rate">Sell rate</label>
+    <select id="sell-rate" (change)="setRate($event)">
+      @for (rate of rates; track rate) {
+        <option [value]="rate" [selected]="options().sellRate === rate">{{ rate }}%</option>
+      }
+    </select>
+  </div>
+}
+
+<fieldset class="choice-group">
+  <legend>Bartering</legend>
+  <label><input type="checkbox" id="bartering" [checked]="bartering()" (change)="setBartering($any($event.target).checked)" /> Roll</label>
+  @if (bartering()) {
+    @for (result of results; track result.value) {
+      <label>
+        <input type="radio" name="barter-result" [value]="result.value" [checked]="options().barter === result.value" (change)="setBarter(result.value)" />
+        {{ result.label }}
+      </label>
+    }
+  }
+</fieldset>

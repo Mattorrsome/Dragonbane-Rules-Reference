@@ -195,3 +195,9 @@ One entry per significant technical decision. Template:
 - Decision (user request): split it once into `scroll-top.webp` (rows 0–240), `scroll-tile.webp` (rows 240–1442, last 120 rows cross-faded into rows 120–240 so the tile wraps onto its own start) and `scroll-bottom.webp` (rows 1442–1682, alpha faded in over its first 80 rows). `.page-scroll` draws the top cap as its background, the tile on `::before` and the bottom cap on `::after`, both behind content. Offsets are percentage margins (relative to width), so the pieces stay aligned at any width. The original `scroll.webp` was removed.
 - Alternatives: Stretch one image to the page height; keep the seams; generate the pieces at build time.
 - Why: Torn edges stay at the real top and bottom of the scroll, the middle repeats without a visible join, and the three files are smaller than the original. It was a one-off split with sharp in a scratch folder, so the app gains no image dependency.
+
+## Stacked table rows on narrow screens (2026-10-22)
+- Context: Below 768px the scroll is at most 640px wide. 8–10 column tables (spells, weapons) overflowed their wrapper, and Windows' hidden overlay scrollbars made the cut-off look like a bug.
+- Decision (user's call): tables with class `stack` turn each row into a card under 768px. The first cell (`.row-title`) is the heading; every other cell shows its column name from a `data-label` attribute. The header row stays in the DOM but is visually hidden. Used by Skills, Heroic Abilities, Spells and Equipment.
+- Alternatives: Horizontal scrolling with visible scrollbars or fade hints; hiding low-priority columns; a separate card component per page.
+- Why: Nothing is hidden or cut off, there is one shared CSS rule, and the markup stays a real table. The ceiling: some older browsers drop table semantics under `display: block`, and explicit ARIA roles are the upgrade path (marked with `ponytail:` in styles.scss).

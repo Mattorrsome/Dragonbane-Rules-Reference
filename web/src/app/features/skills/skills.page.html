@@ -23,7 +23,7 @@
       @if (skills.isLoading()) { Loading… } @else { {{ skills.value()?.length ?? 0 }} skills }
     </p>
     <div class="table-wrap" tabindex="0" role="region" aria-label="Skills table">
-      <table class="data-table">
+      <table class="data-table stack">
         <caption>Skills</caption>
         <thead>
           <tr>
@@ -36,10 +36,10 @@
         <tbody>
           @for (skill of skills.value() ?? []; track skill.id) {
             <tr>
-              <td>{{ skill.name }}</td>
-              <td>{{ skill.type }}</td>
-              <td>{{ skill.attribute }}{{ skill.attributeNote ? ' (' + skill.attributeNote + ')' : '' }}</td>
-              <td class="multiline">{{ skill.description }}</td>
+              <td class="row-title">{{ skill.name }}</td>
+              <td data-label="Type">{{ skill.type }}</td>
+              <td data-label="Attribute">{{ skill.attribute }}{{ skill.attributeNote ? ' (' + skill.attributeNote + ')' : '' }}</td>
+              <td data-label="Description" class="multiline">{{ skill.description }}</td>
             </tr>
           }
         </tbody>

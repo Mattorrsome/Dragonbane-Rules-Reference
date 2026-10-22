@@ -12,7 +12,7 @@
       @if (abilities.isLoading()) { Loading… } @else { {{ abilities.value()?.length ?? 0 }} heroic abilities }
     </p>
     <div class="table-wrap" tabindex="0" role="region" aria-label="Heroic abilities table">
-      <table class="data-table">
+      <table class="data-table stack">
         <caption>Heroic abilities</caption>
         <thead>
           <tr>
@@ -25,10 +25,10 @@
         <tbody>
           @for (ability of abilities.value() ?? []; track ability.id) {
             <tr>
-              <td>{{ ability.name }}</td>
-              <td>{{ ability.prerequisite }}</td>
-              <td>{{ ability.wp }}</td>
-              <td class="multiline">{{ ability.effect }}</td>
+              <td class="row-title">{{ ability.name }}</td>
+              <td data-label="Prerequisite">{{ ability.prerequisite }}</td>
+              <td data-label="WP">{{ ability.wp }}</td>
+              <td data-label="Effect" class="multiline">{{ ability.effect }}</td>
             </tr>
           }
         </tbody>
