@@ -81,3 +81,15 @@ One entry per significant technical decision. Template:
 - Decision: Import skill types exactly as written: Core, Weapon, Secondary.
 - Alternatives: Rename to "Magic" in the importer.
 - Why: The markdown is the source of truth for display data; renaming would be hand-edited data in a second place. Flagged to the user.
+
+## Requirement split rule (2026-10-22)
+- Context: Spell requirements read "Word, gesture" but recipes read "Alchemical laboratory; ingredients: general herbs, wolf blood", where the commas list ingredients inside one requirement.
+- Decision: Split on `;` when present, otherwise on `,`. Trim, upper-case the first letter, and share `Requirement` rows case-insensitively.
+- Alternatives: Always split on commas; keep requirements as text only.
+- Why: Splitting on commas would turn each ingredient into a separate requirement; one rule covers both shapes without per-school special cases.
+
+## Trick casting time stored as "Action" (2026-10-22)
+- Context: The user's trick rule is "casting time is 1 action and every trick needs a gesture"; the source has no casting-time column for tricks.
+- Decision: Store `CastingTime = "Action"` and requirement `Gesture` on every trick.
+- Alternatives: "1 action"; null with a front-end default.
+- Why: "Action" matches the vocabulary of the spells' Casting Time column, so tricks and spells read the same in one table.
