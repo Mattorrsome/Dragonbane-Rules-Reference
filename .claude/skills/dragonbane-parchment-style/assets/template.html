@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{{TITLE}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <!-- inline_assets.py replaces this link with the stylesheet, font and scroll embedded -->
+  <link rel="stylesheet" href="dragonbane.css" />
+</head>
+<body>
+  <!-- Dark green sticky bar: brand left, icon links right -->
+  <nav class="navbar">
+    <div class="nav-content">
+      <a href="#" class="nav-brand">{{TITLE}}</a>
+      <div class="nav-links">
+        <a href="#section-one">Section One</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Green gradient hero, uppercase display title, italic subtitle, two buttons -->
+  <header class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">{{TITLE}}</h1>
+      <p class="hero-subtitle">{{SUBTITLE}}</p>
+      <div class="hero-actions">
+        <a href="#section-one" class="btn btn-primary">Get Started</a>
+        <a href="#section-two" class="btn btn-secondary">Learn More</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Everything else sits on the parchment scroll -->
+  <div class="page-shell">
+    <div class="page-scroll">
+
+      <!-- Optional: centred italic in-world flavour text -->
+      <section class="lore-quote">
+        <blockquote>
+          <p>"A short piece of in-world narration that sets the mood."</p>
+        </blockquote>
+      </section>
+
+      <main class="main-content">
+        <section class="section" id="section-one">
+          <h2 class="chapter-title">Section One</h2>
+          <div class="segment">
+            <div class="segment-full">
+              <p>Full-width intro paragraph. Use <strong>bold</strong> for game terms.</p>
+            </div>
+          </div>
+          <div class="segment">
+            <div class="segment-col">
+              <h3>Left Column</h3>
+              <ul>
+                <li><strong>Term:</strong> star-bulleted list item</li>
+                <li>Another item</li>
+              </ul>
+            </div>
+            <div class="segment-col">
+              <h3>Right Column</h3>
+              <div class="dragonbox">
+                <h4>Rule Box</h4>
+                <p>Light box with a green left edge, for rules and side notes.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="section-two">
+          <h2 class="chapter-title">Section Two</h2>
+          <div class="segment">
+            <div class="segment-full">
+              <div class="demonbox">
+                <h4>Call-out</h4>
+                <ol>
+                  <li>Solid green box for the most important steps</li>
+                  <li>Inline code: <code>https://example.com/manifest.json</code></li>
+                </ol>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+                  <tbody>
+                    <tr><td>Row</td><td>Description</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="footer-disclaimer">Disclaimer text goes here.</p>
+      <div class="footer-links">
+        <p>Styles inspired by “Dragonbane Template” by Sibling Dex. “Old Scroll Texture” by Esther Sanz (CC BY 3.0).</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
