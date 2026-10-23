@@ -173,3 +173,30 @@ These are marked *builder's call* above:
 - The approach for the healing potion dice.
 - How per-row buttons behave while the global toggle is on.
 - Whether suggested spell names link to the Spells page.
+
+## Changes after review (2026-10-23)
+
+The user reviewed the built app and asked for these changes. They supersede the goals above where they
+differ. Each is recorded in `DECISIONS.md`.
+
+- **Scroll cap:** 1500px, not about 1600px. Narrower laptops fill their width minus the page gutter.
+- **Treasure dialog (goals 7–8):**
+  - The title is at the top left. "Re-roll" (renamed from "Roll again") and Close are at the top
+    right, on the same row as the title.
+  - The dialog opens near the top of the window at a fixed width, with a minimum height that fits the
+    tallest result. Neither the controls nor the dialog's size move between rolls at laptop widths.
+  - There is no scrollbar. The dialog scrolls only when the window is too short to hold it.
+  - In the item summary, effects and weapon features take a full row. A grimoire's spells sit on one
+    line.
+- **Mastercraft all (goal 15):** a flat toggle button (pressed or not), not a checkbox, labelled
+  "Mastercraft all". It is right-aligned on the Melee weapons heading row.
+- **Row Mastercrafted button (goal 13):** not underlined.
+- **Bartering (goals 16–17):** the Roll checkbox is gone. The fieldset reads "Roll:" followed by None,
+  Success and Dragon. They are always shown, with None selected by default. Bartering sits on its own
+  line below Price and Sell rate.
+- **Radios and checkboxes (all pages):**
+  - A demon-green ring or box on bone white, with the green four-point star centred when selected.
+  - Drawn as SVG so the star stays centred.
+- **Filter rows (all pages):**
+  - Labels share a top edge, and the search box and the selects are the same height.
+  - An unlabelled button in the row lines up with the bottom of the inputs.
