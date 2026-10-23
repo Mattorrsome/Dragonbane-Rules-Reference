@@ -50,7 +50,7 @@ export const TREASURE: readonly TreasureEntryDto[] = [
       ],
     }),
     roll({ sequence: 2, label: 'spell rank (0 = tricks)', dieSides: 4, modifier: -1, purpose: 'SpellRank' }),
-    roll({ sequence: 3, label: 'number of spells', dieSides: 4, purpose: 'Number' }),
+    roll({ sequence: 3, label: 'spells', dieSides: 4, purpose: 'Number' }),
   ]),
   entry(36, 'Bottle', [roll({
     label: 'contents', dieSides: 6, purpose: 'Pick', outcomes: [
@@ -58,8 +58,8 @@ export const TREASURE: readonly TreasureEntryDto[] = [
       outcome(2, 'sleeping poison potency 14', { equipmentItemId: 112 }),
       outcome(3, 'alcohol'),
       outcome(4, 'herbal concoction', { equipmentItemId: 113 }),
-      outcome(5, 'healing potion', { equipmentItemId: 114, rolls: [roll({ label: 'HP', diceCount: 2, dieSides: 6, purpose: 'Number' })] }),
-      outcome(6, 'healing potion', { equipmentItemId: 114, rolls: [roll({ label: 'HP', diceCount: 3, dieSides: 6, purpose: 'Number' })] }),
+      outcome(5, 'healing potion 2D6 HP', { equipmentItemId: 114 }),
+      outcome(6, 'healing potion 3D6 HP', { equipmentItemId: 114 }),
     ],
   })]),
   entry(37, 'Book', []),

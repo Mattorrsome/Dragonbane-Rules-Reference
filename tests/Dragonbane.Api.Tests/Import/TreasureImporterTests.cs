@@ -86,12 +86,12 @@ public sealed class TreasureImporterTests : IDisposable
     }
 
     [Fact]
-    public void Bottle_nested_hp()
+    public void Bottle_healing_potion_hp_is_dice_text()
     {
         var face6 = Assert.Single(Entry(36).Rolls).Outcomes.Single(o => o.Face == 6);
 
-        var hp = Assert.Single(face6.Rolls);
-        Assert.Equal((3, 6, RollPurpose.Number), (hp.DiceCount, hp.DieSides, hp.Purpose));
+        Assert.Equal("healing potion 3D6 HP", face6.Label);
+        Assert.Empty(face6.Rolls);
     }
 
     [Fact]

@@ -105,13 +105,13 @@ public class SectionEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory
     }
 
     [Fact]
-    public async Task Treasure_dto_nests_rolls()
+    public async Task Treasure_dto_nests_outcomes()
     {
         var bottle = (await List("/api/treasure")).Single(e => e.GetProperty("roll").GetInt32() == 36);
 
-        var hp = bottle.GetProperty("rolls")[0].GetProperty("outcomes")[5].GetProperty("rolls")[0];
-        Assert.Equal(3, hp.GetProperty("diceCount").GetInt32());
-        Assert.Equal("Number", hp.GetProperty("purpose").GetString());
+        var potion = bottle.GetProperty("rolls")[0].GetProperty("outcomes")[5];
+        Assert.Equal("healing potion 3D6 HP", potion.GetProperty("label").GetString());
+        Assert.Equal(0, potion.GetProperty("rolls").GetArrayLength());
     }
 
     [Fact]

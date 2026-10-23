@@ -26,11 +26,11 @@ describe('treasure resolver', () => {
     expect(resolveEntry(byRoll(26), fakeRoller(5), rates).rolls[0].valueCopper).toBe(2500);
   });
 
-  it('resolves nested healing roll', () => {
-    const [pick] = resolveEntry(byRoll(36), fakeRoller(6, 2, 3, 4), rates).rolls;
+  it('healing potion rolls no HP', () => {
+    const [pick] = resolveEntry(byRoll(36), fakeRoller(6), rates).rolls;
 
-    expect(pick.outcome?.face).toBe(6);
-    expect(pick.nested[0].dice.total).toBe(9);
+    expect(pick.outcome?.label).toBe('healing potion 3D6 HP');
+    expect(pick.nested).toEqual([]);
   });
 
   it('resolves grimoire rank with modifier', () => {

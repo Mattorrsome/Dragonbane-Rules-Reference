@@ -237,3 +237,9 @@ One entry per significant technical decision. Template:
 - Decision: `--max-width` is 1500px (scroll, nav and footer content), set by the user against the 2160px-wide zoomed-out view; narrower laptops (1280–1440px) fill their width minus the page gutter, as before. Body text is `clamp(1.15rem, 0.9rem + 0.45vw, 1.45rem)`, and table headers, link buttons and small buttons use `em` so they scale with it. The body is a plain `#403f3e` with no texture; the old dark-mode variant (a darker textured table) is removed so every viewer gets the same background. The header is larger (brand 1.75rem, links 1.15rem, `--spacing-md` padding) and the footer slimmer (0.85rem, small padding, no rule under the disclaimer). The default coin standard is "As written".
 - Alternatives: Fill the full window width (the user chose a bigger cap); a separate wide-screen breakpoint instead of `clamp()`.
 - Why: A bigger cap keeps line lengths readable on huge monitors while using a laptop's width; `clamp()` scales smoothly with no breakpoints. Browser zoom stays the user's own setting.
+
+## Healing potion HP shown as dice, not rolled (2026-10-23)
+- Context: Table feedback: for a bottle that holds a healing potion, the GM wants "2D6" or "3D6", not a rolled number; the HP is rolled when the potion is drunk.
+- Decision: In `TreasureSeed`, roll 36's potion outcomes are labelled "healing potion 2D6 HP" and "healing potion 3D6 HP" and no longer nest an HP roll. The grimoire's count roll is labelled "spells" so a result reads "3 spells". The resolver keeps its generic nested-roll support.
+- Alternatives: Keep the nested roll in the seed and teach the view to show `Number` specs under picks as unrolled dice.
+- Why: The seed is the only hand-curated treasure data, so the change lives there and the display needs no special case. Effect text is still never parsed.
