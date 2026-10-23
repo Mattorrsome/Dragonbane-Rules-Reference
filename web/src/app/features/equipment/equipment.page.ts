@@ -3,7 +3,7 @@ import { httpResource } from '@angular/common/http';
 import { EquipmentCategoryDto, EquipmentItemDto, SupplyDto, WeaponFeatureDto, WeaponTermDto } from '../../api/models';
 import { CoinStandardStore } from '../../core/coin-standard.store';
 import { CurrencyRatesService } from '../../core/currency-rates';
-import { mastercraft } from '../../money/mastercraft';
+import { mastercraftedItem } from '../../money/mastercraft';
 import { BASE_PRICE, formatPrice, isBasePrice, PriceOptions, quote } from '../../money/pricing';
 import { definedOnly } from '../../shared/http';
 import { injectQueryParamWriter } from '../../shared/query-params';
@@ -32,7 +32,9 @@ export class EquipmentPage {
   protected readonly coins = inject(CoinStandardStore);
   private readonly rates = inject(CurrencyRatesService).rates;
   protected readonly options = signal<PriceOptions>(BASE_PRICE);
-  protected readonly expanded = signal<ReadonlySet<number>>(new Set());
+  /** Rows switched to mastercrafted with their own button. */
+  protected readonly mastercrafted = signal<ReadonlySet<number>>(new Set());
+  protected readonly allMastercrafted = signal(false);
 
   protected readonly categories = httpResource<EquipmentCategoryDto[]>(() => '/api/equipment-categories');
   protected readonly items = httpResource<EquipmentItemDto[]>(() => ({
@@ -57,23 +59,27 @@ export class EquipmentPage {
 
   protected cell(column: Column, item: EquipmentItemDto, category: EquipmentCategoryDto): string {
     // No price in the source (Unarmed, blunt objects): show its own placeholder, whatever the price options.
-    if (column.cost) return item.costCopper === null ? item.costText : this.price(item, item.costCopper, category, isBasePrice(this.options()));
-    const value = column.value(item);
+    if (column.cost && item.costCopper === null) return item.costText;
+    const mc = this.isMastercrafted(item);
+    const shown = mc ? mastercraftedItem(item) : item;
+    // A mastercrafted price is always calculated, so it is never shown "as written".
+    if (column.cost) return this.price(item, shown.costCopper, category, !mc && isBasePrice(this.options()));
+    const value = column.value(shown);
     return value === null || value === undefined || value === '' ? '-' : String(value);
   }
 
-  protected mastercrafted(item: EquipmentItemDto, category: EquipmentCategoryDto): string {
-    const mc = mastercraft({
-      costCopper: item.costCopper,
-      strRequirement: item.weapon?.strRequirement ?? null,
-      durability: item.weapon?.durability ?? null,
-    });
-    // A mastercrafted price is always calculated, so it is never shown "as written".
-    return `STR ${mc.strRequirement ?? '-'} · Durability ${mc.durability ?? '-'} · Cost ${this.price(item, mc.costCopper, category, false)}`;
+  /** The mastercrafted rule is in the Melee weapons note, so only priced melee weapons have a version. */
+  protected canMastercraft(item: EquipmentItemDto): boolean {
+    return !!item.weapon && !item.weapon.isRanged && item.costCopper !== null;
+  }
+
+  /** The global toggle overrides the row buttons; turning it off brings back each row's own choice. */
+  protected isMastercrafted(item: EquipmentItemDto): boolean {
+    return this.canMastercraft(item) && (this.allMastercrafted() || this.mastercrafted().has(item.id));
   }
 
   protected toggle(id: number): void {
-    this.expanded.update(open => {
+    this.mastercrafted.update(open => {
       const next = new Set(open);
       if (!next.delete(id)) next.add(id);
       return next;

@@ -5,14 +5,12 @@
 </fieldset>
 
 @if (options().mode === 'sell') {
-  <div class="select-filter">
-    <label for="sell-rate">Sell rate</label>
-    <select id="sell-rate" (change)="setRate($event)">
-      @for (rate of rates; track rate) {
-        <option [value]="rate" [selected]="options().sellRate === rate">{{ rate }}%</option>
-      }
-    </select>
-  </div>
+  <fieldset class="choice-group">
+    <legend>Sell rate</legend>
+    @for (rate of rates; track rate) {
+      <label><input type="radio" name="sell-rate" [value]="rate" [checked]="options().sellRate === rate" (change)="setRate(rate)" /> {{ rate }}%</label>
+    }
+  </fieldset>
 }
 
 <fieldset class="choice-group">

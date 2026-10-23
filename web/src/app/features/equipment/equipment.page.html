@@ -17,6 +17,10 @@
 
   <div class="filters">
     <app-price-controls [(options)]="options" />
+    <label class="toggle-filter">
+      <input type="checkbox" id="all-mastercrafted" [checked]="allMastercrafted()" (change)="allMastercrafted.set($any($event.target).checked)" />
+      Show all melee weapons as mastercrafted
+    </label>
   </div>
 
   <details class="glossary">
@@ -65,23 +69,18 @@
           </thead>
           <tbody>
             @for (item of section.items; track item.id) {
-              <tr>
+              <tr [class.mastercrafted]="isMastercrafted(item)">
                 <td class="row-title">
                   {{ item.name }}
-                  @if (section.isWeapon && item.costCopper !== null) {
-                    <button type="button" class="link-button" [attr.aria-expanded]="expanded().has(item.id)"
-                      [attr.aria-controls]="'mastercrafted-' + item.id" (click)="toggle(item.id)">Mastercrafted</button>
+                  @if (canMastercraft(item)) {
+                    <button type="button" class="link-button" [attr.aria-pressed]="isMastercrafted(item)"
+                      [disabled]="allMastercrafted()" (click)="toggle(item.id)">Mastercrafted</button>
                   }
                 </td>
                 @for (column of section.columns; track column.header) {
                   <td [attr.data-label]="column.header" [class.multiline]="!column.cost">{{ cell(column, item, section.category) }}</td>
                 }
               </tr>
-              @if (section.isWeapon && item.costCopper !== null) {
-                <tr class="sub-row" [id]="'mastercrafted-' + item.id" [hidden]="!expanded().has(item.id)">
-                  <td [attr.colspan]="section.columns.length + 1">Mastercrafted {{ item.name }}: {{ mastercrafted(item, section.category) }}</td>
-                </tr>
-              }
             }
           </tbody>
         </table>

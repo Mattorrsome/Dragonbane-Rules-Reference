@@ -15,13 +15,22 @@ describe('PriceControls', () => {
     return { fixture, host, click };
   }
 
-  it('hides the sell rate while buying', async () => {
+  it('shows the sell rate radios only while selling', async () => {
     const { host, click } = await render();
-    expect(host.querySelector('#sell-rate')).toBeNull();
+    expect(host.querySelectorAll('input[name="sell-rate"]').length).toBe(0);
 
     await click('input[name="price-mode"][value="sell"]');
 
-    expect(host.querySelector('#sell-rate')).not.toBeNull();
+    expect([...host.querySelectorAll<HTMLInputElement>('input[name="sell-rate"]')].map(r => r.value)).toEqual(['100', '50', '20', '10']);
+  });
+
+  it('sell rate radio sets 20', async () => {
+    const { fixture, click } = await render();
+    await click('input[name="price-mode"][value="sell"]');
+
+    await click('input[name="sell-rate"][value="20"]');
+
+    expect(fixture.componentInstance.options().sellRate).toBe(20);
   });
 
   it('bartering toggle resets result', async () => {

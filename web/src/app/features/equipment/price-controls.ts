@@ -23,8 +23,7 @@ export class PriceControls {
     this.options.update(o => ({ ...o, mode }));
   }
 
-  protected setRate(event: Event): void {
-    const sellRate = Number((event.target as HTMLSelectElement).value) as SellRate;
+  protected setRate(sellRate: SellRate): void {
     this.options.update(o => ({ ...o, sellRate }));
   }
 

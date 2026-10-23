@@ -60,12 +60,18 @@ describe('EquipmentPage', () => {
     const sell = async (rate: string) => {
       host.querySelector<HTMLInputElement>('input[name="price-mode"][value="sell"]')!.click();
       await settle();
-      const select = host.querySelector<HTMLSelectElement>('#sell-rate')!;
-      select.value = rate;
-      select.dispatchEvent(new Event('change'));
+      host.querySelector<HTMLInputElement>(`input[name="sell-rate"][value="${rate}"]`)!.click();
       await settle();
     };
-    return { host, cost, sell, settle };
+    const row = (name: string) => [...host.querySelectorAll('tbody tr')].find(tr => tr.querySelector('td')?.textContent?.includes(name))!;
+    const cell = (name: string, label: string) => row(name).querySelector(`td[data-label="${label}"]`)?.textContent?.trim();
+    const toggle = (name: string) => row(name).querySelector<HTMLButtonElement>('button[aria-pressed]')!;
+    const global = async (on: boolean) => {
+      const box = host.querySelector<HTMLInputElement>('#all-mastercrafted')!;
+      if (box.checked !== on) box.click();
+      await settle();
+    };
+    return { host, cost, sell, settle, row, cell, toggle, global };
   }
 
   it('sell 50% halves price', async () => {
@@ -94,20 +100,64 @@ describe('EquipmentPage', () => {
     expect(page.cost('Dagger')).toBe('5 silver');
   });
 
-  it('mastercrafted row', async () => {
+  it('mastercrafted toggles in the row', async () => {
     const page = await render();
-    const row = [...page.host.querySelectorAll('tbody tr')].find(tr => tr.textContent?.includes('Battleaxe'))!;
-    const toggle = row.querySelector<HTMLButtonElement>('button[aria-expanded]')!;
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    const toggle = page.toggle('Battleaxe');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
 
     toggle.click();
     await page.settle();
 
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    const detail = page.host.querySelector(`#${toggle.getAttribute('aria-controls')}`)!.textContent!;
-    expect(detail).toContain('STR 10');
-    expect(detail).toContain('Durability 12');
-    expect(detail).toContain('100 gold');
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(page.row('Battleaxe').classList).toContain('mastercrafted');
+    expect(page.cell('Battleaxe', 'STR')).toBe('10');
+    expect(page.cell('Battleaxe', 'Durability')).toBe('12');
+    expect(page.cost('Battleaxe')).toBe('100 gold');
+    expect(page.host.querySelector('.sub-row')).toBeNull();
+    expect(page.row('Dagger').classList).not.toContain('mastercrafted');
+  });
+
+  it('ranged weapons have no mastercrafted button', async () => {
+    const bow = weapon(5, 'Longbow', 2500, '25 gold', 12, 6);
+    items.push({ ...bow, weapon: { ...bow.weapon!, isRanged: true } });
+    const page = await render();
+    items.pop();
+
+    expect(page.row('Longbow').querySelector('button')).toBeNull();
+  });
+
+  it('global toggle mastercrafts every priced melee row and disables the row buttons', async () => {
+    const page = await render();
+
+    await page.global(true);
+
+    expect(page.row('Dagger').classList).toContain('mastercrafted');
+    expect(page.row('Battleaxe').classList).toContain('mastercrafted');
+    expect(page.cell('Dagger', 'Durability')).toBe('12');
+    expect(page.toggle('Dagger').disabled).toBe(true);
+    expect(page.toggle('Dagger').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('global off restores each row its own state', async () => {
+    const page = await render();
+    page.toggle('Battleaxe').click();
+    await page.settle();
+
+    await page.global(true);
+    await page.global(false);
+
+    expect(page.row('Battleaxe').classList).toContain('mastercrafted');
+    expect(page.row('Dagger').classList).not.toContain('mastercrafted');
+  });
+
+  it('sell rate applies to the mastercrafted cost', async () => {
+    const page = await render();
+    page.toggle('Battleaxe').click();
+    await page.settle();
+
+    await page.sell('50');
+
+    expect(page.cost('Battleaxe')).toBe('50 gold');
   });
 
   it('offers no mastercrafted version of an unpriced weapon', async () => {
@@ -115,8 +165,9 @@ describe('EquipmentPage', () => {
     const page = await render();
     items.pop();
 
-    const row = [...page.host.querySelectorAll('tbody tr')].find(tr => tr.textContent?.includes('Unarmed'))!;
-    expect(row.querySelector('button')).toBeNull();
+    expect(page.row('Unarmed').querySelector('button')).toBeNull();
+    await page.global(true);
+    expect(page.row('Unarmed').classList).not.toContain('mastercrafted');
   });
 
   it('shows the source placeholder for an unpriced item', async () => {

@@ -50,10 +50,16 @@ test('equipment controls by keyboard', async ({ page }) => {
   await page.keyboard.press('ArrowRight');
 
   await expect(page.locator('input[name="price-mode"][value="sell"]')).toBeChecked();
-  const rate = page.locator('#sell-rate');
-  await expect(rate).toBeVisible();
-  await rate.focus();
-  await expect(rate).toBeFocused();
+  const full = page.locator('input[name="sell-rate"][value="100"]');
+  await expect(full).toBeVisible();
+  await full.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('input[name="sell-rate"][value="50"]')).toBeChecked();
+
+  const mastercrafted = page.getByRole('button', { name: 'Mastercrafted' }).first();
+  await mastercrafted.focus();
+  await page.keyboard.press('Enter');
+  await expect(mastercrafted).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('treasure roll opens an accessible dialog', async ({ page }) => {
