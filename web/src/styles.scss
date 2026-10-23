@@ -171,11 +171,32 @@
   gap: var(--spacing-sm) var(--spacing-md);
 }
 
-.toggle-filter {
-  display: inline-flex;
+/* A category heading with an action on the right (Mastercraft all on Melee weapons). */
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.3rem;
-  align-self: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Flat on/off switch: outlined when off, filled when on. */
+.toggle-button {
+  padding: 0.2rem 0.7rem;
+  border: 2px solid var(--demon-green-dark);
+  border-radius: 2px;
+  background: none;
+  color: var(--demon-green-dark);
+  font-family: var(--font-display);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    background: var(--demon-green-dark);
+    color: var(--bone-white);
+  }
 }
 
 .school-title {
@@ -349,9 +370,20 @@
     background: rgba(0, 0, 0, 0.6);
   }
 
+  /* Close sits in the top right corner, level with the title; the title leaves room for it. */
   .dialog-close {
-    display: block;
-    margin-bottom: var(--spacing-sm);
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+  }
+
+  h2 {
+    padding-right: 6rem;
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
   }
 }
 

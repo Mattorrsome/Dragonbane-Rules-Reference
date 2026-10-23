@@ -101,7 +101,7 @@ test('treasure roll opens an accessible dialog', async ({ page }) => {
   const results = await new AxeBuilder({ page }).include('dialog').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   expect(results.violations.map(v => v.id)).toEqual([]);
 
-  await dialog.getByRole('button', { name: 'Roll again' }).click();
+  await dialog.getByRole('button', { name: 'Re-roll' }).click();
   await expect(dialog).toBeVisible();
 
   await dialog.getByRole('button', { name: 'Close' }).click();

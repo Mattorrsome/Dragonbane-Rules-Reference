@@ -17,10 +17,6 @@
 
   <div class="filters">
     <app-price-controls [(options)]="options" />
-    <label class="toggle-filter">
-      <input type="checkbox" id="all-mastercrafted" [checked]="allMastercrafted()" (change)="allMastercrafted.set($any($event.target).checked)" />
-      Show all melee weapons as mastercrafted
-    </label>
   </div>
 
   <details class="glossary">
@@ -55,7 +51,13 @@
     </p>
 
     @for (section of sections(); track section.category.id) {
-      <h2>{{ section.category.name }}</h2>
+      <div class="section-head">
+        <h2>{{ section.category.name }}</h2>
+        @if (section.items.some(canMastercraft)) {
+          <button type="button" id="all-mastercrafted" class="toggle-button" [attr.aria-pressed]="allMastercrafted()"
+            (click)="allMastercrafted.set(!allMastercrafted())">Mastercraft all</button>
+        }
+      </div>
       <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="section.category.name + ' table'">
         <table class="data-table stack" [class.stack-lg]="section.isWeapon">
           <caption>{{ section.category.name }}</caption>

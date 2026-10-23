@@ -152,12 +152,12 @@ describe('TreasurePage', () => {
     expect(link.getAttribute('href')).toContain('schoolId=2');
   });
 
-  it('roll again after a row roll re-rolls the same row', async () => {
+  it('re-roll after a row roll re-rolls the same row', async () => {
     const page = await render();
     await page.roll('Rat', 40, 2);
 
     faces.push(3);
-    page.button('Roll again').click();
+    page.button('Re-roll').click();
     await page.settle();
 
     expect(faces).toEqual([]);
@@ -166,7 +166,7 @@ describe('TreasurePage', () => {
     expect(page.dialog().querySelectorAll('app-treasure-result').length).toBe(1);
   });
 
-  it('roll again after a table roll rolls the D40 again', async () => {
+  it('re-roll after a table roll rolls the D40 again', async () => {
     const page = await render();
     faces.push(26, 5);
     page.host.querySelector<HTMLButtonElement>('button.roll-treasure')!.click();
@@ -174,7 +174,7 @@ describe('TreasurePage', () => {
     expect(page.dialog().querySelector('h2')?.textContent?.trim()).toBe('26 - Gemstone');
 
     faces.push(40, 2);
-    page.button('Roll again').click();
+    page.button('Re-roll').click();
     await page.settle();
 
     expect(page.dialog().querySelector('h2')?.textContent?.trim()).toBe('40 - Rat');

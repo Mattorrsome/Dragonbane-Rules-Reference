@@ -67,8 +67,8 @@ describe('EquipmentPage', () => {
     const cell = (name: string, label: string) => row(name).querySelector(`td[data-label="${label}"]`)?.textContent?.trim();
     const toggle = (name: string) => row(name).querySelector<HTMLButtonElement>('button[aria-pressed]')!;
     const global = async (on: boolean) => {
-      const box = host.querySelector<HTMLInputElement>('#all-mastercrafted')!;
-      if (box.checked !== on) box.click();
+      const toggle = host.querySelector<HTMLButtonElement>('#all-mastercrafted')!;
+      if ((toggle.getAttribute('aria-pressed') === 'true') !== on) toggle.click();
       await settle();
     };
     return { host, cost, sell, settle, row, cell, toggle, global };
@@ -136,6 +136,19 @@ describe('EquipmentPage', () => {
     expect(page.cell('Dagger', 'Durability')).toBe('12');
     expect(page.toggle('Dagger').disabled).toBe(true);
     expect(page.toggle('Dagger').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('"Mastercraft all" is a toggle button in the Melee weapons heading row', async () => {
+    const page = await render();
+
+    const toggle = page.host.querySelector<HTMLButtonElement>('#all-mastercrafted')!;
+    expect(toggle.tagName).toBe('BUTTON');
+    expect(toggle.textContent?.trim()).toBe('Mastercraft all');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    expect(toggle.closest('.section-head')?.querySelector('h2')?.textContent).toBe('Melee weapons');
+
+    await page.global(true);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('global off restores each row its own state', async () => {

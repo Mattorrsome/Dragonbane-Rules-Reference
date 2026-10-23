@@ -12,7 +12,9 @@
       <app-treasure-result [result]="current" [items]="items()" [categories]="categories()" [suggested]="suggested()"
         [standard]="coins.standard()" [rates]="rates()!" />
     }
-    <button type="button" class="btn btn-primary" (click)="rollAgain()">Roll again</button>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-primary" (click)="rollAgain()">Re-roll</button>
+    </div>
   </dialog>
 
   @if (entries().error()) {
