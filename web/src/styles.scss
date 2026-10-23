@@ -48,12 +48,17 @@
   }
 }
 
+/* Filter rows line up on their labels' tops; an unlabelled button (Roll treasure) sits level with the inputs' bottom. */
 .filters {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--spacing-sm) var(--spacing-md);
   margin-bottom: var(--spacing-sm);
+
+  > .btn {
+    align-self: flex-end;
+  }
 }
 
 .search-box {
@@ -70,9 +75,12 @@
   font-size: 0.9rem;
 }
 
+/* Same font, line height and padding, so the search box and the selects are the same height. */
 .search-box input,
 .filters select {
   font: inherit;
+  line-height: 1.3;
+  height: calc(1.3em + 0.6rem + 4px);
   padding: 0.3rem 0.5rem;
   border: 2px solid var(--parchment-darker);
   border-radius: 2px;
@@ -291,33 +299,35 @@
   }
 }
 
-/* Radios and checkboxes drawn in the style: a dark green box that shows the green ✦ when selected. */
+/*
+ * Radios and checkboxes drawn in the style as SVG, so the star is exactly centred: a demon-green (#227262)
+ * ring or box on bone white, with the green four-point star (the ✦ of the Mastercrafted button) when selected.
+ */
 input[type='radio'],
 input[type='checkbox'] {
   appearance: none;
-  display: inline-grid;
-  place-content: center;
-  width: 1.2em;
-  height: 1.2em;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
   margin: 0;
-  border: 2px solid var(--demon-green-dark);
-  background: var(--bone-white);
+  background: center / 100% no-repeat;
   cursor: pointer;
-
-  &:checked::before {
-    content: '✦';
-    color: var(--demon-green);
-    font-size: 1.15em;
-    line-height: 1;
-  }
 }
 
 input[type='radio'] {
-  border-radius: 50%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.75' fill='%23f5f2eb' stroke='%23227262' stroke-width='2.5'/%3E%3C/svg%3E");
+
+  &:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.75' fill='%23f5f2eb' stroke='%23227262' stroke-width='2.5'/%3E%3Cpath d='M10 3.6Q11 9 16.4 10Q11 11 10 16.4Q9 11 3.6 10Q9 9 10 3.6Z' fill='%23227262'/%3E%3C/svg%3E");
+  }
 }
 
 input[type='checkbox'] {
-  border-radius: 2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Crect x='1.25' y='1.25' width='17.5' height='17.5' rx='2' fill='%23f5f2eb' stroke='%23227262' stroke-width='2.5'/%3E%3C/svg%3E");
+
+  &:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Crect x='1.25' y='1.25' width='17.5' height='17.5' rx='2' fill='%23f5f2eb' stroke='%23227262' stroke-width='2.5'/%3E%3Cpath d='M10 3.6Q11 9 16.4 10Q11 11 10 16.4Q9 11 3.6 10Q9 9 10 3.6Z' fill='%23227262'/%3E%3C/svg%3E");
+  }
 }
 
 .status {

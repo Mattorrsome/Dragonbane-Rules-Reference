@@ -42,6 +42,29 @@ for (const viewport of viewports) {
   });
 }
 
+test.describe('filter rows line up', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  for (const route of routes) {
+    test(`${route}: labels share a top, search and selects share a height`, async ({ page }) => {
+      await page.goto(route);
+      await page.locator('table').first().waitFor();
+
+      const row = await page.locator('.filters').first().evaluate(f => {
+        const top = (e: Element | null) => (e ? Math.round(e.getBoundingClientRect().top) : null);
+        const labelled = [...f.children].filter(c => c.querySelector('label, legend'));
+        return {
+          labelTops: [...new Set(labelled.map(c => top(c.querySelector('label, legend'))))],
+          controlHeights: [...new Set([...f.querySelectorAll('input[type="search"], input[type="text"], select')]
+            .map(e => Math.round(e.getBoundingClientRect().height)))],
+        };
+      });
+      expect(row.labelTops).toHaveLength(1);
+      expect(row.controlHeights).toHaveLength(1);
+    });
+  }
+});
+
 test('equipment controls by keyboard', async ({ page }) => {
   await page.goto('/equipment');
   await page.locator('table').first().waitFor();
