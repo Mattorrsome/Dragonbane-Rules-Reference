@@ -1,27 +1,27 @@
-<fieldset class="choice-group">
-  <legend>Price</legend>
-  <label><input type="radio" name="price-mode" value="buy" [checked]="options().mode === 'buy'" (change)="setMode('buy')" /> Buy</label>
-  <label><input type="radio" name="price-mode" value="sell" [checked]="options().mode === 'sell'" (change)="setMode('sell')" /> Sell</label>
-</fieldset>
-
-@if (options().mode === 'sell') {
+<div class="price-row">
   <fieldset class="choice-group">
-    <legend>Sell rate</legend>
-    @for (rate of rates; track rate) {
-      <label><input type="radio" name="sell-rate" [value]="rate" [checked]="options().sellRate === rate" (change)="setRate(rate)" /> {{ rate }}%</label>
-    }
+    <legend>Price</legend>
+    <label><input type="radio" name="price-mode" value="buy" [checked]="options().mode === 'buy'" (change)="setMode('buy')" /> Buy</label>
+    <label><input type="radio" name="price-mode" value="sell" [checked]="options().mode === 'sell'" (change)="setMode('sell')" /> Sell</label>
   </fieldset>
-}
+
+  @if (options().mode === 'sell') {
+    <fieldset class="choice-group">
+      <legend>Sell rate</legend>
+      @for (rate of rates; track rate) {
+        <label><input type="radio" name="sell-rate" [value]="rate" [checked]="options().sellRate === rate" (change)="setRate(rate)" /> {{ rate }}%</label>
+      }
+    </fieldset>
+  }
+</div>
 
 <fieldset class="choice-group">
   <legend>Bartering</legend>
-  <label><input type="checkbox" id="bartering" [checked]="bartering()" (change)="setBartering($any($event.target).checked)" /> Roll</label>
-  @if (bartering()) {
-    @for (result of results; track result.value) {
-      <label>
-        <input type="radio" name="barter-result" [value]="result.value" [checked]="options().barter === result.value" (change)="setBarter(result.value)" />
-        {{ result.label }}
-      </label>
-    }
+  <span class="choice-prefix">Roll:</span>
+  @for (result of results; track result.value) {
+    <label>
+      <input type="radio" name="barter-result" [value]="result.value" [checked]="options().barter === result.value" (change)="setBarter(result.value)" />
+      {{ result.label }}
+    </label>
   }
 </fieldset>

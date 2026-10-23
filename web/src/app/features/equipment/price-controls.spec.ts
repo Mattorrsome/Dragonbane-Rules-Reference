@@ -33,14 +33,33 @@ describe('PriceControls', () => {
     expect(fixture.componentInstance.options().sellRate).toBe(20);
   });
 
-  it('bartering toggle resets result', async () => {
+  it('bartering results are always shown, None first and selected, with no checkbox', async () => {
+    const { host } = await render();
+
+    const results = [...host.querySelectorAll<HTMLInputElement>('input[name="barter-result"]')];
+    expect(results.map(r => r.value)).toEqual(['none', 'success', 'dragon']);
+    expect(results[0].checked).toBe(true);
+    expect(host.querySelector('input[type="checkbox"]')).toBeNull();
+    expect(results[0].closest('fieldset')?.textContent).toContain('Roll:');
+  });
+
+  it('bartering result can be picked and set back to None', async () => {
     const { fixture, click } = await render();
 
-    await click('#bartering');
     await click('input[name="barter-result"][value="success"]');
     expect(fixture.componentInstance.options().barter).toBe('success');
 
-    await click('#bartering');
+    await click('input[name="barter-result"][value="none"]');
     expect(fixture.componentInstance.options().barter).toBe('none');
+  });
+
+  it('bartering sits on its own line below Price and Sell rate', async () => {
+    const { host, click } = await render();
+    await click('input[name="price-mode"][value="sell"]');
+
+    const [row, barter] = [...host.children];
+    expect(row.classList).toContain('price-row');
+    expect([...row.querySelectorAll('legend')].map(l => l.textContent)).toEqual(['Price', 'Sell rate']);
+    expect(barter.querySelector('legend')?.textContent).toBe('Bartering');
   });
 });

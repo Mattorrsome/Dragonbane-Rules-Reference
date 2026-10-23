@@ -179,8 +179,6 @@ describe('EquipmentPage', () => {
     await page.settle();
     await page.sell('50');
 
-    page.host.querySelector<HTMLInputElement>('#bartering')!.click();
-    await page.settle();
     page.host.querySelector<HTMLInputElement>('input[name="barter-result"][value="success"]')!.click();
     await page.settle();
 

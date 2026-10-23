@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, model } from '@angular/core';
 import { BarterResult, PriceOptions, SellRate, TradeMode } from '../../money/pricing';
 
 /** Buy/sell, sell rate and bartering result for the equipment price columns. */
@@ -17,7 +17,6 @@ export class PriceControls {
     { value: 'success', label: 'Success' },
     { value: 'dragon', label: 'Dragon' },
   ];
-  protected readonly bartering = signal(false);
 
   protected setMode(mode: TradeMode): void {
     this.options.update(o => ({ ...o, mode }));
@@ -25,11 +24,6 @@ export class PriceControls {
 
   protected setRate(sellRate: SellRate): void {
     this.options.update(o => ({ ...o, sellRate }));
-  }
-
-  protected setBartering(on: boolean): void {
-    this.bartering.set(on);
-    if (!on) this.setBarter('none');
   }
 
   protected setBarter(barter: BarterResult): void {

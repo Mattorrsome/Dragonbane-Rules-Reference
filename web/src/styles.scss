@@ -140,7 +140,6 @@
   font: inherit;
   font-size: 0.85em;
   color: var(--accent);
-  text-decoration: underline;
   cursor: pointer;
 
   /* A shape as well as the row tint, so colour is never the only cue. */
@@ -163,8 +162,15 @@
   color: var(--demon-green-dark);
 }
 
-/* Price, Sell rate and Bartering on one line, wrapping as the width shrinks. */
+/* Price and Sell rate on one line (wrapping as the width shrinks), Bartering on the line below. */
 .price-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.price-row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -279,6 +285,39 @@
     align-items: center;
     gap: 0.3rem;
   }
+
+  .choice-prefix {
+    color: var(--ink-light);
+  }
+}
+
+/* Radios and checkboxes drawn in the style: a dark green box that shows the green ✦ when selected. */
+input[type='radio'],
+input[type='checkbox'] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.2em;
+  height: 1.2em;
+  margin: 0;
+  border: 2px solid var(--demon-green-dark);
+  background: var(--bone-white);
+  cursor: pointer;
+
+  &:checked::before {
+    content: '✦';
+    color: var(--demon-green);
+    font-size: 1.15em;
+    line-height: 1;
+  }
+}
+
+input[type='radio'] {
+  border-radius: 50%;
+}
+
+input[type='checkbox'] {
+  border-radius: 2px;
 }
 
 .status {
@@ -355,10 +394,17 @@
 }
 
 /* Treasure result popup: a native modal dialog on the parchment, Close first so it sits top left. */
+/* A fixed height, so a re-roll never makes the dialog jump; long results scroll inside it. */
+.treasure-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 .treasure-dialog {
   margin: auto;
   width: min(40rem, 100vw - 2rem);
-  max-height: calc(100dvh - 2rem);
+  height: min(32rem, 100dvh - 2rem);
+  overflow-y: auto;
   padding: var(--spacing-md);
   border: 2px solid var(--parchment-darker);
   border-radius: 2px;
@@ -381,9 +427,11 @@
     padding-right: 6rem;
   }
 
+  /* Re-roll stays at the bottom right, whatever the result's length. */
   .dialog-actions {
     display: flex;
     justify-content: flex-end;
+    margin-top: auto;
   }
 }
 
