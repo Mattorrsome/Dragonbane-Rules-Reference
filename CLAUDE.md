@@ -16,7 +16,6 @@ All five sections built: API in `Dragonbane.slnx` (`src/Dragonbane.Api`, `tests/
 - If `ng test` dies at start with "Worker exited unexpectedly with signal SIGTERM", a long-running `npm start` dev server has gone stale after many file changes (e.g. a branch checkout). Restart the dev server; the tests themselves are fine.
 - Full check before a commit: `dotnet test`, then in `web/`: `npx ng test --watch=false && npx ng build && npm run e2e`
 
-- `Initial_Brainstorming.md`: the user's original requirements.
 - `docs/superpowers/specs/2026-10-22-dragonbane-reference-design.md`: the agreed design. **Read it before any build work.** It is the source of truth for goals, non-goals, anti-goals and the schema.
 - `Source Material/*.md`: the Dragonbane source tables. They are the source of truth for display data.
 - `DECISIONS.md` (repo root): one entry per significant technical decision covering context, decision, alternatives considered and why. Update it whenever you make a decision.
