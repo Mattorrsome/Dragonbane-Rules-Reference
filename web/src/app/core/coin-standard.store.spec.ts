@@ -12,8 +12,8 @@ describe('CoinStandardStore', () => {
     return TestBed.inject(CoinStandardStore);
   };
 
-  it('defaults to gold', () => {
-    expect(fresh().standard()).toBe('gold');
+  it('defaults to as written', () => {
+    expect(fresh().standard()).toBe('written');
   });
 
   it('persists and restores the choice', () => {
@@ -28,7 +28,7 @@ describe('CoinStandardStore', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('denied'); });
 
     const store = fresh();
-    expect(store.standard()).toBe('gold');
+    expect(store.standard()).toBe('written');
     expect(() => store.set('copper')).not.toThrow();
     expect(store.standard()).toBe('copper');
   });
@@ -36,6 +36,6 @@ describe('CoinStandardStore', () => {
   it('ignores an invalid stored value', () => {
     localStorage.setItem(KEY, 'platinum');
 
-    expect(fresh().standard()).toBe('gold');
+    expect(fresh().standard()).toBe('written');
   });
 });

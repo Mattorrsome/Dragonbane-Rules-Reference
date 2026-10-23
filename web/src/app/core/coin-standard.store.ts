@@ -23,8 +23,8 @@ export class CoinStandardStore {
 function read(): CoinStandard {
   try {
     const stored = localStorage.getItem(KEY);
-    return STANDARDS.find(s => s === stored) ?? 'gold';
+    return STANDARDS.find(s => s === stored) ?? 'written';
   } catch {
-    return 'gold';
+    return 'written';
   }
 }

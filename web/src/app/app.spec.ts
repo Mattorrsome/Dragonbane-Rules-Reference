@@ -29,6 +29,6 @@ describe('App shell', () => {
 
     const select = host.querySelector<HTMLSelectElement>('select#coin-standard')!;
     expect(host.querySelector('label[for="coin-standard"]')?.textContent).toContain('Coin standard');
-    expect(select.value).toBe('gold');
+    expect(select.value).toBe('written');
   });
 });
