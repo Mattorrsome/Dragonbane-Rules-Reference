@@ -6,11 +6,14 @@
     <button type="button" class="btn btn-primary roll-treasure" [disabled]="!ready()" (click)="rollTable()">Roll treasure (D40)</button>
   </div>
 
-  <div class="treasure-results" aria-live="polite">
+  <dialog #dialog class="treasure-dialog" aria-labelledby="treasure-result-title">
+    <button type="button" class="btn btn-secondary btn-small dialog-close" (click)="close()">Close</button>
     @if (result(); as current) {
-      <app-treasure-result [result]="current" [items]="items()" [standard]="coins.standard()" [rates]="rates()!" />
+      <app-treasure-result [result]="current" [items]="items()" [categories]="categories()" [suggested]="suggested()"
+        [standard]="coins.standard()" [rates]="rates()!" />
     }
-  </div>
+    <button type="button" class="btn btn-primary" (click)="rollAgain()">Roll again</button>
+  </dialog>
 
   @if (entries().error()) {
     <p class="status" role="alert">The treasure table could not be loaded. Is the API running?</p>

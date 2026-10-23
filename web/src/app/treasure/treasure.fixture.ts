@@ -1,6 +1,6 @@
 import { TreasureEntryDto, TreasureOutcomeDto, TreasureRollDto } from '../api/models';
 
-/** Hand-built treasure DTOs in the API's shape (entries 10, 26, 30, 31, 35, 36, 37). */
+/** Hand-built treasure DTOs in the API's shape (entries 10, 26, 30, 31, 35, 36, 37, 40). */
 const roll = (r: Partial<TreasureRollDto> & Pick<TreasureRollDto, 'label' | 'dieSides' | 'purpose'>): TreasureRollDto => ({
   sequence: 1, diceCount: 1, modifier: 0, multiplier: 1, coin: null, outcomes: [], ...r,
 });
@@ -63,6 +63,7 @@ export const TREASURE: readonly TreasureEntryDto[] = [
     ],
   })]),
   entry(37, 'Book', []),
+  entry(40, 'Rat', [roll({ label: 'damage', dieSides: 4, purpose: 'Number' })]),
 ];
 
 export const byRoll = (r: number): TreasureEntryDto => TREASURE.find(e => e.roll === r)!;

@@ -56,12 +56,23 @@ test('equipment controls by keyboard', async ({ page }) => {
   await expect(rate).toBeFocused();
 });
 
-test('treasure roll announces', async ({ page }) => {
+test('treasure roll opens an accessible dialog', async ({ page }) => {
   await page.goto('/treasure');
   await page.locator('table').first().waitFor();
+  const roll = page.getByRole('button', { name: 'Roll treasure (D40)' });
 
-  await page.getByRole('button', { name: 'Roll treasure (D40)' }).click();
+  await roll.click();
 
-  await expect(page.locator('.treasure-results[aria-live="polite"]')).not.toBeEmpty();
-  await expect(page.locator('.treasure-results')).toContainText('D40 →');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('heading', { level: 2 })).toHaveText(/^\d+ - /);
+  const results = await new AxeBuilder({ page }).include('dialog').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  expect(results.violations.map(v => v.id)).toEqual([]);
+
+  await dialog.getByRole('button', { name: 'Roll again' }).click();
+  await expect(dialog).toBeVisible();
+
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(roll).toBeFocused();
 });

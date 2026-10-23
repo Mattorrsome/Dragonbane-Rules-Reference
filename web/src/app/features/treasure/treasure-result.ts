@@ -1,22 +1,24 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CoinStandard, EquipmentItemDto } from '../../api/models';
+import { CoinStandard, EquipmentCategoryDto, EquipmentItemDto, SpellDto } from '../../api/models';
 import { CurrencyRates } from '../../core/currency-rates';
 import { formatCoins } from '../../money/coins';
-import { mastercraft } from '../../money/mastercraft';
+import { mastercraftedItem } from '../../money/mastercraft';
 import { formatPrice } from '../../money/pricing';
-import { describeDice } from '../../treasure/dice-format';
+import { sentenceCase } from '../../shared/text';
 import { ResolvedRoll, TreasureResult } from '../../treasure/treasure-resolver';
+import { columnsFor } from '../equipment/columns';
 
-/** One line of the result: dice arithmetic text, optionally followed by an equipment link and its price. */
+/** One outcome line: text, optionally an equipment link with its stats as the equipment table shows them. */
 interface ResultLine {
   depth: number;
   text: string;
   link?: { text: string; queryParams: Record<string, string | number> };
   suffix?: string;
+  stats?: { label: string; value: string }[];
 }
 
-/** Shows a resolved treasure roll with every die and its arithmetic. */
+/** Shows a resolved treasure roll as outcomes only; the dice stay in the result for tests, not on screen. */
 @Component({
   selector: 'app-treasure-result',
   imports: [RouterLink],
@@ -26,17 +28,20 @@ interface ResultLine {
 export class TreasureResultView {
   readonly result = input.required<TreasureResult>();
   readonly items = input.required<ReadonlyMap<number, EquipmentItemDto>>();
+  readonly categories = input.required<ReadonlyMap<number, EquipmentCategoryDto>>();
+  readonly suggested = input.required<readonly SpellDto[]>();
   readonly standard = input.required<CoinStandard>();
   readonly rates = input.required<CurrencyRates>();
 
+  protected readonly sentenceCase = sentenceCase;
+
   protected readonly lines = computed<ResultLine[]>(() => {
-    const { entry, d40, rolls } = this.result();
-    const lines: ResultLine[] = d40 ? [{ depth: 0, text: `D40 → ${d40.total}: ${entry.name}` }] : [];
+    const lines: ResultLine[] = [];
     const walk = (roll: ResolvedRoll, depth: number) => {
       lines.push(this.describe(roll, depth));
       roll.nested.forEach(n => walk(n, depth + 1));
     };
-    rolls.forEach(r => walk(r, 0));
+    this.result().rolls.forEach(r => walk(r, 0));
     return lines;
   });
 
@@ -50,39 +55,56 @@ export class TreasureResultView {
   });
 
   private describe(roll: ResolvedRoll, depth: number): ResultLine {
-    const dice = describeDice(roll.dice);
+    const total = roll.dice.total;
     const standard = this.standard();
-    const rates = this.rates();
     switch (roll.spec.purpose) {
       case 'Coins': {
         // Found coins are shown as rolled; a coin standard adds the conversion. Price options never apply.
-        const converted = standard !== 'written' && roll.valueCopper !== null ? ` (${formatCoins(roll.valueCopper, standard, rates)})` : '';
-        return { depth, text: `${dice} ${roll.spec.coin?.toLowerCase() ?? ''}${converted}` };
+        const converted = standard !== 'written' && roll.valueCopper !== null ? ` (${formatCoins(roll.valueCopper, standard, this.rates())})` : '';
+        return { depth, text: `${total} ${roll.spec.coin?.toLowerCase() ?? ''}${converted}` };
       }
+      case 'SpellRank':
+        return { depth, text: total <= 0 ? 'Tricks' : `Rank ${total}` };
       case 'Pick': {
         const outcome = roll.outcome;
-        if (!outcome) return { depth, text: `${dice}: no outcome` };
+        if (!outcome) return { depth, text: `${sentenceCase(roll.spec.label)}: -` };
         const item = outcome.equipmentItemId === null ? undefined : this.items().get(outcome.equipmentItemId);
         if (item) {
-          const price = outcome.isMastercrafted
-            ? formatPrice(mastercraft({ costCopper: item.costCopper, strRequirement: null, durability: null }).costCopper, standard, rates, item, false)
-            : formatPrice(item.costCopper, standard, rates, item, true);
           return {
             depth,
-            text: `${dice}: `,
+            text: '',
             link: { text: `${outcome.isMastercrafted ? 'Mastercrafted ' : ''}${item.name}`, queryParams: { categoryId: item.categoryId, search: item.name } },
-            // Keep the source label only when it adds something, e.g. "lethal poison potency 12".
-            suffix: `${item.name.toLowerCase().startsWith(outcome.label.toLowerCase()) ? '' : ` (${outcome.label})`} — ${price}`,
+            // Keep the source label only when it adds something, e.g. "healing potion 2D6 HP".
+            suffix: item.name.toLowerCase().startsWith(outcome.label.toLowerCase()) ? '' : ` (${outcome.label})`,
+            stats: this.stats(item, outcome.isMastercrafted),
           };
         }
         if (outcome.valueCopper !== null) {
-          const value = standard === 'written' ? outcome.valueText : formatCoins(outcome.valueCopper, standard, rates);
-          return { depth, text: `${dice}: ${outcome.label} (${value})` };
+          const value = standard === 'written' ? outcome.valueText : formatCoins(outcome.valueCopper, standard, this.rates());
+          return { depth, text: `${sentenceCase(outcome.label)} — ${value}` };
         }
-        return { depth, text: `${dice}: ${outcome.label}` };
+        return { depth, text: `${sentenceCase(roll.spec.label)}: ${outcome.label}` };
       }
       default:
-        return { depth, text: `${dice} ${roll.spec.label}` };
+        return { depth, text: `${total} ${roll.spec.label}` };
     }
+  }
+
+  /** The item's row from its equipment table, minus Supply and Weight; mastercrafted values when it is mastercrafted. */
+  private stats(item: EquipmentItemDto, mastercrafted: boolean): ResultLine['stats'] {
+    const category = this.categories().get(item.categoryId);
+    if (!category) return [];
+    const shown = mastercrafted ? mastercraftedItem(item) : item;
+    return columnsFor(category, item)
+      .filter(c => c.header !== 'Supply' && c.header !== 'Weight')
+      .map(c => {
+        if (c.cost) {
+          // A mastercrafted price is always calculated, so it is never shown "as written".
+          const value = shown.costCopper === null ? item.costText : formatPrice(shown.costCopper, this.standard(), this.rates(), item, !mastercrafted);
+          return { label: c.header, value };
+        }
+        const value = c.value(shown);
+        return { label: c.header, value: value === null || value === undefined || value === '' ? '-' : String(value) };
+      });
   }
 }
