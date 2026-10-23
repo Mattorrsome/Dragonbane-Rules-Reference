@@ -62,6 +62,32 @@ test('equipment controls by keyboard', async ({ page }) => {
   await expect(mastercrafted).toHaveAttribute('aria-pressed', 'true');
 });
 
+/**
+ * Axe reports text over the scroll texture as "incomplete", so check the mastercrafted row by hand: the pressed
+ * button's text against the row tint laid over the sandiest parchment tone in the scroll tile (#e8dbbf).
+ */
+test('pressed mastercrafted button keeps AA contrast on the tinted row', async ({ page }) => {
+  await page.goto('/equipment');
+  await page.locator('table').first().waitFor();
+  const button = page.getByRole('button', { name: 'Mastercrafted' }).first();
+  await button.click();
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+
+  const ratio = await button.evaluate(el => {
+    const rgba = (css: string) => css.match(/[\d.]+/g)!.map(Number);
+    const [tr, tg, tb, ta] = rgba(getComputedStyle(el.closest('td')!).backgroundColor);
+    const sand = [0xe8, 0xdb, 0xbf];
+    const bg = [tr, tg, tb].map((c, i) => c * ta + sand[i] * (1 - ta));
+    const lum = ([r, g, b]: number[]) => {
+      const lin = (c: number) => (c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    };
+    const [a, b] = [lum(rgba(getComputedStyle(el).color)), lum(bg)].sort((x, y) => y - x);
+    return (a + 0.05) / (b + 0.05);
+  });
+  expect(ratio).toBeGreaterThanOrEqual(4.5);
+});
+
 test('treasure roll opens an accessible dialog', async ({ page }) => {
   await page.goto('/treasure');
   await page.locator('table').first().waitFor();

@@ -158,6 +158,11 @@
   background: rgba(231, 47, 50, 0.1);
 }
 
+/* The accent green falls below AA on the tint over sandy parchment; the dark green keeps it. */
+.data-table tr.mastercrafted .link-button {
+  color: var(--demon-green-dark);
+}
+
 /* Price, Sell rate and Bartering on one line, wrapping as the width shrinks. */
 .price-controls {
   display: flex;
