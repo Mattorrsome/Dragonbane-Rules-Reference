@@ -6,8 +6,8 @@ import { formatCoins } from '../../money/coins';
 import { mastercraftedItem } from '../../money/mastercraft';
 import { formatPrice } from '../../money/pricing';
 import { sentenceCase } from '../../shared/text';
-import { ResolvedRoll, TreasureResult } from '../../treasure/treasure-resolver';
-import { columnsFor } from '../equipment/columns';
+import { grimoireRolls, ResolvedRoll, TreasureResult } from '../../treasure/treasure-resolver';
+import { cellText, columnsFor } from '../equipment/columns';
 
 /** One outcome line: text, optionally an equipment link with its stats as the equipment table shows them. */
 interface ResultLine {
@@ -47,11 +47,9 @@ export class TreasureResultView {
 
   /** For a grimoire: the rolled school and rank as a Spells page filter (rank 0 means tricks). */
   protected readonly spellsLink = computed(() => {
-    const rolls = this.result().rolls;
-    const schoolId = rolls.find(r => r.outcome?.magicSchoolId)?.outcome?.magicSchoolId;
-    const rank = rolls.find(r => r.spec.purpose === 'SpellRank')?.dice.total;
-    if (!schoolId || rank === undefined) return null;
-    return rank <= 0 ? { schoolId, kind: 'Trick' } : { schoolId, rank };
+    const g = grimoireRolls(this.result());
+    if (!g) return null;
+    return g.rank <= 0 ? { schoolId: g.schoolId, kind: 'Trick' } : { schoolId: g.schoolId, rank: g.rank };
   });
 
   private describe(roll: ResolvedRoll, depth: number): ResultLine {
@@ -90,21 +88,19 @@ export class TreasureResultView {
     }
   }
 
-  /** The item's row from its equipment table, minus Supply and Weight; mastercrafted values when it is mastercrafted. */
+  /** The item's row from its equipment table, minus list-only columns; mastercrafted values when it is mastercrafted. */
   private stats(item: EquipmentItemDto, mastercrafted: boolean): ResultLine['stats'] {
     const category = this.categories().get(item.categoryId);
     if (!category) return [];
     const shown = mastercrafted ? mastercraftedItem(item) : item;
     return columnsFor(category, item)
-      .filter(c => c.header !== 'Supply' && c.header !== 'Weight')
-      .map(c => {
-        if (c.cost) {
-          // A mastercrafted price is always calculated, so it is never shown "as written".
-          const value = shown.costCopper === null ? item.costText : formatPrice(shown.costCopper, this.standard(), this.rates(), item, !mastercrafted);
-          return { label: c.header, value };
-        }
-        const value = c.value(shown);
-        return { label: c.header, value: value === null || value === undefined || value === '' ? '-' : String(value) };
-      });
+      .filter(c => !c.listOnly)
+      .map(c => ({
+        label: c.header,
+        // A mastercrafted price is always calculated, so it is never shown "as written".
+        value: !c.cost ? cellText(c.value(shown))
+          : shown.costCopper === null ? item.costText
+          : formatPrice(shown.costCopper, this.standard(), this.rates(), item, !mastercrafted),
+      }));
   }
 }

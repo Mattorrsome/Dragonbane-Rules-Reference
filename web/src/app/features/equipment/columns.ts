@@ -5,10 +5,12 @@ export interface Column {
   header: string;
   value: (item: EquipmentItemDto) => string | number | null | undefined;
   cost?: true;
+  /** Trade details for the equipment list only (Supply, Weight); item summaries leave them out. */
+  listOnly?: true;
 }
 
 const COST: Column = { header: 'Cost', value: () => null, cost: true };
-const SUPPLY: Column = { header: 'Supply', value: i => i.supply };
+const SUPPLY: Column = { header: 'Supply', value: i => i.supply, listOnly: true };
 
 /** Columns as the source tables have them, per kind of category. */
 export function columnsFor(category: EquipmentCategoryDto, sample: EquipmentItemDto | undefined): Column[] {
@@ -35,7 +37,12 @@ export function columnsFor(category: EquipmentCategoryDto, sample: EquipmentItem
   return [
     COST,
     SUPPLY,
-    ...(category.hasWeight ? [{ header: 'Weight', value: (i: EquipmentItemDto) => i.weight }] : []),
+    ...(category.hasWeight ? [{ header: 'Weight', value: (i: EquipmentItemDto) => i.weight, listOnly: true as const }] : []),
     ...(category.effectHeader ? [{ header: category.effectHeader, value: (i: EquipmentItemDto) => i.effect }] : []),
   ];
+}
+
+/** A cell's text: a dash when the source has no value. */
+export function cellText(value: string | number | null | undefined): string {
+  return value === null || value === undefined || value === '' ? '-' : String(value);
 }

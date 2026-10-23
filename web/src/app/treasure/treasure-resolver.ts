@@ -53,3 +53,11 @@ function coinValue(coin: string | null, rates: CurrencyRates): number {
   if (key !== 'copper' && key !== 'silver' && key !== 'gold') throw new Error(`Unknown coin ${coin}`);
   return rates[key];
 }
+
+/** A grimoire's rolled school, rank (0 or less means tricks) and spell count; null for any other result. */
+export function grimoireRolls({ rolls }: TreasureResult): { schoolId: number; rank: number; count: number } | null {
+  const schoolId = rolls.find(r => r.outcome?.magicSchoolId)?.outcome?.magicSchoolId;
+  const rank = rolls.find(r => r.spec.purpose === 'SpellRank')?.dice.total;
+  const count = rolls.find(r => r.spec.purpose === 'Number')?.dice.total;
+  return schoolId && rank !== undefined && count !== undefined ? { schoolId, rank, count } : null;
+}

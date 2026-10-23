@@ -160,6 +160,21 @@ describe('EquipmentPage', () => {
     expect(page.cost('Battleaxe')).toBe('50 gold');
   });
 
+  it('sell rate then bartering apply to the mastercrafted cost', async () => {
+    const page = await render();
+    page.toggle('Battleaxe').click();
+    await page.settle();
+    await page.sell('50');
+
+    page.host.querySelector<HTMLInputElement>('#bartering')!.click();
+    await page.settle();
+    page.host.querySelector<HTMLInputElement>('input[name="barter-result"][value="success"]')!.click();
+    await page.settle();
+
+    // 10 gold ×10 mastercrafted → 50% sell rate → +20% for a successful barter when selling.
+    expect(page.cost('Battleaxe')).toBe('60 gold');
+  });
+
   it('offers no mastercrafted version of an unpriced weapon', async () => {
     items.push({ ...weapon(4, 'Unarmed', 0, '-', null, null), costCopper: null });
     const page = await render();

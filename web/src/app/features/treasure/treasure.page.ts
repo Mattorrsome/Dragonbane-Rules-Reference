@@ -7,7 +7,7 @@ import { DiceRoller } from '../../dice/dice-roller';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
 import { suggestSpells } from '../../treasure/spell-suggestions';
-import { resolveEntry, rollTreasure, TreasureResult } from '../../treasure/treasure-resolver';
+import { grimoireRolls, resolveEntry, rollTreasure, TreasureResult } from '../../treasure/treasure-resolver';
 import { TreasureResultView } from './treasure-result';
 
 @Component({
@@ -75,11 +75,8 @@ export class TreasurePage {
     if (!dialog.open) dialog.showModal();
   }
 
-  private grimoire({ rolls }: TreasureResult): SpellDto[] {
-    const schoolId = rolls.find(r => r.outcome?.magicSchoolId)?.outcome?.magicSchoolId;
-    const rank = rolls.find(r => r.spec.purpose === 'SpellRank')?.dice.total;
-    const count = rolls.find(r => r.spec.purpose === 'Number')?.dice.total;
-    if (!schoolId || rank === undefined || count === undefined) return [];
-    return suggestSpells(this.spells.value()!, schoolId, rank, count, this.roller);
+  private grimoire(result: TreasureResult): SpellDto[] {
+    const g = grimoireRolls(result);
+    return g ? suggestSpells(this.spells.value()!, g.schoolId, g.rank, g.count, this.roller) : [];
   }
 }

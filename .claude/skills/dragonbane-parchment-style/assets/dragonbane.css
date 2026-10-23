@@ -77,9 +77,9 @@ body {
 }
 
 /*
- * Scroll parchment page wrapper, seamless at any height. scroll.webp has torn top/bottom edges, so a
- * repeat-y of it shows a seam every texture height. It is split into a top cap, a loop-safe middle tile
- * and a bottom cap whose top fades out. Each piece is 600px wide and the caps 240px tall, drawn at 100%
+ * Scroll parchment page wrapper, seamless at any height. The texture comes in three pieces: a top cap
+ * (scroll-top.webp), a loop-safe middle tile (scroll-tile.webp) and a bottom cap whose top fades out
+ * (scroll-bottom.webp). Each piece is 600px wide and the caps 240px tall, drawn at 100%
  * width, so cap heights are 40% of the width; margins in % are relative to width, which keeps the pieces
  * aligned at any width.
  */

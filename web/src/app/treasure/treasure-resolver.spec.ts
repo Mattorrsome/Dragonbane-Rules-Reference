@@ -1,6 +1,6 @@
 import { DiceRoller } from '../dice/dice-roller';
 import { byRoll, TREASURE } from './treasure.fixture';
-import { resolveEntry, rollTreasure } from './treasure-resolver';
+import { grimoireRolls, resolveEntry, rollTreasure } from './treasure-resolver';
 
 const rates = { copper: 1, silver: 10, gold: 100 };
 
@@ -51,5 +51,15 @@ describe('treasure resolver', () => {
     expect(result.entry.roll).toBe(26);
     expect(result.d40?.total).toBe(26);
     expect(result.rolls[0].outcome?.label).toBe('glass');
+  });
+});
+
+describe('grimoireRolls', () => {
+  it('reads school, rank and count from a grimoire', () => {
+    expect(grimoireRolls(resolveEntry(byRoll(35), fakeRoller(1, 1, 3), rates))).toEqual({ schoolId: 2, rank: 0, count: 3 });
+  });
+
+  it('is null for anything else', () => {
+    expect(grimoireRolls(resolveEntry(byRoll(40), fakeRoller(2), rates))).toBeNull();
   });
 });

@@ -8,7 +8,7 @@ import { BASE_PRICE, formatPrice, isBasePrice, PriceOptions, quote } from '../..
 import { definedOnly } from '../../shared/http';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
-import { Column, columnsFor } from './columns';
+import { cellText, Column, columnsFor } from './columns';
 import { PriceControls } from './price-controls';
 
 interface CategorySection {
@@ -64,8 +64,7 @@ export class EquipmentPage {
     const shown = mc ? mastercraftedItem(item) : item;
     // A mastercrafted price is always calculated, so it is never shown "as written".
     if (column.cost) return this.price(item, shown.costCopper, category, !mc && isBasePrice(this.options()));
-    const value = column.value(shown);
-    return value === null || value === undefined || value === '' ? '-' : String(value);
+    return cellText(column.value(shown));
   }
 
   /** The mastercrafted rule is in the Melee weapons note, so only priced melee weapons have a version. */
