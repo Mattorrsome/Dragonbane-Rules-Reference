@@ -1,3 +1,5 @@
+import { EquipmentItemDto } from '../api/models';
+
 export interface WeaponStats {
   costCopper: number | null;
   strRequirement: number | null;
@@ -12,4 +14,11 @@ export function mastercraft(stats: WeaponStats): WeaponStats {
     strRequirement: str !== null && str > 0 ? str : null,
     durability: stats.durability === null ? null : stats.durability + 3,
   };
+}
+
+/** The item as its mastercrafted version (cost, STR and durability changed); items without weapon stats are returned as-is. */
+export function mastercraftedItem(item: EquipmentItemDto): EquipmentItemDto {
+  if (!item.weapon) return item;
+  const mc = mastercraft({ costCopper: item.costCopper, strRequirement: item.weapon.strRequirement, durability: item.weapon.durability });
+  return { ...item, costCopper: mc.costCopper, weapon: { ...item.weapon, strRequirement: mc.strRequirement, durability: mc.durability } };
 }
