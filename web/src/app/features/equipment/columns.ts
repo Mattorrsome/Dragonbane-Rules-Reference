@@ -7,6 +7,8 @@ export interface Column {
   cost?: true;
   /** Trade details for the equipment list only (Supply, Weight); item summaries leave them out. */
   listOnly?: true;
+  /** Long text (effects, weapon features): an item summary gives it a full row. */
+  wide?: true;
 }
 
 const COST: Column = { header: 'Cost', value: () => null, cost: true };
@@ -23,7 +25,7 @@ export function columnsFor(category: EquipmentCategoryDto, sample: EquipmentItem
       { header: 'Durability', value: i => i.weapon?.durability },
       COST,
       SUPPLY,
-      { header: 'Features', value: i => i.weapon?.featuresText },
+      { header: 'Features', value: i => i.weapon?.featuresText, wide: true },
     ];
   }
   if (sample?.armour) {
@@ -31,14 +33,14 @@ export function columnsFor(category: EquipmentCategoryDto, sample: EquipmentItem
       { header: 'Rating', value: i => (i.armour?.isHelmet ? `+${i.armour.rating}` : i.armour?.rating) },
       COST,
       SUPPLY,
-      { header: 'Effect', value: i => i.effect },
+      { header: 'Effect', value: i => i.effect, wide: true },
     ];
   }
   return [
     COST,
     SUPPLY,
     ...(category.hasWeight ? [{ header: 'Weight', value: (i: EquipmentItemDto) => i.weight, listOnly: true as const }] : []),
-    ...(category.effectHeader ? [{ header: category.effectHeader, value: (i: EquipmentItemDto) => i.effect }] : []),
+    ...(category.effectHeader ? [{ header: category.effectHeader, value: (i: EquipmentItemDto) => i.effect, wide: true as const }] : []),
   ];
 }
 

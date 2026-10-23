@@ -180,6 +180,24 @@ describe('TreasurePage', () => {
     expect(page.dialog().querySelector('h2')?.textContent?.trim()).toBe('40 - Rat');
   });
 
+  it('title, Re-roll and Close share the header row above the result', async () => {
+    const page = await render();
+    await page.roll('Rat', 40, 2);
+
+    const head = page.dialog().querySelector('.dialog-head')!;
+    expect(head.querySelector('h2')?.textContent?.trim()).toBe('40 - Rat');
+    expect([...head.querySelectorAll('button')].map(b => b.textContent?.trim())).toEqual(['Re-roll', 'Close']);
+    expect(head.nextElementSibling?.tagName).toBe('APP-TREASURE-RESULT');
+  });
+
+  it('long stats take a full row in the summary', async () => {
+    const page = await render();
+    await page.roll('Mastercrafted weapon', 31, 3);
+
+    const wide = [...page.dialog().querySelectorAll('.item-stats .wide dt')].map(dt => dt.textContent?.trim());
+    expect(wide).toEqual(['Features']);
+  });
+
   it('close button closes the dialog', async () => {
     const page = await render();
     await page.roll('Rat', 40, 2);

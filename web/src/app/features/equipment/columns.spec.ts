@@ -12,6 +12,16 @@ describe('columnsFor', () => {
   });
 });
 
+describe('wide columns', () => {
+  it('flags the long text columns: the category effect and weapon Features', () => {
+    const weapon = { weapon: {}, armour: null } as EquipmentItemDto;
+    const wide = (item: EquipmentItemDto) => columnsFor(category, item).filter(c => c.wide).map(c => c.header);
+
+    expect(wide(potion)).toEqual(['Effect']);
+    expect(wide(weapon)).toEqual(['Features']);
+  });
+});
+
 describe('cellText', () => {
   it('shows a dash for an empty value and text otherwise', () => {
     expect([null, undefined, '', 0, 'Rare'].map(cellText)).toEqual(['-', '-', '-', '0', 'Rare']);

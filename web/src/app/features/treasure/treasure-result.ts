@@ -15,7 +15,7 @@ interface ResultLine {
   text: string;
   link?: { text: string; queryParams: Record<string, string | number> };
   suffix?: string;
-  stats?: { label: string; value: string }[];
+  stats?: { label: string; value: string; wide?: true }[];
 }
 
 /** Shows a resolved treasure roll as outcomes only; the dice stay in the result for tests, not on screen. */
@@ -97,6 +97,7 @@ export class TreasureResultView {
       .filter(c => !c.listOnly)
       .map(c => ({
         label: c.header,
+        wide: c.wide,
         // A mastercrafted price is always calculated, so it is never shown "as written".
         value: !c.cost ? cellText(c.value(shown))
           : shown.costCopper === null ? item.costText
