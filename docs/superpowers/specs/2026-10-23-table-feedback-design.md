@@ -181,8 +181,9 @@ differ. Each is recorded in `DECISIONS.md`.
 
 - **Scroll cap:** 1500px, not about 1600px. Narrower laptops fill their width minus the page gutter.
 - **Treasure dialog (goals 7–8):**
-  - The title is at the top left. "Re-roll" (renamed from "Roll again") and Close are at the top
-    right, on the same row as the title.
+  - The title is at the top left. Close is a round X icon, drawn like the radio buttons, that floats
+    in the top right corner. "Re-roll" (renamed from "Roll again") sits at the bottom centre.
+  - A click outside the dialog (on the dark backdrop) closes it.
   - The dialog opens near the top of the window at a fixed width, with a minimum height that fits the
     tallest result. Neither the controls nor the dialog's size move between rolls at laptop widths.
   - There is no scrollbar. The dialog scrolls only when the window is too short to hold it.

@@ -6,17 +6,19 @@
     <button type="button" class="btn btn-primary roll-treasure" [disabled]="!ready()" (click)="rollTable()">Roll treasure (D40)</button>
   </div>
 
-  <!-- Title and buttons share the header row, so a new result never moves them. -->
-  <dialog #dialog class="treasure-dialog" aria-labelledby="treasure-result-title">
+  <!-- Same size for every roll, so the title, the corner Close and the bottom Re-roll never move. -->
+  <dialog #dialog class="treasure-dialog" aria-labelledby="treasure-result-title" (click)="closeOnBackdrop($event)">
+    <button type="button" class="dialog-close" aria-label="Close" (click)="close()"></button>
     <div class="dialog-head">
       <h2 id="treasure-result-title">{{ result()?.entry?.roll }} - {{ result()?.entry?.name }}</h2>
-      <button type="button" class="btn btn-primary btn-small" (click)="rollAgain()">Re-roll</button>
-      <button type="button" class="btn btn-secondary btn-small" (click)="close()">Close</button>
     </div>
     @if (result(); as current) {
       <app-treasure-result [result]="current" [items]="items()" [categories]="categories()" [suggested]="suggested()"
         [standard]="coins.standard()" [rates]="rates()!" />
     }
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-primary" (click)="rollAgain()">Re-roll</button>
+    </div>
   </dialog>
 
   @if (entries().error()) {

@@ -68,6 +68,15 @@ export class TreasurePage {
     this.dialog().nativeElement.close();
   }
 
+  /** A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. */
+  protected closeOnBackdrop(event: MouseEvent): void {
+    const dialog = this.dialog().nativeElement;
+    if (event.target !== dialog) return;
+    const box = dialog.getBoundingClientRect();
+    const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+    if (!inside) dialog.close();
+  }
+
   private show(result: TreasureResult): void {
     this.result.set(result);
     this.suggested.set(this.grimoire(result));

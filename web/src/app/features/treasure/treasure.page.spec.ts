@@ -70,7 +70,8 @@ describe('TreasurePage', () => {
       await settle();
     };
     const dialog = () => host.querySelector('dialog')!;
-    const button = (text: string) => [...dialog().querySelectorAll('button')].find(b => b.textContent?.trim() === text)!;
+    const button = (name: string) =>
+      [...dialog().querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent?.trim()) === name)!;
     return { host, roll, dialog, button, settle };
   }
 
@@ -180,14 +181,32 @@ describe('TreasurePage', () => {
     expect(page.dialog().querySelector('h2')?.textContent?.trim()).toBe('40 - Rat');
   });
 
-  it('title, Re-roll and Close share the header row above the result', async () => {
+  it('title heads the dialog, an icon Close floats in the corner, Re-roll sits at the bottom', async () => {
     const page = await render();
     await page.roll('Rat', 40, 2);
 
-    const head = page.dialog().querySelector('.dialog-head')!;
-    expect(head.querySelector('h2')?.textContent?.trim()).toBe('40 - Rat');
-    expect([...head.querySelectorAll('button')].map(b => b.textContent?.trim())).toEqual(['Re-roll', 'Close']);
-    expect(head.nextElementSibling?.tagName).toBe('APP-TREASURE-RESULT');
+    const dialog = page.dialog();
+    expect(dialog.querySelector('.dialog-head h2')?.textContent?.trim()).toBe('40 - Rat');
+    const close = page.button('Close');
+    expect(close.classList).toContain('dialog-close');
+    expect(close.textContent?.trim()).toBe('');
+    expect(dialog.lastElementChild?.classList).toContain('dialog-actions');
+    expect(dialog.lastElementChild?.textContent?.trim()).toBe('Re-roll');
+  });
+
+  it('a click outside the dialog closes it; a click inside does not', async () => {
+    const page = await render();
+    await page.roll('Rat', 40, 2);
+    const dialog = page.dialog();
+    // jsdom lays nothing out, so give the dialog a box: (50, 50) is inside it, (5, 5) is on the backdrop.
+    vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(new DOMRect(10, 10, 100, 100));
+
+    dialog.querySelector('h2')!.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 50, clientY: 50 }));
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 50, clientY: 50 }));
+    expect(dialog.open).toBe(true);
+
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 5, clientY: 5 }));
+    expect(dialog.open).toBe(false);
   });
 
   it('long stats take a full row in the summary', async () => {
