@@ -30,8 +30,9 @@
               }
             ],
             "styles": [
-              "src/dragonbane.css",
-              "src/styles.scss"
+              "src/styles/tokens.css",
+              "src/styles/parchment.css",
+              "src/styles/app.scss"
             ]
           },
           "configurations": {

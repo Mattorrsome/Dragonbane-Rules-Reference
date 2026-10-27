@@ -1,0 +1,44 @@
+/*
+ * Every colour, font, spacing and width token the app uses. The look started from the
+ * dragonbane-parchment-style skill; this file is now the source of truth. Use these, never raw values.
+ */
+/* ================ TOKENS ================ */
+:root {
+  /* Dragonbane Colors (from LaTeX template) */
+  --demon-green: #227262; /* DemonGreen */
+  --demon-green-light: #3d8f7b;
+  --demon-green-dark: #14443a;
+  --dragon-red: #e72f32; /* DragonRed */
+  --dragon-red-light: #ff5658;
+
+  /* Parchment / Page Colors (BoneWhite, Sand, ScrollBrown, StainBrown) */
+  --bone-white: #f5f2eb;
+  --sand: #e8dbbf;
+  --scroll-brown: #552200;
+  --stain-brown: #66552d;
+  --parchment: var(--bone-white);
+  --parchment-dark: #e3dac6;
+  --parchment-darker: #d0c1a0;
+
+  /* Ink */
+  --ink: #231f20; /* InkBlack */
+  --ink-light: #4a3f30;
+
+  /* Accent (matches LaTeX "accent" color) */
+  --accent: var(--demon-green);
+  --accent-light: var(--demon-green-light);
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* Typography (matching Crimson Pro + Colus title font) */
+  --font-display: 'Colus', 'Cinzel Decorative', serif;
+  --font-body: 'Crimson Pro', 'Crimson Text', Georgia, serif;
+
+  /* Layout */
+  --max-width: 1500px;
+}

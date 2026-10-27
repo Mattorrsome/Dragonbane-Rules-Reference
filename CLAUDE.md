@@ -39,7 +39,7 @@ A Dragonbane RPG lookup app used at the gaming table, plus a showcase of current
 - **Never display the Currency Exchange table.** The front end uses it only for conversion.
 - **Never parse treasure effect text at runtime.** Dice specs come from the structured seed.
 - **Pricing order:** base copper → sell rate (100/50/20/10%) → bartering (Success ±20%, Dragon ½ or ×2) → coin standard → round down.
-- **UI:** use the parchment style from the `anthropic-skills:dragonbane-parchment-style` skill. The layout is laptop-first and responsive.
+- **UI:** use the parchment style in `web/src/styles/` (tokens in `tokens.css`, base styles in `parchment.css`, app pieces in `app.scss`). It came from the `anthropic-skills:dragonbane-parchment-style` skill, but the repo copy is the source of truth; new styles use its tokens, never raw colours. The layout is laptop-first and responsive.
 
 
 ## Superpowers step gating (MANDATORY)

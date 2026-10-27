@@ -261,3 +261,9 @@ One entry per significant technical decision. Template:
 - Decision: Radios and checkboxes use `appearance: none` with an inline SVG background: a demon-green (#227262) ring or box on bone white, plus a four-point star exactly centred when `:checked`. Filter rows use `align-items: flex-start`, so every label shares a top; the search box and selects get the same line height and an explicit height (`calc(1.3em + 0.6rem + 4px)`), and an unlabelled button in the row (Roll treasure) aligns to the bottom. An e2e check per section asserts one label top and one control height.
 - Alternatives: A font glyph in `::before` (tried: hard to centre across fonts and sizes); bottom-aligning the row (the cause: the search box was taller than the selects).
 - Why: SVG centres the star at any size; equal control heights plus top alignment keep labels level whatever mix of controls a page has.
+
+## Styles live in web/src/styles, not the skill (2026-10-27)
+- Context: Feedback: the look must not depend on a Claude skill that can change. The app already compiled a copy (`web/src/dragonbane.css` plus `web/src/styles.scss`), but `CLAUDE.md` told future work to follow the skill.
+- Decision: The global styles live in `web/src/styles/`: `tokens.css` (every custom property: colours, fonts, spacing, width), `parchment.css` (the rest of the old `dragonbane.css`) and `app.scss` (the old `styles.scss`), loaded in that order from `angular.json`. `CLAUDE.md` names this folder as the source of truth; the skill is only where the style came from. Pure move: no rule changed.
+- Alternatives: Keep the two files where they were and only change `CLAUDE.md`; Sass partials with `@use` (the token file is plain CSS custom properties, which need no Sass).
+- Why: One file holds every token, so new work reuses them instead of copying raw colours, and nothing outside the repo decides how the app looks.
