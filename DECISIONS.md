@@ -279,3 +279,15 @@ One entry per significant technical decision. Template:
 - Decision: The Melee weapons and Ranged weapons tables gain a last column `Skill`, filled from the Skills table descriptions (swords, axes, hammers incl. clubs and flail, knives, spears incl. lance, halberd and trident, staves, slings, bows, crossbows); unarmed, improvised objects and shields are Brawling. `Weapon` links to `Skill`, the importer fails on an unknown skill name, and skills now import before equipment. `WeaponDto.Skill` carries the skill name.
 - Alternatives: A weapon-to-skill map in importer code (data in two places); inferring the skill from row order (breaks silently on any reorder).
 - Why: The markdown stays the single source of truth, and a typo fails the import instead of producing a weapon with no skill. Halberd is filed under Spears by the table's grouping; change one cell if the rulebook says Axes.
+
+## NPC table imported, reversing its exclusion (2026-10-27)
+- Context: The 2026-10-22 design excluded `Dragonbane_NPC_Table.md`. The 2026-10-27 feedback asks for an NPC Manager that starts from the book's typical NPCs.
+- Decision: The importer loads the NPC table like every other section: `Npc` (name without "(boss)", `IsBoss`, HP, WP, damage bonus as an `Attribute` link plus dice) with junction tables `NpcSkill` (level), `NpcHeroicAbility` (count, from "Robust x6") and `NpcGear`, each linked to its Reference row and kept in source order by Id. "Magic school" (Archmage) is not a Skills row, so `NpcSkill` holds either a skill link or that name, enforced by a check constraint. Every other unmatched name fails the import.
+- Alternatives: Keep NPCs as text cells (no links for descriptions or weapon lines); a front-end copy of the table (data in two places).
+- Why: The NPC Manager needs each name linked to its description, damage and armour rating; the schema rule (normalised, no bags) and the single-source rule hold.
+
+## NPC name aliases in the importer (2026-10-27)
+- Context: Three NPC gear names are written differently from the Equipment table: "leather armour" (Leather), "Wooden club" (Small wooden club or Large wooden club) and "Relevant book" (Book). Other names differ only in case ("studded leather", "short bow").
+- Decision: Lookups ignore case, and a three-entry alias map in `NpcImporter` resolves the rest; "Wooden club" maps to Small wooden club (a villager's one-handed club). This is hand-curated data, like the treasure seed.
+- Alternatives: Edit the NPC markdown to the Equipment names (the transcription would no longer match the book); skip unmatched gear (silently loses items).
+- Why: The source stays as printed and every gear name still links to a real item; a new mismatch fails the import rather than vanishing.

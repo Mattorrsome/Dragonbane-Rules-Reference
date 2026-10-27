@@ -21,7 +21,7 @@ Markdown files in `C:\Projects\Dragonbane\Source Material\`:
 | `Dragonbane_Equipment_Tables.md` | Equipment |
 | `Dragonbane_Treasure_Table.md` | Treasure |
 
-`Dragonbane_NPC_Table.md` also exists and is **deliberately excluded**.
+`Dragonbane_NPC_Table.md` was excluded here; since 2026-10-27 it is imported for the NPC Manager (see `2026-10-27-npc-manager-and-feedback-design.md`).
 
 The markdown files are the source of truth for display data. An importer loads them into the database; data is never edited in two places. (More sections may be added later — "5 for now" — so adding a section should follow an obvious repeatable pattern.)
 
@@ -123,7 +123,7 @@ The markdown files are the source of truth for display data. An importer loads t
   **Other sections:** `Skill` (with `Attribute` and skill-type lookups), `HeroicAbility`, `TreasureEntry` with child `TreasureOutcome` rows holding dice specs, `CurrencyRate`.
 
 ## Non-goals
-- NPC table.
+- NPC table (reversed 2026-10-27: see `2026-10-27-npc-manager-and-feedback-design.md`).
 - Demon bartering result.
 - Search across all sections at once.
 - Offline use / PWA / service worker — a network connection can be assumed.

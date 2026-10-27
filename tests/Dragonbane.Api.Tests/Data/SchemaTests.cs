@@ -36,6 +36,7 @@ public sealed class SchemaTests : IDisposable
         {
             "Spell", "RankedSpell", "Recipe", "EquipmentItem", "Weapon", "Armour",
             "SpellRequirement", "WeaponWeaponFeature", "WeaponDamageType", "TreasureRoll",
+            "Npc", "NpcSkill", "NpcHeroicAbility", "NpcGear",
         });
     }
 

@@ -22,7 +22,7 @@ All five sections built: API in `Dragonbane.slnx` (`src/Dragonbane.Api`, `tests/
 
 ## What it is
 
-A Dragonbane RPG lookup app used at the gaming table, plus a showcase of current Angular and ASP.NET best practices. It has five sections: Skills, Heroic Abilities, Spells, Equipment and Treasure. `Dragonbane_NPC_Table.md` is deliberately excluded.
+A Dragonbane RPG lookup app used at the gaming table, plus a showcase of current Angular and ASP.NET best practices. The Reference has five sections: Skills, Heroic Abilities, Spells, Equipment and Treasure. The NPC Manager (`/npcs`) tweaks the typical NPCs from `Dragonbane_NPC_Table.md` and saves them in local storage; see `docs/superpowers/specs/2026-10-27-npc-manager-and-feedback-design.md`.
 
 ## Architecture (from the design)
 

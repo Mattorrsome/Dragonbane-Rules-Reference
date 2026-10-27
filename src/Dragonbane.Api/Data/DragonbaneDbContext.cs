@@ -27,6 +27,10 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
     public DbSet<TreasureEntry> TreasureEntries => Set<TreasureEntry>();
     public DbSet<TreasureRoll> TreasureRolls => Set<TreasureRoll>();
     public DbSet<TreasureOutcome> TreasureOutcomes => Set<TreasureOutcome>();
+    public DbSet<Npc> Npcs => Set<Npc>();
+    public DbSet<NpcSkill> NpcSkills => Set<NpcSkill>();
+    public DbSet<NpcHeroicAbility> NpcHeroicAbilities => Set<NpcHeroicAbility>();
+    public DbSet<NpcGear> NpcGear => Set<NpcGear>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -51,6 +55,13 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
         model.Entity<TreasureOutcome>().HasOne<MagicSchool>().WithMany().HasForeignKey(o => o.MagicSchoolId);
         model.Entity<TreasureRoll>().ToTable(t => t.HasCheckConstraint(
             "CK_TreasureRoll_OneParent", "(\"EntryId\" IS NULL) <> (\"OutcomeId\" IS NULL)"));
+
+        model.Entity<Npc>().HasMany(n => n.Skills).WithOne().HasForeignKey(s => s.NpcId);
+        model.Entity<Npc>().HasMany(n => n.HeroicAbilities).WithOne().HasForeignKey(a => a.NpcId);
+        model.Entity<Npc>().HasMany(n => n.Gear).WithOne().HasForeignKey(g => g.NpcId);
+        model.Entity<NpcSkill>().ToTable(t => t.HasCheckConstraint(
+            "CK_NpcSkill_OneName", "(\"SkillId\" IS NULL) <> (\"UnlinkedName\" IS NULL)"));
+        model.Entity<Npc>().HasIndex(e => e.Name).IsUnique();
 
         model.Entity<CurrencyRate>().HasIndex(e => e.Name).IsUnique();
         model.Entity<EquipmentCategory>().HasIndex(e => e.Name).IsUnique();

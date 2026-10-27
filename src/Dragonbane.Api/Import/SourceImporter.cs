@@ -42,6 +42,7 @@ public static class SourceImporter
         HeroicAbilitiesImporter.Import(Read("Dragonbane_Heroic_Abilities_Table.md"), db);
         SpellsImporter.Import(Read("Dragonbane_Spell_Tables.md"), db);
         TreasureImporter.Import(Read("Dragonbane_Treasure_Table.md"), db);
+        NpcImporter.Import(Read("Dragonbane_NPC_Table.md"), db);
         db.ChangeTracker.Clear();
 
         // Leave one self-contained file (no -wal/-shm sidecars) that can be copied to a server and opened read-only.
