@@ -116,6 +116,20 @@ describe('NpcEditor', () => {
     expect(e.field<HTMLInputElement>('HP').value).toBe('26');
   });
 
+  it('clearing a count or level box while retyping changes nothing until a number is typed', () => {
+    const e = render(fromTypical(BANDIT_CHIEF, ref));
+
+    e.type(e.field('Robust count'), '');
+    expect(e.chips('Heroic abilities')).toEqual(['Berserker', 'Robust', 'Veteran']);
+    expect(e.field<HTMLInputElement>('HP').value).toBe('30');
+    e.type(e.field('Robust count'), '4');
+    expect(e.field<HTMLInputElement>('HP').value).toBe('26');
+
+    e.type(e.field('Awareness level'), '');
+    e.click('Save');
+    expect(e.saved[0].skills[0]).toEqual({ name: 'Awareness', level: 12 });
+  });
+
   it('the preview follows the draft and the descriptions checkbox', () => {
     const e = render(fromTypical(BANDIT_CHIEF, ref));
 

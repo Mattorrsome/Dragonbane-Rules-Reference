@@ -1,4 +1,4 @@
-import { fileName } from './npc-export';
+import { download, fileName } from './npc-export';
 
 describe('fileName', () => {
   it('slugs the NPC name', () => {
@@ -14,5 +14,29 @@ describe('fileName', () => {
 
   it('keeps letters with accents', () => {
     expect(fileName('Ásgerd', 'md')).toBe('ásgerd.md');
+  });
+});
+
+describe('download', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('clicks a link to the blob and frees the URL only after the browser has started the download', () => {
+    vi.useFakeTimers();
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x');
+    const clicked: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      clicked.push(this.download);
+    });
+
+    download(new Blob(['x']), 'grok.txt');
+
+    expect(clicked).toEqual(['grok.txt']);
+    expect(revoke).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    expect(revoke).toHaveBeenCalledWith('blob:x');
   });
 });

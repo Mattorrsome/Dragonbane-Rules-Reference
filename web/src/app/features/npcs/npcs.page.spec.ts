@@ -213,6 +213,25 @@ describe('NpcsPage', () => {
       expect(TestBed.inject(NpcStore).npcs()).toEqual([]);
     });
 
+    it('a drag that starts inside and ends on the backdrop does not close the editor', async () => {
+      const page = await render();
+      page.button('Tweak Guard').click();
+      await page.settle();
+      const d = dialog(page.host);
+      vi.spyOn(d, 'getBoundingClientRect').mockReturnValue(new DOMRect(10, 10, 100, 100));
+
+      // Selecting text in the Name box and releasing outside: the click lands on the dialog itself.
+      d.querySelector('#npc-name')!.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 50, clientY: 50 }));
+      d.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 5, clientY: 5 }));
+      await page.settle();
+      expect(d.open).toBe(true);
+
+      // A real backdrop click: pressed and released outside.
+      d.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 5, clientY: 5 }));
+      d.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 5, clientY: 5 }));
+      await page.settle();
+      expect(d.open).toBe(false);
+    });
     it('Export opens the export menu for that NPC', async () => {
       const store = TestBed.inject(NpcStore);
       store.save({ ...fromTypical(BANDIT_CHIEF, ref), name: 'Grok' });

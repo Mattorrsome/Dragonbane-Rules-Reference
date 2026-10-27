@@ -15,6 +15,12 @@ export function spellLabel(spell: NpcSpellRef): string {
   return `${sentenceCase(spell.name)} (${spell.school}${kind})`;
 }
 
+/** The whole number in a number box, or null while it is empty or half-typed (mid-edit values change nothing). */
+function typedInteger(event: Event): number | null {
+  const raw = (event.target as HTMLInputElement).value.trim();
+  return /^-?\d+$/.test(raw) ? Number(raw) : null;
+}
+
 /** Edits a copy of an NPC with a live card preview; emits the edited NPC on Save. */
 @Component({
   selector: 'app-npc-editor',
@@ -62,12 +68,16 @@ export class NpcEditor {
   }
 
   protected setLevel(name: string, event: Event): void {
-    const level = Number((event.target as HTMLInputElement).value);
+    const level = typedInteger(event);
+    if (level === null) return;
     this.draft.update(d => ({ ...d, skills: d.skills.map(s => (s.name === name ? { ...s, level } : s)) }));
   }
 
+  /** Removing an ability is the ✕ button's job; an emptied count box keeps the last count. */
   protected setCount(name: string, event: Event): void {
-    this.draft.update(d => setAbilityCount(d, name, Number((event.target as HTMLInputElement).value)));
+    const count = typedInteger(event);
+    if (count === null) return;
+    this.draft.update(d => setAbilityCount(d, name, count));
   }
 
   protected removeSkill(name: string): void {

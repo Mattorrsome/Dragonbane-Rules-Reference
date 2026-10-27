@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { DEFAULT_MOVEMENT, Npc, SavedNpc } from './npc';
 
 const KEY = 'dragonbane.npcs.v1';
@@ -11,6 +11,15 @@ const KEY = 'dragonbane.npcs.v1';
 export class NpcStore {
   private readonly value = signal<readonly SavedNpc[]>(read());
   readonly npcs = this.value.asReadonly();
+
+  constructor() {
+    // Another tab saved or deleted: take its list, so this tab's next save does not overwrite it.
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === KEY) this.value.set(read());
+    };
+    window.addEventListener('storage', onStorage);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('storage', onStorage));
+  }
 
   /** Adds a new NPC (no id) or replaces the saved one with the same id; returns it as saved. */
   save(npc: Npc & { id?: string }): SavedNpc {

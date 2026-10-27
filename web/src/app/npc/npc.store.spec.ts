@@ -77,6 +77,28 @@ describe('NpcStore', () => {
     }]);
   });
 
+  it('picks up NPCs saved in another tab, so its own next save keeps them', () => {
+    const here = store();
+    here.save({ ...guard(), name: 'Here' });
+    // Another tab saves on top of what it read, then the browser tells this tab.
+    const other = [...JSON.parse(localStorage.getItem(KEY)!), { ...guard(), id: 'other', name: 'There' }];
+    localStorage.setItem(KEY, JSON.stringify(other));
+    window.dispatchEvent(new StorageEvent('storage', { key: KEY }));
+
+    expect(here.npcs().map(n => n.name)).toEqual(['Here', 'There']);
+    here.save({ ...guard(), name: 'Later' });
+    expect(store().npcs().map(n => n.name)).toEqual(['Here', 'There', 'Later']);
+  });
+
+  it('ignores storage events for other keys', () => {
+    const here = store();
+    here.save({ ...guard(), name: 'Here' });
+    localStorage.setItem('dragonbane.coinStandard', 'gold');
+    window.dispatchEvent(new StorageEvent('storage', { key: 'dragonbane.coinStandard' }));
+
+    expect(here.npcs().map(n => n.name)).toEqual(['Here']);
+  });
+
   it('keeps NPCs in memory when storage is blocked', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');

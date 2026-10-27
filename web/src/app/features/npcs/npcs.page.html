@@ -86,7 +86,7 @@
 </section>
 
 <!-- Tweak / Edit: the editor and its live card preview over the tables. Escape, Close, Cancel and the backdrop close it. -->
-<dialog #dialog class="app-dialog npc-dialog" aria-labelledby="npc-dialog-title" (close)="editing.set(null)" (click)="closeOnBackdrop($event)">
+<dialog #dialog class="app-dialog npc-dialog" aria-labelledby="npc-dialog-title" (close)="editing.set(null)" (mousedown)="pressStart($event)" (click)="closeOnBackdrop($event)">
   <button type="button" class="dialog-close" aria-label="Close" (click)="close()"></button>
   <div class="dialog-body">
     @if (editing(); as npc) {
@@ -97,7 +97,7 @@
 </dialog>
 
 <!-- Export: copy or download a saved NPC as an image, text or Markdown. -->
-<dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (click)="closeOnBackdrop($event)">
+<dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (mousedown)="pressStart($event)" (click)="closeOnBackdrop($event)">
   <button type="button" class="dialog-close" aria-label="Close" (click)="exporting.set(null)"></button>
   <div class="dialog-body">
     @if (exporting(); as npc) {

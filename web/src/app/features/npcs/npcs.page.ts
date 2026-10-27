@@ -59,16 +59,21 @@ export class NpcsPage {
     this.editing.set(null);
   }
 
+  /** Whether the last press began on a dialog's backdrop (not inside its box). */
+  private pressedOnBackdrop = false;
+
+  protected pressStart(event: MouseEvent): void {
+    this.pressedOnBackdrop = onBackdrop(event);
+  }
+
   /**
-   * A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. The
-   * dialog's (close) event then clears its signal.
+   * A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. Both the
+   * press and the release must be on the backdrop, so a text selection dragged out of the editor keeps the draft.
+   * The dialog's (close) event then clears its signal.
    */
   protected closeOnBackdrop(event: MouseEvent): void {
-    const dialog = event.currentTarget as HTMLDialogElement;
-    if (event.target !== dialog) return;
-    const box = dialog.getBoundingClientRect();
-    const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
-    if (!inside) dialog.close();
+    if (this.pressedOnBackdrop && onBackdrop(event)) (event.currentTarget as HTMLDialogElement).close();
+    this.pressedOnBackdrop = false;
   }
 
   protected tweak(dto: NpcDto): void {
@@ -103,6 +108,14 @@ export class NpcsPage {
       return { text: name, description: item ? describeItem(item) : null };
     });
   }
+}
+
+/** The event hit the dialog element itself at a point outside its box: the backdrop. */
+function onBackdrop(event: MouseEvent): boolean {
+  const dialog = event.currentTarget as HTMLDialogElement;
+  if (event.target !== dialog) return false;
+  const box = dialog.getBoundingClientRect();
+  return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
 }
 
 /** Opens a modal dialog or closes it, whichever it is not already. */

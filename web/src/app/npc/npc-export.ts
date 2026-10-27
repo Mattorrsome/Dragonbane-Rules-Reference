@@ -15,5 +15,8 @@ export function download(blob: Blob, name: string): void {
   link.href = url;
   link.download = name;
   link.click();
-  URL.revokeObjectURL(url);
+  // Freed later: revoking straight after the click cancels the download in some browsers (Safari, older Firefox).
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_AFTER_MS);
 }
+
+const REVOKE_AFTER_MS = 10_000;
