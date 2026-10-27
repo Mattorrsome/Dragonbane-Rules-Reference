@@ -29,7 +29,8 @@ for (const viewport of viewports) {
   test.describe(`${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport });
 
-    for (const route of routes) {
+    // The NPC Manager has no filter row, so it joins this check but not the filter alignment below.
+    for (const route of [...routes, '/npcs']) {
       test(`${route} is axe-clean and nothing overflows`, async ({ page }) => {
         await page.goto(route);
         await page.locator('table').first().waitFor();
@@ -218,3 +219,65 @@ test('app menu opens, closes on Escape back to its button, and switches apps', a
   await expect(page.locator('.nav-brand')).toHaveText('NPC Manager');
   await expect(page.getByRole('navigation', { name: 'Sections' })).toHaveCount(0);
 });
+
+for (const viewport of viewports) {
+  test.describe(`NPC Manager ${viewport.width}×${viewport.height}`, () => {
+    test.use({ viewport });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/npcs');
+      await page.evaluate(() => localStorage.removeItem('dragonbane.npcs.v1'));
+      await page.reload();
+      await page.getByRole('button', { name: 'Tweak Bandit chief' }).waitFor();
+      await expect(page.getByRole('button', { name: 'Tweak Bandit chief' })).toBeEnabled();
+    });
+
+    test('tweak dialog is accessible, fits, and saves an NPC that survives a reload', async ({ page }) => {
+      await page.getByRole('button', { name: 'Tweak Bandit chief' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Tweak Bandit chief' });
+      await expect(dialog).toBeVisible();
+
+      const results = await new AxeBuilder({ page }).include('dialog[open]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
+      const close = (await dialog.getByRole('button', { name: 'Close' }).boundingBox())!;
+      expect(close.x + close.width).toBeLessThanOrEqual(viewport.width);
+      expect(close.y).toBeGreaterThanOrEqual(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+      const { form, preview } = await dialog.evaluate(d => ({
+        form: d.querySelector('.npc-form')!.getBoundingClientRect().toJSON(),
+        preview: d.querySelector('.npc-preview')!.getBoundingClientRect().toJSON(),
+      }));
+      // Side by side on a laptop, stacked (preview under the form) on a phone.
+      if (viewport.width < 600) expect(preview.top).toBeGreaterThanOrEqual(form.bottom);
+      else expect(preview.left).toBeGreaterThanOrEqual(form.right);
+
+      await dialog.getByLabel('Name', { exact: true }).fill('Grok');
+      await expect(dialog.locator('.npc-card-name')).toHaveText('Grok');
+      await dialog.getByRole('button', { name: 'Save' }).click();
+      await expect(dialog).toBeHidden();
+      await expect(page.getByRole('table', { name: 'My NPCs' })).toContainText('Grok');
+
+      await page.reload();
+      await expect(page.getByRole('table', { name: 'My NPCs' })).toContainText('Bandit chief');
+      await expect(page.getByRole('button', { name: 'Edit Grok' })).toBeVisible();
+    });
+
+    test('export dialog is accessible', async ({ page }) => {
+      await page.getByRole('button', { name: 'Tweak Guard' }).click();
+      const tweak = page.getByRole('dialog', { name: 'Tweak Guard' });
+      await tweak.getByLabel('Name', { exact: true }).fill('Sergeant Pell');
+      await tweak.getByRole('button', { name: 'Save' }).click();
+      await expect(tweak).toBeHidden();
+
+      await page.getByRole('button', { name: 'Export Sergeant Pell' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export Sergeant Pell' });
+      await expect(dialog).toBeVisible();
+      const results = await new AxeBuilder({ page }).include('dialog[open]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+    });
+  });
+}
