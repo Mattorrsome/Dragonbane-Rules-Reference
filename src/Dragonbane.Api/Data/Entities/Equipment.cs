@@ -66,6 +66,9 @@ public class Weapon : EquipmentItem
     public int? Durability { get; set; }
     public bool IsRanged { get; set; }
     public string FeaturesText { get; set; } = "";
+    /// <summary>The skill an attack with this weapon rolls against (the markdown's Skill column).</summary>
+    public int SkillId { get; set; }
+    public Skill Skill { get; set; } = null!;
     public List<WeaponFeature> Features { get; set; } = [];
     public List<DamageType> DamageTypes { get; set; } = [];
 }

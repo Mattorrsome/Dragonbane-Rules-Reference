@@ -1105,6 +1105,7 @@ export interface components {
             durability: null | number;
             isRanged: boolean;
             featuresText: string;
+            skill: string;
         };
     };
     responses: never;

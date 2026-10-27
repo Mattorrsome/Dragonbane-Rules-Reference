@@ -11,7 +11,7 @@ import { ROLL_DELAY_MS, TreasurePage } from './treasure.page';
 const battleaxe: EquipmentItemDto = {
   id: 19, categoryId: 1, name: 'Battleaxe', costCopper: 1000, costUnit: null, costOrMore: false, costText: '10 gold', supply: 'Uncommon',
   weight: null, effect: null, armour: null,
-  weapon: { grip: '1H', strRequirement: 13, range: '2', damage: '2D8', durability: 9, isRanged: false, featuresText: 'Toppling, slashing' },
+  weapon: { grip: '1H', strRequirement: 13, range: '2', damage: '2D8', durability: 9, isRanged: false, featuresText: 'Toppling, slashing', skill: 'Axes' },
 };
 const potion: EquipmentItemDto = {
   id: 114, categoryId: 9, name: 'Healing potion, dose', costCopper: 1000, costUnit: null, costOrMore: false, costText: '10 gold', supply: 'Rare',

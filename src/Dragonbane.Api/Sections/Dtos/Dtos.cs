@@ -41,7 +41,8 @@ public sealed record MagicSchoolDto(int Id, string Name, string Description, str
         new MagicSchoolDto(m.Id, m.Name, m.Description, m.Note);
 }
 
-public sealed record WeaponDto(string? Grip, int? StrRequirement, string Range, string Damage, int? Durability, bool IsRanged, string FeaturesText);
+public sealed record WeaponDto(string? Grip, int? StrRequirement, string Range, string Damage, int? Durability, bool IsRanged,
+    string FeaturesText, string Skill);
 
 public sealed record ArmourDto(int Rating, bool IsHelmet);
 
@@ -53,7 +54,7 @@ public sealed record EquipmentItemDto(int Id, int CategoryId, string Name, int? 
         i.Id, i.CategoryId, i.Name, i.CostCopper, i.CostUnit, i.CostOrMore, i.CostText, i.Supply!.Name, i.Weight, i.Effect,
         i is Weapon
             ? new WeaponDto(((Weapon)i).Grip, ((Weapon)i).StrRequirement, ((Weapon)i).Range, ((Weapon)i).Damage,
-                ((Weapon)i).Durability, ((Weapon)i).IsRanged, ((Weapon)i).FeaturesText)
+                ((Weapon)i).Durability, ((Weapon)i).IsRanged, ((Weapon)i).FeaturesText, ((Weapon)i).Skill.Name)
             : null,
         i is Armour ? new ArmourDto(((Armour)i).Rating, ((Armour)i).IsHelmet) : null);
 }

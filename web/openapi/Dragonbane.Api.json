@@ -1388,7 +1388,8 @@
           "damage",
           "durability",
           "isRanged",
-          "featuresText"
+          "featuresText",
+          "skill"
         ],
         "type": "object",
         "properties": {
@@ -1422,6 +1423,9 @@
             "type": "boolean"
           },
           "featuresText": {
+            "type": "string"
+          },
+          "skill": {
             "type": "string"
           }
         }

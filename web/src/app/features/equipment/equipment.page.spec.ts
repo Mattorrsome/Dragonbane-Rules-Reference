@@ -13,7 +13,7 @@ const categories: EquipmentCategoryDto[] = [
 
 const weapon = (id: number, name: string, costCopper: number, costText: string, str: number | null, durability: number | null): EquipmentItemDto => ({
   id, categoryId: 1, name, costCopper, costUnit: null, costOrMore: false, costText, supply: 'Common', weight: null, effect: null,
-  weapon: { grip: '1H', strRequirement: str, range: '2', damage: '2D8', durability, isRanged: false, featuresText: 'Toppling, slashing' },
+  weapon: { grip: '1H', strRequirement: str, range: '2', damage: '2D8', durability, isRanged: false, featuresText: 'Toppling, slashing', skill: 'Axes' },
   armour: null,
 });
 

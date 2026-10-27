@@ -32,6 +32,7 @@ public static class EquipmentImporter
         var supplies = db.Supplies.ToDictionary(s => s.Name);
         var features = db.WeaponFeatures.ToDictionary(f => f.Name);
         var damageTypes = db.DamageTypes.ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
+        var skills = db.Skills.ToDictionary(s => s.Name);
 
         foreach (var section in doc.Where(s => s.Level == 2 && s.Columns.Count > 0 && !GlossarySections.Contains(s.Heading)))
         {
@@ -52,7 +53,7 @@ public static class EquipmentImporter
             {
                 var item = section.Heading switch
                 {
-                    "Melee weapons" or "Ranged weapons" => Weapon(row, section.Heading == "Ranged weapons", features, damageTypes),
+                    "Melee weapons" or "Ranged weapons" => Weapon(row, section.Heading == "Ranged weapons", features, damageTypes, skills),
                     "Armour and helmets" => Armour(row),
                     _ => new EquipmentItem { Effect = Cell(row, category.EffectHeader) },
                 };
@@ -72,12 +73,15 @@ public static class EquipmentImporter
     }
 
     static Weapon Weapon(IReadOnlyDictionary<string, string> row, bool isRanged,
-        Dictionary<string, WeaponFeature> features, Dictionary<string, DamageType> damageTypes)
+        Dictionary<string, WeaponFeature> features, Dictionary<string, DamageType> damageTypes, Dictionary<string, Skill> skills)
     {
         var text = row["Features"];
         var split = text.IndexOf(';');
         var weapon = new Weapon
         {
+            Skill = skills.TryGetValue(row["Skill"], out var skill)
+                ? skill
+                : throw new InvalidDataException($"Weapon '{row["Weapon"]}' has unknown skill '{row["Skill"]}'."),
             Grip = Cell(row, "Grip"),
             StrRequirement = Cell(row, "STR") is { } str ? int.Parse(str) : null,
             Range = row["Range"],

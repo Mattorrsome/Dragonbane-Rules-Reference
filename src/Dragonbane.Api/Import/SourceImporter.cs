@@ -34,10 +34,11 @@ public static class SourceImporter
         IReadOnlyList<MarkdownSection> Read(string file) =>
             MarkdownDocument.Parse(File.ReadAllText(Path.Combine(sourceDirectory, file)));
 
+        // Skills first: weapons link to their skill.
+        SkillsImporter.Import(Read("Dragonbane_Skills_Table.md"), db);
         var equipment = Read("Dragonbane_Equipment_Tables.md");
         CurrencyImporter.Import(equipment, db);
         EquipmentImporter.Import(equipment, db);
-        SkillsImporter.Import(Read("Dragonbane_Skills_Table.md"), db);
         HeroicAbilitiesImporter.Import(Read("Dragonbane_Heroic_Abilities_Table.md"), db);
         SpellsImporter.Import(Read("Dragonbane_Spell_Tables.md"), db);
         TreasureImporter.Import(Read("Dragonbane_Treasure_Table.md"), db);

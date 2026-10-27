@@ -17,6 +17,7 @@ public sealed class TreasureImporterTests : IDisposable
         _connection.Open();
         _db = new DragonbaneDbContext(new DbContextOptionsBuilder<DragonbaneDbContext>().UseSqlite(_connection).Options);
         _db.Database.EnsureCreated();
+        SkillsImporter.Import(Read("Dragonbane_Skills_Table.md"), _db);
         var equipment = Read("Dragonbane_Equipment_Tables.md");
         CurrencyImporter.Import(equipment, _db);
         EquipmentImporter.Import(equipment, _db);

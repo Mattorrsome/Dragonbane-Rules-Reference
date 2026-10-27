@@ -24,10 +24,14 @@ public sealed class EquipmentImporterTests : IDisposable
         _connection.Dispose();
     }
 
+    static IReadOnlyList<MarkdownSection> Read(string file) =>
+        MarkdownDocument.Parse(File.ReadAllText(Path.Combine(TestPaths.SourceMaterial, file)));
+
+    /// <summary>Skills first: weapons link to their skill.</summary>
     void ImportRealFile()
     {
-        var doc = MarkdownDocument.Parse(
-            File.ReadAllText(Path.Combine(TestPaths.SourceMaterial, "Dragonbane_Equipment_Tables.md")));
+        SkillsImporter.Import(Read("Dragonbane_Skills_Table.md"), _db);
+        var doc = Read("Dragonbane_Equipment_Tables.md");
         CurrencyImporter.Import(doc, _db);
         EquipmentImporter.Import(doc, _db);
         _db.ChangeTracker.Clear();
@@ -95,17 +99,51 @@ public sealed class EquipmentImporterTests : IDisposable
     }
 
     [Fact]
-    public void Unknown_feature_token_fails_loudly()
+    public void Weapons_link_their_skill()
     {
-        var doc = MarkdownDocument.Parse("""
+        ImportRealFile();
+        var skills = _db.Weapons.Include(w => w.Skill).ToDictionary(w => w.Name, w => w.Skill.Name);
+
+        Assert.Equal("Hammers", skills["Heavy warhammer"]);
+        Assert.Equal("Brawling", skills["Large shield"]);
+        Assert.Equal("Brawling", skills["Unarmed"]);
+        Assert.Equal("Knives", skills["Parrying dagger"]);
+        Assert.Equal("Spears", skills["Halberd"]);
+        Assert.Equal("Crossbows", skills["Hand crossbow"]);
+        Assert.Equal(35, skills.Count);
+    }
+
+    /// <summary>One melee row in a minimal document; Brawling is the only skill that exists.</summary>
+    void ImportOneWeapon(string skill, string features)
+    {
+        SkillsImporter.Import(MarkdownDocument.Parse("""
+            ## Skills
+
+            | Name | Type | Attribute | Description |
+            | --- | --- | --- | --- |
+            | Brawling | Weapon | STR | Fists. |
+            """), _db);
+        EquipmentImporter.Import(MarkdownDocument.Parse($"""
             ## Melee weapons
 
-            | Weapon | Grip | STR | Range | Damage | Durability | Cost Copper | Cost | Supply | Features |
-            | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | --- | --- |
-            | Club | 1H | - | 2 | D8 | 9 | 10 | 1 silver | - | Bludgeoning, sparkly |
-            """);
+            | Weapon | Grip | STR | Range | Damage | Durability | Cost Copper | Cost | Supply | Features | Skill |
+            | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | --- | --- | --- |
+            | Club | 1H | - | 2 | D8 | 9 | 10 | 1 silver | - | {features} | {skill} |
+            """), _db);
+    }
 
-        var ex = Assert.Throws<InvalidDataException>(() => EquipmentImporter.Import(doc, _db));
+    [Fact]
+    public void Unknown_feature_token_fails_loudly()
+    {
+        var ex = Assert.Throws<InvalidDataException>(() => ImportOneWeapon("Brawling", "Bludgeoning, sparkly"));
         Assert.Contains("sparkly", ex.Message);
+    }
+
+    [Fact]
+    public void Unknown_weapon_skill_fails_loudly()
+    {
+        var ex = Assert.Throws<InvalidDataException>(() => ImportOneWeapon("Juggling", "Bludgeoning"));
+        Assert.Contains("Club", ex.Message);
+        Assert.Contains("Juggling", ex.Message);
     }
 }

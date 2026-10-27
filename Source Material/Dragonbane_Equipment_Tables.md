@@ -45,50 +45,50 @@
 
 ## Melee weapons
 
-| Weapon | Grip | STR | Range | Damage | Durability | Cost Copper | Cost | Supply | Features |
-| --- | --- | ---: | ---: | --- | ---: | ---: | ---: | --- | --- |
-| Unarmed | - | - | 2 | D6 | - | - | - | - | Bludgeoning |
-| Light blunt object | 1H | - | STR | D8 | 3 | - | - | - | Bludgeoning, thrown |
-| Heavy blunt object | 2H | 16 | 2 | 2D8 | 3 | - | - | - | Bludgeoning |
-| Knife | 1H | - | STR | D8 | 6 | 50 | 5 silver | Common | Subtle, piercing, thrown |
-| Dagger | 1H | - | STR | D8 | 9 | 100 | 1 gold | Common | Subtle, piercing, slashing, thrown |
-| Parrying dagger | 1H | - | 2 | D6 | 15 | 200 | 2 gold | Uncommon | Subtle, piercing, slashing |
-| Short sword | 1H | 7 | 2 | D10 | 12 | 800 | 8 gold | Common | Piercing, slashing |
-| Broadsword | 1H | 10 | 2 | 2D6 | 15 | 1200 | 12 gold | Common | Piercing, slashing |
-| Longsword | 1H | 13 | 2 | 2D8 | 15 | 2500 | 25 gold | Uncommon | Piercing, slashing |
-| Greatsword | 2H | 16 | 2 | 2D10 | 15 | 5000 | 50 gold | Rare | Piercing, slashing |
-| Scimitar | 1H | 10 | 2 | 2D6 | 12 | 1000 | 10 gold | Uncommon | Toppling, slashing |
-| Handaxe | 1H | 7 | STR | 2D6 | 9 | 200 | 2 gold | Common | Toppling, slashing, thrown |
-| Battleaxe | 1H | 13 | 2 | 2D8 | 9 | 1000 | 10 gold | Uncommon | Toppling, slashing |
-| Two-handed axe | 2H | 16 | 2 | 2D10 | 9 | 2500 | 25 gold | Uncommon | Toppling, slashing |
-| Mace | 1H | 7 | 2 | 2D4 | 12 | 800 | 8 gold | Common | Bludgeoning |
-| Morningstar | 1H | 13 | 2 | 2D8 | 12 | 1400 | 14 gold | Uncommon | Bludgeoning |
-| Flail | 1H | 13 | 2 | 2D8 | - | 1600 | 16 gold | Uncommon | Bludgeoning, toppling; cannot parry |
-| Light warhammer | 1H | 10 | 2 | 2D6 | 12 | 1000 | 10 gold | Uncommon | Bludgeoning, toppling |
-| Heavy warhammer | 2H | 16 | 2 | 2D10 | 12 | 2000 | 20 gold | Uncommon | Bludgeoning, toppling |
-| Small wooden club | 1H | 7 | 2 | D8 | 9 | 10 | 1 silver | Common | Bludgeoning |
-| Large wooden club | 2H | 16 | 2 | 2D8 | 12 | 20 | 2 silver | Common | Bludgeoning |
-| Staff | 2H | 7 | 2 | D8 | 9 | 20 | 2 silver | Common | Bludgeoning, toppling |
-| Short spear | 1H | 7 | STR x 2 | D10 | 9 | 50 | 5 silver | Common | Piercing, thrown |
-| Long spear | 2H | 10 | 4 | 2D8 | 9 | 100 | 1 gold | Common | Long, piercing |
-| Lance | 1H | 13 | 4 | 2D10 | 12 | 1200 | 12 gold | Rare | Long, piercing; requires combat-trained mount |
-| Halberd | 2H | 13 | 4 | 2D8 | 12 | 2000 | 20 gold | Rare | Long, toppling, piercing, slashing |
-| Trident | 1H | 10 | STR | 2D6 | 9 | 500 | 5 gold | Uncommon | Toppling, piercing, thrown |
-| Small shield | 1H | 7 | 2 | D8 | 15 | 400 | 4 gold | Common | Bludgeoning |
-| Large shield | 1H | 13 | 2 | D8 | 18 | 1200 | 12 gold | Common | Bludgeoning |
+| Weapon | Grip | STR | Range | Damage | Durability | Cost Copper | Cost | Supply | Features | Skill |
+| --- | --- | ---: | ---: | --- | ---: | ---: | ---: | --- | --- | --- |
+| Unarmed | - | - | 2 | D6 | - | - | - | - | Bludgeoning | Brawling |
+| Light blunt object | 1H | - | STR | D8 | 3 | - | - | - | Bludgeoning, thrown | Brawling |
+| Heavy blunt object | 2H | 16 | 2 | 2D8 | 3 | - | - | - | Bludgeoning | Brawling |
+| Knife | 1H | - | STR | D8 | 6 | 50 | 5 silver | Common | Subtle, piercing, thrown | Knives |
+| Dagger | 1H | - | STR | D8 | 9 | 100 | 1 gold | Common | Subtle, piercing, slashing, thrown | Knives |
+| Parrying dagger | 1H | - | 2 | D6 | 15 | 200 | 2 gold | Uncommon | Subtle, piercing, slashing | Knives |
+| Short sword | 1H | 7 | 2 | D10 | 12 | 800 | 8 gold | Common | Piercing, slashing | Swords |
+| Broadsword | 1H | 10 | 2 | 2D6 | 15 | 1200 | 12 gold | Common | Piercing, slashing | Swords |
+| Longsword | 1H | 13 | 2 | 2D8 | 15 | 2500 | 25 gold | Uncommon | Piercing, slashing | Swords |
+| Greatsword | 2H | 16 | 2 | 2D10 | 15 | 5000 | 50 gold | Rare | Piercing, slashing | Swords |
+| Scimitar | 1H | 10 | 2 | 2D6 | 12 | 1000 | 10 gold | Uncommon | Toppling, slashing | Swords |
+| Handaxe | 1H | 7 | STR | 2D6 | 9 | 200 | 2 gold | Common | Toppling, slashing, thrown | Axes |
+| Battleaxe | 1H | 13 | 2 | 2D8 | 9 | 1000 | 10 gold | Uncommon | Toppling, slashing | Axes |
+| Two-handed axe | 2H | 16 | 2 | 2D10 | 9 | 2500 | 25 gold | Uncommon | Toppling, slashing | Axes |
+| Mace | 1H | 7 | 2 | 2D4 | 12 | 800 | 8 gold | Common | Bludgeoning | Hammers |
+| Morningstar | 1H | 13 | 2 | 2D8 | 12 | 1400 | 14 gold | Uncommon | Bludgeoning | Hammers |
+| Flail | 1H | 13 | 2 | 2D8 | - | 1600 | 16 gold | Uncommon | Bludgeoning, toppling; cannot parry | Hammers |
+| Light warhammer | 1H | 10 | 2 | 2D6 | 12 | 1000 | 10 gold | Uncommon | Bludgeoning, toppling | Hammers |
+| Heavy warhammer | 2H | 16 | 2 | 2D10 | 12 | 2000 | 20 gold | Uncommon | Bludgeoning, toppling | Hammers |
+| Small wooden club | 1H | 7 | 2 | D8 | 9 | 10 | 1 silver | Common | Bludgeoning | Hammers |
+| Large wooden club | 2H | 16 | 2 | 2D8 | 12 | 20 | 2 silver | Common | Bludgeoning | Hammers |
+| Staff | 2H | 7 | 2 | D8 | 9 | 20 | 2 silver | Common | Bludgeoning, toppling | Staves |
+| Short spear | 1H | 7 | STR x 2 | D10 | 9 | 50 | 5 silver | Common | Piercing, thrown | Spears |
+| Long spear | 2H | 10 | 4 | 2D8 | 9 | 100 | 1 gold | Common | Long, piercing | Spears |
+| Lance | 1H | 13 | 4 | 2D10 | 12 | 1200 | 12 gold | Rare | Long, piercing; requires combat-trained mount | Spears |
+| Halberd | 2H | 13 | 4 | 2D8 | 12 | 2000 | 20 gold | Rare | Long, toppling, piercing, slashing | Spears |
+| Trident | 1H | 10 | STR | 2D6 | 9 | 500 | 5 gold | Uncommon | Toppling, piercing, thrown | Spears |
+| Small shield | 1H | 7 | 2 | D8 | 15 | 400 | 4 gold | Common | Bludgeoning | Brawling |
+| Large shield | 1H | 13 | 2 | D8 | 18 | 1200 | 12 gold | Common | Bludgeoning | Brawling |
 
 A **mastercrafted** version costs 10 times normal, reduces STR requirement by 3 and increases Durability by 3.
 
 ## Ranged weapons
 
-| Weapon | Grip | STR | Range | Damage | Durability | Cost Copper | Cost | Supply | Features |
-| --- | --- | ---: | ---: | --- | ---: | ---: | ---: | --- | --- |
-| Sling | 1H | - | 20 | D8 | - | 10 | 1 silver | Common | Bludgeoning; tiny item |
-| Short bow | 2H | 7 | 30 | D10 | 3 | 2500 | 25 gold | Common | Piercing; requires quiver |
-| Longbow | 2H | 13 | 100 | D12 | 6 | 5000 | 50 gold | Uncommon | Piercing; requires quiver |
-| Light crossbow | 2H | 7 | 40 | 2D6 | 6 | 7500 | 75 gold | Uncommon | Piercing; requires quiver; no damage bonus |
-| Heavy crossbow | 2H | 13 | 60 | 2D8 | 9 | 20000 | 200 gold | Rare | Piercing; requires quiver; no damage bonus |
-| Hand crossbow | 1H | 7 | 30 | 2D6 | 6 | 9000 | 90 gold | Rare | Piercing; requires quiver; no damage bonus |
+| Weapon | Grip | STR | Range | Damage | Durability | Cost Copper | Cost | Supply | Features | Skill |
+| --- | --- | ---: | ---: | --- | ---: | ---: | ---: | --- | --- | --- |
+| Sling | 1H | - | 20 | D8 | - | 10 | 1 silver | Common | Bludgeoning; tiny item | Slings |
+| Short bow | 2H | 7 | 30 | D10 | 3 | 2500 | 25 gold | Common | Piercing; requires quiver | Bows |
+| Longbow | 2H | 13 | 100 | D12 | 6 | 5000 | 50 gold | Uncommon | Piercing; requires quiver | Bows |
+| Light crossbow | 2H | 7 | 40 | 2D6 | 6 | 7500 | 75 gold | Uncommon | Piercing; requires quiver; no damage bonus | Crossbows |
+| Heavy crossbow | 2H | 13 | 60 | 2D8 | 9 | 20000 | 200 gold | Rare | Piercing; requires quiver; no damage bonus | Crossbows |
+| Hand crossbow | 1H | 7 | 30 | 2D6 | 6 | 9000 | 90 gold | Rare | Piercing; requires quiver; no damage bonus | Crossbows |
 
 ## Clothes
 
