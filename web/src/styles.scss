@@ -543,6 +543,18 @@ input[type='checkbox'] {
     margin: 0 0 var(--spacing-xs);
   }
 
+  /* The before-roll text leads into the outcomes with a green colon; each outcome opens with a green arrow. */
+  .lead-colon,
+  .result-line > p::before {
+    color: var(--demon-green);
+    font-weight: 700;
+  }
+
+  /* Decorative: the empty alt text keeps it out of the accessible name. */
+  .result-line > p::before {
+    content: '\2192\00a0' / '';
+  }
+
   /* Links sit inside result text, so colour alone must not set them apart (axe link-in-text-block). */
   a {
     text-decoration: underline;

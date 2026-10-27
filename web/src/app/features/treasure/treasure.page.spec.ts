@@ -265,6 +265,15 @@ describe('TreasurePage', () => {
     expect(body.lastElementChild?.textContent?.trim()).toBe('Re-roll');
   });
 
+  it('the before-roll text ends in a colon instead of its full stop', async () => {
+    const page = await render();
+    await page.roll('Rat', 40, 2);
+
+    const lead = page.dialog().querySelector('app-treasure-result p.multiline')!;
+    expect(lead.textContent).toBe('Rat effect:');
+    expect(lead.querySelector('.lead-colon')?.textContent).toBe(':');
+  });
+
   it('result lines are not centred (the block is, the text is left-aligned)', async () => {
     const page = await render();
     await page.roll('Rat', 40, 2);

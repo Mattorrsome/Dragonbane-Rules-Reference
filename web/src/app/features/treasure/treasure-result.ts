@@ -5,7 +5,7 @@ import { CurrencyRates } from '../../core/currency-rates';
 import { formatCoins } from '../../money/coins';
 import { mastercraftedItem } from '../../money/mastercraft';
 import { formatPrice } from '../../money/pricing';
-import { sentenceCase } from '../../shared/text';
+import { sentenceCase, withoutFinalStop } from '../../shared/text';
 import { grimoireRolls, ResolvedRoll, TreasureResult } from '../../treasure/treasure-resolver';
 import { cellText, columnsFor } from '../equipment/columns';
 
@@ -34,6 +34,7 @@ export class TreasureResultView {
   readonly rates = input.required<CurrencyRates>();
 
   protected readonly sentenceCase = sentenceCase;
+  protected readonly withoutFinalStop = withoutFinalStop;
 
   protected readonly lines = computed<ResultLine[]>(() => {
     const lines: ResultLine[] = [];

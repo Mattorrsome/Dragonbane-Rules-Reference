@@ -1,5 +1,5 @@
 <article class="treasure-result">
-  <p class="multiline">{{ result().entry.effectText }}</p>
+  <p class="multiline">{{ withoutFinalStop(result().entry.effectText) }}<span class="lead-colon">:</span></p>
   @for (line of lines(); track $index) {
     <div class="result-line" [style.margin-left.rem]="line.depth * 1.5">
       <p>{{ line.text }}@if (line.link; as link) {<a routerLink="/equipment" [queryParams]="link.queryParams">{{ link.text }}</a>}{{ line.suffix }}</p>

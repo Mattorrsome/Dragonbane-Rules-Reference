@@ -182,6 +182,10 @@ for (const viewport of viewports) {
       // The margins between the blocks are uneven by a few pixels; the block must sit near the middle, not the top.
       expect(Math.abs(layout.dy)).toBeLessThanOrEqual(12);
       expect(new Set(layout.align)).toEqual(new Set(['start']));
+      // The real text "Roll EVADE. On failure, take D4 damage ignoring armour." ends in a colon, not a stop.
+      await expect(dialog.locator('.treasure-result > p.multiline')).toHaveText(/armour:$/);
+      // Each outcome line opens with a decorative green arrow (CSS, empty alt text).
+      expect(await dialog.locator('.result-line > p').first().evaluate(p => getComputedStyle(p, '::before').content)).toContain('→');
 
       // Only laptop widths keep one box size; on a phone the box grows to fit a long result.
       if (viewport.width < 1000) return;
