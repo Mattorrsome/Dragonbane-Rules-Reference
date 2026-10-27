@@ -291,3 +291,9 @@ One entry per significant technical decision. Template:
 - Decision: Lookups ignore case, and a three-entry alias map in `NpcImporter` resolves the rest; "Wooden club" maps to Small wooden club (a villager's one-handed club). This is hand-curated data, like the treasure seed.
 - Alternatives: Edit the NPC markdown to the Equipment names (the transcription would no longer match the book); skip unmatched gear (silently loses items).
 - Why: The source stays as printed and every gear name still links to a real item; a new mismatch fails the import rather than vanishing.
+
+## NPC card image via html-to-image (2026-10-27)
+- Context: The NPC Manager exports a saved NPC as a card image like the book's NPC boxes, as well as text and Markdown, by copy or download.
+- Decision: The export dialog shows the card (`NpcCardView`) and turns that same element into a PNG with `html-to-image` (`toBlob`, pixel ratio 2), behind an injectable `CARD_RENDERER` so tests need no canvas. Copy uses `navigator.clipboard.write` with a `ClipboardItem` (given the blob promise, which Safari needs) or `writeText`; a missing or refused clipboard shows "Your browser blocked the clipboard. Use Download instead.". The Google Fonts `<link>` carries `crossorigin="anonymous"` so the library can read its rules and embed Crimson Pro in the PNG (without it the image fell back to another font). The library loads only with the NPC page chunk.
+- Alternatives: Draw the card by hand on a canvas (duplicates the layout in code); self-host the fonts (more files for the same result, since Google already serves the stylesheet with CORS); an off-screen copy of the card for capture (the visible card is already the export preview).
+- Why: One layout serves the preview, the editor and the image. Known quirk: the clone keeps each row's measured height, so a line that wraps on screen but not in the PNG leaves a little extra space in that row.

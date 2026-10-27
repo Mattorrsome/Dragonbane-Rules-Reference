@@ -71,6 +71,8 @@
                 } @else {
                   <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
                     [attr.aria-label]="'Edit ' + npc.name" (click)="edit(npc)">Edit</button>
+                  <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                    [attr.aria-label]="'Export ' + npc.name" (click)="exporting.set(npc)">Export</button>
                   <button type="button" class="btn btn-secondary btn-small"
                     [attr.aria-label]="'Delete ' + npc.name" (click)="confirmingDelete.set(npc.id)">Delete</button>
                 }
@@ -90,6 +92,17 @@
     @if (editing(); as npc) {
       <h2 id="npc-dialog-title" class="npc-heading">{{ npc.id ? 'Edit ' + npc.name : 'Tweak ' + npc.basedOn }}</h2>
       <app-npc-editor [npc]="npc" [ref]="ref()!" (saved)="save($event)" (cancelled)="close()" />
+    }
+  </div>
+</dialog>
+
+<!-- Export: copy or download a saved NPC as an image, text or Markdown. -->
+<dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (click)="closeOnBackdrop($event)">
+  <button type="button" class="dialog-close" aria-label="Close" (click)="exporting.set(null)"></button>
+  <div class="dialog-body">
+    @if (exporting(); as npc) {
+      <h2 id="export-dialog-title" class="npc-heading">Export {{ npc.name }}</h2>
+      <app-npc-export-menu [npc]="npc" [ref]="ref()!" />
     }
   </div>
 </dialog>

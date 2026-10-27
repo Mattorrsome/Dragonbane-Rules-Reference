@@ -1,0 +1,25 @@
+<div class="npc-export">
+  <div class="npc-export-actions">
+    <div class="field-check">
+      <input id="export-descriptions" type="checkbox" [checked]="withDescriptions()" (change)="withDescriptions.set($any($event.target).checked)" />
+      <label for="export-descriptions">Include spell and heroic ability descriptions</label>
+    </div>
+    <div class="export-group" role="group" aria-label="Image">
+      <button type="button" class="btn btn-primary btn-small" (click)="copyImage()">Copy image</button>
+      <button type="button" class="btn btn-secondary btn-small" (click)="downloadImage()">Download image</button>
+    </div>
+    <div class="export-group" role="group" aria-label="Plain text">
+      <button type="button" class="btn btn-primary btn-small" (click)="copyText(false)">Copy text</button>
+      <button type="button" class="btn btn-secondary btn-small" (click)="downloadText(false)">Download text</button>
+    </div>
+    <div class="export-group" role="group" aria-label="Markdown">
+      <button type="button" class="btn btn-primary btn-small" (click)="copyText(true)">Copy Markdown</button>
+      <button type="button" class="btn btn-secondary btn-small" (click)="downloadText(true)">Download Markdown</button>
+    </div>
+    <p class="export-status" role="status">{{ status() }}</p>
+  </div>
+  <!-- What is shown is what the image is drawn from. -->
+  <div class="npc-export-card" #cardHost>
+    <app-npc-card [card]="card()" />
+  </div>
+</div>

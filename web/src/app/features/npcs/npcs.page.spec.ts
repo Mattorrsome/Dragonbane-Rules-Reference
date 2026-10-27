@@ -212,5 +212,19 @@ describe('NpcsPage', () => {
       expect(dialog(page.host).open).toBe(false);
       expect(TestBed.inject(NpcStore).npcs()).toEqual([]);
     });
+
+    it('Export opens the export menu for that NPC', async () => {
+      const store = TestBed.inject(NpcStore);
+      store.save({ ...fromTypical(BANDIT_CHIEF, ref), name: 'Grok' });
+      const page = await render();
+
+      page.button('Export Grok').click();
+      await page.settle();
+
+      const exportDialog = page.host.querySelector<HTMLDialogElement>('dialog.export-dialog')!;
+      expect(exportDialog.open).toBe(true);
+      expect(exportDialog.querySelector(`#${exportDialog.getAttribute('aria-labelledby')}`)?.textContent?.trim()).toBe('Export Grok');
+      expect(exportDialog.querySelector('app-npc-export-menu .npc-card-name')?.textContent?.trim()).toBe('Grok');
+    });
   });
 });

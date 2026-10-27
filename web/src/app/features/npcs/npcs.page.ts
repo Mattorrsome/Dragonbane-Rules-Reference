@@ -5,6 +5,7 @@ import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '
 import { fromTypical, Npc, NpcReference, SavedNpc } from '../../npc/npc';
 import { NpcStore } from '../../npc/npc.store';
 import { NpcEditor } from './npc-editor';
+import { NpcExportMenu } from './npc-export-menu';
 
 /** A name in a typical NPC's cell, with its Reference description when it has one. */
 interface Described {
@@ -14,7 +15,7 @@ interface Described {
 
 @Component({
   selector: 'app-npcs-page',
-  imports: [NgTemplateOutlet, NpcEditor],
+  imports: [NgTemplateOutlet, NpcEditor, NpcExportMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './npcs.page.html',
 })
@@ -39,14 +40,14 @@ export class NpcsPage {
   protected readonly confirmingDelete = signal<string | null>(null);
   private readonly myHeading = viewChild<ElementRef<HTMLElement>>('myHeading');
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  /** The saved NPC open in the export menu. */
+  protected readonly exporting = signal<SavedNpc | null>(null);
+  private readonly exportDialog = viewChild.required<ElementRef<HTMLDialogElement>>('exportDialog');
 
   constructor() {
-    // The dialog follows the editing signal: open while an NPC is being edited, closed otherwise.
-    effect(() => {
-      const dialog = this.dialog().nativeElement;
-      if (this.editing() && !dialog.open) dialog.showModal();
-      if (!this.editing() && dialog.open) dialog.close();
-    });
+    // Each dialog follows its signal: open while it holds an NPC, closed otherwise.
+    effect(() => toggle(this.dialog().nativeElement, !!this.editing()));
+    effect(() => toggle(this.exportDialog().nativeElement, !!this.exporting()));
   }
 
   protected save(npc: Npc): void {
@@ -58,13 +59,16 @@ export class NpcsPage {
     this.editing.set(null);
   }
 
-  /** A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. */
+  /**
+   * A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. The
+   * dialog's (close) event then clears its signal.
+   */
   protected closeOnBackdrop(event: MouseEvent): void {
-    const dialog = this.dialog().nativeElement;
+    const dialog = event.currentTarget as HTMLDialogElement;
     if (event.target !== dialog) return;
     const box = dialog.getBoundingClientRect();
     const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
-    if (!inside) this.close();
+    if (!inside) dialog.close();
   }
 
   protected tweak(dto: NpcDto): void {
@@ -99,6 +103,12 @@ export class NpcsPage {
       return { text: name, description: item ? describeItem(item) : null };
     });
   }
+}
+
+/** Opens a modal dialog or closes it, whichever it is not already. */
+function toggle(dialog: HTMLDialogElement, open: boolean): void {
+  if (open && !dialog.open) dialog.showModal();
+  if (!open && dialog.open) dialog.close();
 }
 
 /** A weapon's or armour's stats first (their effect is often empty), then the item's effect. */
