@@ -1,0 +1,47 @@
+@let c = card();
+<article class="npc-card">
+  <p class="npc-card-name">{{ c.name }}</p>
+  @if (c.description) {
+    <p class="npc-card-description">{{ c.description }}</p>
+  }
+  <p class="npc-card-row">
+    <span><b>Movement:</b> {{ c.movement }}</span>
+    @if (c.damageBonus) { <span><b>Damage Bonus:</b> {{ c.damageBonus }}</span> }
+  </p>
+  <p class="npc-card-row">
+    @if (c.armour) { <span><b>Armor:</b> {{ c.armour }}</span> }
+    <span><b>HP:</b> {{ c.hp }}</span>
+    @if (c.wp !== null) { <span><b>WP:</b> {{ c.wp }}</span> }
+  </p>
+  @if (c.skills) {
+    <p class="npc-card-row"><span><b>Skills:</b> {{ c.skills }}</span></p>
+  }
+  @if (c.abilities.length) {
+    <ng-container *ngTemplateOutlet="entries; context: { $implicit: c.abilities, label: 'Heroic Abilities:' }" />
+  }
+  @if (c.weapons) {
+    <p class="npc-card-row"><span><b>Weapons:</b> {{ c.weapons }}</span></p>
+  }
+  @if (c.spells.length) {
+    <ng-container *ngTemplateOutlet="entries; context: { $implicit: c.spells, label: 'Spells:' }" />
+  }
+  @if (c.gear) {
+    <p class="npc-card-row"><span><b>Gear:</b> {{ c.gear }}</span></p>
+  }
+</article>
+
+<!-- A list row: one line of names, or one entry per line once any entry has a description. -->
+<ng-template #entries let-items let-label="label">
+  @if (hasDetail(items)) {
+    <div class="npc-card-row">
+      <b>{{ label }}</b>
+      <ul class="npc-card-entries">
+        @for (entry of items; track $index) {
+          <li>{{ entry.text }}@if (entry.detail) {<span class="entry-detail">{{ entry.detail }}</span>}</li>
+        }
+      </ul>
+    </div>
+  } @else {
+    <p class="npc-card-row"><span><b>{{ label }}</b> {{ names(items) }}</span></p>
+  }
+</ng-template>

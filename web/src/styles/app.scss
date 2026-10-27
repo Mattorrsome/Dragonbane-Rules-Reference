@@ -665,3 +665,243 @@ input[type='checkbox'] {
   align-items: center;
   gap: var(--spacing-xs);
 }
+
+/* ================ NPC DIALOG ================ */
+/* Wide enough for the form and the card side by side; leaves room for the corner Close at 375px. */
+.npc-dialog {
+  margin: 4vh auto auto;
+  width: min(72rem, 100vw - 3.5rem);
+  max-height: calc(100dvh - 4vh - 1rem);
+}
+
+/* Form left, live card right; stacked (card under the form) on narrow screens. */
+.npc-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+  gap: var(--spacing-md);
+  align-items: start;
+
+  @media (max-width: 48rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.npc-preview {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.npc-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+
+  .field,
+  .picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* Bottom-aligned, so a label that wraps to two lines does not push its box out of line. */
+  .field-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--spacing-sm);
+
+    .field {
+      flex: 1 1 7rem;
+    }
+  }
+
+  label,
+  legend {
+    font-family: var(--font-display);
+    color: var(--accent);
+    font-size: 0.9rem;
+  }
+
+  input,
+  select,
+  textarea {
+    font: inherit;
+    line-height: 1.3;
+    padding: 0.3rem 0.5rem;
+    border: 2px solid var(--parchment-darker);
+    border-radius: 2px;
+    background: var(--bone-white);
+    color: var(--ink);
+    min-width: 0;
+  }
+
+  .picker {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-xs);
+
+    input {
+      flex: 1 1 10rem;
+    }
+  }
+}
+
+.chip-group {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+/* Each chip: name, an optional number, and a 44px remove button. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0 0 0 0.6rem;
+    border: 1px solid var(--parchment-darker);
+    border-radius: 2px;
+    background: var(--parchment-dark);
+
+    &::before {
+      content: none;
+    }
+  }
+
+  .chip-number {
+    width: 4.2rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .chip-remove {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    border: none;
+    background: transparent;
+    color: var(--demon-green-dark);
+    font-size: 1rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--dragon-red);
+    }
+  }
+}
+
+.field-error,
+.form-errors {
+  margin: 0;
+  color: var(--dragon-red);
+  font-weight: 600;
+}
+
+.form-errors {
+  padding-left: 0;
+
+  li::before {
+    content: none;
+  }
+}
+
+.npc-form-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.field-check {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.95rem;
+}
+
+/* ================ NPC CARD ================ */
+/* The book's NPC box: a green banner with the name, a parchment body, ruled stat rows with every other one tinted. */
+.npc-card {
+  border: 3px solid var(--demon-green-dark);
+  border-radius: 4px;
+  background: var(--bone-white);
+  color: var(--ink);
+  line-height: 1.4;
+  overflow: hidden;
+
+  p {
+    margin: 0;
+  }
+
+  .npc-card-name {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--demon-green-dark);
+    color: var(--bone-white);
+    font-family: var(--font-display);
+    font-size: 1.3em;
+    letter-spacing: 0.12em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .npc-card-description {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .npc-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--spacing-sm);
+    padding: 0.35rem var(--spacing-sm);
+    border-top: 1px solid var(--parchment-darker);
+
+    &:nth-of-type(odd) {
+      background: var(--sand);
+    }
+  }
+
+  b {
+    color: var(--demon-green-dark);
+  }
+
+  .npc-card-entries {
+    flex-basis: 100%;
+    margin: 0.2rem 0 0;
+    padding: 0;
+
+    li {
+      padding-left: 0;
+      margin-bottom: 0.3rem;
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  /* Descriptions: smaller, under their entry. */
+  .entry-detail {
+    display: block;
+    font-size: 0.8em;
+    line-height: 1.35;
+    color: var(--ink-light);
+  }
+
+  &::after {
+    content: '';
+    display: block;
+    height: 0.5rem;
+    background: var(--demon-green-dark);
+  }
+}

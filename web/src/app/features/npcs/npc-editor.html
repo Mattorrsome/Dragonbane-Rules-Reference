@@ -1,0 +1,147 @@
+@let d = draft();
+<div class="npc-editor">
+  <form class="npc-form" (submit)="$event.preventDefault(); save()" novalidate>
+    <div class="field">
+      <label for="npc-name">Name</label>
+      <input id="npc-name" type="text" required [value]="d.name" (input)="setText('name', $event)" />
+    </div>
+    <div class="field">
+      <label for="npc-description">Description</label>
+      <textarea id="npc-description" rows="3" [value]="d.description" (input)="setText('description', $event)"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="npc-movement">Movement</label>
+        <input id="npc-movement" type="number" min="0" [value]="d.movement" (input)="setNumber('movement', $event)" />
+      </div>
+      <div class="field">
+        <label for="npc-hp">HP</label>
+        <input id="npc-hp" type="number" min="0" [value]="d.hp" (input)="setNumber('hp', $event)" />
+      </div>
+      <div class="field">
+        <label for="npc-wp">WP</label>
+        <input id="npc-wp" type="number" min="0" [value]="d.wp ?? ''" (input)="setNumber('wp', $event)" />
+      </div>
+      <div class="field">
+        <label for="npc-bonus-attribute">Damage bonus attribute</label>
+        <select id="npc-bonus-attribute" (change)="setBonus('attribute', $event)">
+          <option value="" [selected]="!d.damageBonus">None</option>
+          <option value="STR" [selected]="d.damageBonus?.attribute === 'STR'">STR</option>
+          <option value="AGL" [selected]="d.damageBonus?.attribute === 'AGL'">AGL</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="npc-bonus-dice">Damage bonus dice</label>
+        <select id="npc-bonus-dice" [disabled]="!d.damageBonus" (change)="setBonus('dice', $event)">
+          <option value="D4" [selected]="d.damageBonus?.dice === 'D4'">+D4</option>
+          <option value="D6" [selected]="d.damageBonus?.dice === 'D6'">+D6</option>
+        </select>
+      </div>
+    </div>
+
+    <fieldset class="chip-group">
+      <legend>Skills</legend>
+      <ul class="chips" aria-label="Skills">
+        @for (skill of d.skills; track skill.name) {
+          <li>
+            <span class="chip-name">{{ skill.name }}</span>
+            <input type="number" min="0" class="chip-number" [attr.aria-label]="skill.name + ' level'" [value]="skill.level" (input)="setLevel(skill.name, $event)" />
+            <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + skill.name" (click)="removeSkill(skill.name)">✕</button>
+          </li>
+        }
+      </ul>
+      <div class="picker">
+        <label for="skill-to-add">Skill to add</label>
+        <input id="skill-to-add" list="skill-options" [value]="toAdd().skill" (input)="typed('skill', $event)" (keydown.enter)="$event.preventDefault(); add('skill')" />
+        <datalist id="skill-options">
+          @for (s of ref().skills; track s.id) { <option [value]="s.name"></option> }
+        </datalist>
+        <button type="button" class="btn btn-secondary btn-small" (click)="add('skill')">Add skill</button>
+      </div>
+      @if (pickError() === 'skill') { <p class="field-error" role="alert">Pick a skill from the list.</p> }
+    </fieldset>
+
+    <fieldset class="chip-group">
+      <legend>Heroic abilities</legend>
+      <ul class="chips" aria-label="Heroic abilities">
+        @for (ability of d.abilities; track ability.name) {
+          <li>
+            <span class="chip-name">{{ ability.name }}</span>
+            @if (isStacking(ability.name)) {
+              <input type="number" min="0" class="chip-number" [attr.aria-label]="ability.name + ' count'" [value]="ability.count" (input)="setCount(ability.name, $event)" />
+            }
+            <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + ability.name" (click)="removeAbility(ability.name)">✕</button>
+          </li>
+        }
+      </ul>
+      <div class="picker">
+        <label for="ability-to-add">Heroic ability to add</label>
+        <input id="ability-to-add" list="ability-options" [value]="toAdd().ability" (input)="typed('ability', $event)" (keydown.enter)="$event.preventDefault(); add('ability')" />
+        <datalist id="ability-options">
+          @for (a of ref().abilities; track a.id) { <option [value]="a.name"></option> }
+        </datalist>
+        <button type="button" class="btn btn-secondary btn-small" (click)="add('ability')">Add heroic ability</button>
+      </div>
+      @if (pickError() === 'ability') { <p class="field-error" role="alert">Pick a heroic ability from the list.</p> }
+    </fieldset>
+
+    <fieldset class="chip-group">
+      <legend>Gear</legend>
+      <ul class="chips" aria-label="Gear">
+        @for (item of d.gear; track $index) {
+          <li>
+            <span class="chip-name">{{ item }}</span>
+            <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + item" (click)="removeGear(item)">✕</button>
+          </li>
+        }
+      </ul>
+      <div class="picker">
+        <label for="gear-to-add">Gear to add</label>
+        <input id="gear-to-add" list="gear-options" [value]="toAdd().gear" (input)="typed('gear', $event)" (keydown.enter)="$event.preventDefault(); add('gear')" />
+        <datalist id="gear-options">
+          @for (i of ref().equipment; track i.id) { <option [value]="i.name"></option> }
+        </datalist>
+        <button type="button" class="btn btn-secondary btn-small" (click)="add('gear')">Add gear</button>
+      </div>
+    </fieldset>
+
+    <fieldset class="chip-group">
+      <legend>Spells</legend>
+      <ul class="chips" aria-label="Spells">
+        @for (spell of d.spells; track spellLabel(spell)) {
+          <li>
+            <span class="chip-name">{{ spellLabel(spell) }}</span>
+            <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + spellLabel(spell)" (click)="removeSpell(spell)">✕</button>
+          </li>
+        }
+      </ul>
+      <div class="picker">
+        <label for="spell-to-add">Spell to add</label>
+        <input id="spell-to-add" list="spell-options" [value]="toAdd().spell" (input)="typed('spell', $event)" (keydown.enter)="$event.preventDefault(); add('spell')" />
+        <datalist id="spell-options">
+          @for (o of spellOptions(); track o.label) { <option [value]="o.label"></option> }
+        </datalist>
+        <button type="button" class="btn btn-secondary btn-small" (click)="add('spell')">Add spell</button>
+      </div>
+      @if (pickError() === 'spell') { <p class="field-error" role="alert">Pick a spell from the list.</p> }
+    </fieldset>
+
+    @if (errors().length) {
+      <ul class="form-errors" role="alert">
+        @for (error of errors(); track error) { <li>{{ error }}</li> }
+      </ul>
+    }
+    <div class="npc-form-actions">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" (click)="cancelled.emit()">Cancel</button>
+    </div>
+  </form>
+
+  <div class="npc-preview">
+    <div class="field-check">
+      <input id="npc-descriptions" type="checkbox" [checked]="withDescriptions()" (change)="withDescriptions.set($any($event.target).checked)" />
+      <label for="npc-descriptions">Include spell and heroic ability descriptions</label>
+    </div>
+    <app-npc-card [card]="card()" />
+  </div>
+</div>

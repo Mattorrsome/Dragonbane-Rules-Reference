@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../../api/models';
 import { fromTypical, Npc, NpcReference, SavedNpc } from '../../npc/npc';
 import { NpcStore } from '../../npc/npc.store';
+import { NpcEditor } from './npc-editor';
 
 /** A name in a typical NPC's cell, with its Reference description when it has one. */
 interface Described {
@@ -13,7 +14,7 @@ interface Described {
 
 @Component({
   selector: 'app-npcs-page',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, NpcEditor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './npcs.page.html',
 })
@@ -37,6 +38,34 @@ export class NpcsPage {
   /** The saved NPC whose row is asking "Delete …?". */
   protected readonly confirmingDelete = signal<string | null>(null);
   private readonly myHeading = viewChild<ElementRef<HTMLElement>>('myHeading');
+  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+
+  constructor() {
+    // The dialog follows the editing signal: open while an NPC is being edited, closed otherwise.
+    effect(() => {
+      const dialog = this.dialog().nativeElement;
+      if (this.editing() && !dialog.open) dialog.showModal();
+      if (!this.editing() && dialog.open) dialog.close();
+    });
+  }
+
+  protected save(npc: Npc): void {
+    this.store.save({ ...npc, id: this.editing()?.id });
+    this.editing.set(null);
+  }
+
+  protected close(): void {
+    this.editing.set(null);
+  }
+
+  /** A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. */
+  protected closeOnBackdrop(event: MouseEvent): void {
+    const dialog = this.dialog().nativeElement;
+    if (event.target !== dialog) return;
+    const box = dialog.getBoundingClientRect();
+    const inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+    if (!inside) this.close();
+  }
 
   protected tweak(dto: NpcDto): void {
     this.editing.set(fromTypical(dto, this.ref()!));

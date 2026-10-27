@@ -10,6 +10,9 @@ describe('NpcsPage', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    // jsdom has no modal dialog; the browser behaviour is covered by the e2e test.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; };
     localStorage.clear();
     TestBed.configureTestingModule({
       imports: [NpcsPage],
@@ -142,5 +145,72 @@ describe('NpcsPage', () => {
     const page = await render({ failNpcs: true });
 
     expect(page.host.querySelector('[role="alert"]')?.textContent?.trim()).toBe('The NPC table could not be loaded. Is the API running?');
+  });
+
+  describe('dialog', () => {
+    const dialog = (host: HTMLElement) => host.querySelector('dialog')!;
+
+    it('Tweak opens a modal dialog on a copy, with the floating Close', async () => {
+      const page = await render();
+
+      page.button('Tweak Bandit chief').click();
+      await page.settle();
+
+      expect(dialog(page.host).open).toBe(true);
+      expect(dialog(page.host).classList).toContain('app-dialog');
+      const title = dialog(page.host).querySelector(`#${dialog(page.host).getAttribute('aria-labelledby')}`);
+      expect(title?.textContent?.trim()).toBe('Tweak Bandit chief');
+      expect(dialog(page.host).querySelector('.dialog-close')?.getAttribute('aria-label')).toBe('Close');
+      expect(dialog(page.host).querySelector('app-npc-editor')).not.toBeNull();
+    });
+
+    it('saving stores the NPC and closes', async () => {
+      const page = await render();
+      page.button('Tweak Bandit chief').click();
+      await page.settle();
+
+      const name = dialog(page.host).querySelector<HTMLInputElement>('#npc-name')!;
+      name.value = 'Grok';
+      name.dispatchEvent(new Event('input'));
+      await page.settle();
+      [...dialog(page.host).querySelectorAll('button')].find(b => b.textContent?.trim() === 'Save')!.click();
+      await page.settle();
+
+      expect(TestBed.inject(NpcStore).npcs().map(n => [n.name, n.basedOn])).toEqual([['Grok', 'Bandit chief']]);
+      expect(dialog(page.host).open).toBe(false);
+      expect(page.table('My NPCs')).toBeTruthy();
+    });
+
+    it('Edit opens the saved NPC; saving replaces it', async () => {
+      const store = TestBed.inject(NpcStore);
+      store.save({ ...fromTypical(BANDIT_CHIEF, ref), name: 'Grok' });
+      const page = await render();
+
+      page.button('Edit Grok').click();
+      await page.settle();
+      const title = dialog(page.host).querySelector(`#${dialog(page.host).getAttribute('aria-labelledby')}`);
+      expect(title?.textContent?.trim()).toBe('Edit Grok');
+      [...dialog(page.host).querySelectorAll('button')].find(b => b.textContent?.trim() === 'Save')!.click();
+      await page.settle();
+
+      expect(store.npcs()).toHaveLength(1);
+    });
+
+    it('Close and Cancel close without saving', async () => {
+      const page = await render();
+      page.button('Tweak Guard').click();
+      await page.settle();
+
+      page.button('Close').click();
+      await page.settle();
+      expect(dialog(page.host).open).toBe(false);
+
+      page.button('Tweak Guard').click();
+      await page.settle();
+      [...dialog(page.host).querySelectorAll('button')].find(b => b.textContent?.trim() === 'Cancel')!.click();
+      await page.settle();
+      expect(dialog(page.host).open).toBe(false);
+      expect(TestBed.inject(NpcStore).npcs()).toEqual([]);
+    });
   });
 });

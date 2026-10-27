@@ -83,6 +83,17 @@
   }
 </section>
 
+<!-- Tweak / Edit: the editor and its live card preview over the tables. Escape, Close, Cancel and the backdrop close it. -->
+<dialog #dialog class="app-dialog npc-dialog" aria-labelledby="npc-dialog-title" (close)="editing.set(null)" (click)="closeOnBackdrop($event)">
+  <button type="button" class="dialog-close" aria-label="Close" (click)="close()"></button>
+  <div class="dialog-body">
+    @if (editing(); as npc) {
+      <h2 id="npc-dialog-title" class="npc-heading">{{ npc.id ? 'Edit ' + npc.name : 'Tweak ' + npc.basedOn }}</h2>
+      <app-npc-editor [npc]="npc" [ref]="ref()!" (saved)="save($event)" (cancelled)="close()" />
+    }
+  </div>
+</dialog>
+
 <!-- A cell's names: each with a description opens like a disclosure; one without stays plain text. -->
 <ng-template #names let-items>
   <ul class="npc-names">
