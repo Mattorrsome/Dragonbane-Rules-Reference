@@ -6,7 +6,7 @@ import { EquipmentCategoryDto, EquipmentItemDto, SpellDto } from '../../api/mode
 import { CoinStandardStore } from '../../core/coin-standard.store';
 import { DiceRoller } from '../../dice/dice-roller';
 import { TREASURE } from '../../treasure/treasure.fixture';
-import { TreasurePage } from './treasure.page';
+import { ROLL_DELAY_MS, TreasurePage } from './treasure.page';
 
 const battleaxe: EquipmentItemDto = {
   id: 19, categoryId: 1, name: 'Battleaxe', costCopper: 1000, costUnit: null, costOrMore: false, costText: '10 gold', supply: 'Uncommon',
@@ -29,8 +29,10 @@ const trick = (id: number, name: string): SpellDto => ({
 describe('TreasurePage', () => {
   let http: HttpTestingController;
   let faces: number[];
+  let delay: number;
 
   beforeEach(() => {
+    delay = 0;
     // jsdom has no modal dialog; the browser behaviour is covered by the e2e test.
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
     HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; };
@@ -44,6 +46,8 @@ describe('TreasurePage', () => {
         provideHttpClientTesting(),
         // Returns queued faces in order, ignoring the die size.
         { provide: DiceRoller, useValue: { roll: (count: number) => faces.splice(0, count) } },
+        // No spinner pause, except in the tests that time it (read when the page is created).
+        { provide: ROLL_DELAY_MS, useFactory: () => delay },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -63,7 +67,11 @@ describe('TreasurePage', () => {
     ]);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
-    const settle = () => fixture.whenStable();
+    // The result lands after the (zero) spinner delay, on the next macrotask.
+    const settle = async () => {
+      await new Promise(resolve => setTimeout(resolve));
+      await fixture.whenStable();
+    };
     const roll = async (name: string, rollNumber: number, ...queued: number[]) => {
       faces.push(...queued);
       host.querySelector<HTMLButtonElement>(`button[aria-label="Roll ${name} (${rollNumber})"]`)!.click();
@@ -72,8 +80,68 @@ describe('TreasurePage', () => {
     const dialog = () => host.querySelector('dialog')!;
     const button = (name: string) =>
       [...dialog().querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent?.trim()) === name)!;
-    return { host, roll, dialog, button, settle };
+    return { host, roll, dialog, button, settle, fixture };
   }
+
+  describe('spinner', () => {
+    beforeEach(() => (delay = 500));
+    afterEach(() => vi.useRealTimers());
+
+    /** Renders with real timers (the HTTP flush needs them), then fakes the clock for the roll. */
+    async function rolled() {
+      const page = await render();
+      vi.useFakeTimers();
+      faces.push(2);
+      page.host.querySelector<HTMLButtonElement>('button[aria-label="Roll Rat (40)"]')!.click();
+      page.fixture.detectChanges();
+      return page;
+    }
+    const status = (page: { dialog: () => HTMLDialogElement }) => page.dialog().querySelector('[role="status"]');
+    const advance = async (page: { fixture: { detectChanges(): void } }, ms: number) => {
+      await vi.advanceTimersByTimeAsync(ms);
+      page.fixture.detectChanges();
+    };
+
+    it('shows Rolling… for 500 ms before the result', async () => {
+      const page = await rolled();
+
+      expect(page.dialog().open).toBe(true);
+      expect(status(page)?.textContent?.trim()).toBe('Rolling…');
+      expect(page.dialog().querySelector('app-treasure-result')).toBeNull();
+
+      await advance(page, 499);
+      expect(status(page)?.textContent?.trim()).toBe('Rolling…');
+
+      await advance(page, 1);
+      expect(status(page)).toBeNull();
+      expect(page.dialog().textContent).toContain('2 damage');
+    });
+
+    it('Re-roll shows the spinner again', async () => {
+      const page = await rolled();
+      await advance(page, 500);
+
+      faces.push(3);
+      page.button('Re-roll').click();
+      page.fixture.detectChanges();
+      expect(status(page)?.textContent?.trim()).toBe('Rolling…');
+
+      await advance(page, 500);
+      expect(page.dialog().textContent).toContain('3 damage');
+    });
+
+    it('Re-roll is ignored while rolling', async () => {
+      const page = await rolled();
+      faces.push(3);
+
+      expect(page.button('Re-roll').getAttribute('aria-disabled')).toBe('true');
+      page.button('Re-roll').click();
+      await advance(page, 500);
+
+      expect(faces).toEqual([3]);
+      expect(page.button('Re-roll').getAttribute('aria-disabled')).toBeNull();
+    });
+  });
 
   it('row roll opens a titled dialog with outcomes only', async () => {
     const page = await render();

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, InjectionToken, input, signal, viewChild } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { EquipmentCategoryDto, EquipmentItemDto, SpellDto, TreasureEntryDto } from '../../api/models';
 import { CoinStandardStore } from '../../core/coin-standard.store';
@@ -9,6 +9,9 @@ import { SearchBox } from '../../shared/search-box';
 import { suggestSpells } from '../../treasure/spell-suggestions';
 import { grimoireRolls, resolveEntry, rollTreasure, TreasureResult } from '../../treasure/treasure-resolver';
 import { TreasureResultView } from './treasure-result';
+
+/** How long the dialog shows the rolling spinner before the result. The roll itself is instant; the pause is for the table. */
+export const ROLL_DELAY_MS = new InjectionToken<number>('ROLL_DELAY_MS', { factory: () => 500 });
 
 @Component({
   selector: 'app-treasure-page',
@@ -41,6 +44,9 @@ export class TreasurePage {
     () => !!this.rates() && !!this.all.value() && this.equipment.hasValue() && this.categoryList.hasValue() && this.spells.hasValue(),
   );
 
+  private readonly rollDelayMs = inject(ROLL_DELAY_MS);
+  /** True while the spinner shows; the result is already rolled and waits for the delay. */
+  protected readonly rolling = signal(false);
   protected readonly result = signal<TreasureResult | null>(null);
   /** A grimoire's suggested spells, rolled with the result; empty for anything else. */
   protected readonly suggested = signal<readonly SpellDto[]>([]);
@@ -61,7 +67,7 @@ export class TreasurePage {
   }
 
   protected rollAgain(): void {
-    this.rerun?.();
+    if (!this.rolling()) this.rerun?.();
   }
 
   protected close(): void {
@@ -77,11 +83,17 @@ export class TreasurePage {
     if (!inside) dialog.close();
   }
 
+  /** Opens the dialog on the spinner, then shows the result once the delay is up. */
   private show(result: TreasureResult): void {
-    this.result.set(result);
-    this.suggested.set(this.grimoire(result));
+    const suggested = this.grimoire(result);
+    this.rolling.set(true);
     const dialog = this.dialog().nativeElement;
     if (!dialog.open) dialog.showModal();
+    setTimeout(() => {
+      this.result.set(result);
+      this.suggested.set(suggested);
+      this.rolling.set(false);
+    }, this.rollDelayMs);
   }
 
   private grimoire(result: TreasureResult): SpellDto[] {
