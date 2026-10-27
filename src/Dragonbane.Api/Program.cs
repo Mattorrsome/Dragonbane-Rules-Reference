@@ -54,6 +54,7 @@ app.MapSection<Supply, GlossaryDto<Supply>, NameFilter<Supply>>("supplies");
 app.MapSection<WeaponTerm, GlossaryDto<WeaponTerm>, NameFilter<WeaponTerm>>("weapon-terms");
 app.MapSection<WeaponFeature, GlossaryDto<WeaponFeature>, NameFilter<WeaponFeature>>("weapon-features");
 app.MapSection<TreasureEntry, TreasureEntryDto, TreasureFilter>("treasure");
+app.MapSection<Npc, NpcDto, NameFilter<Npc>>("npcs");
 
 app.MapGet("/api/currency-rates", async (DragonbaneDbContext db, CancellationToken ct) =>
     TypedResults.Ok(await db.CurrencyRates.OrderBy(r => r.CopperValue).Select(r => new CurrencyRateDto(r.Name, r.CopperValue)).ToArrayAsync(ct)))

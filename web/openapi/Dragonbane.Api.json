@@ -769,6 +769,70 @@
           }
         }
       }
+    },
+    "/api/npcs": {
+      "get": {
+        "tags": [
+          "npcs"
+        ],
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NpcDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/npcs/{id}": {
+      "get": {
+        "tags": [
+          "npcs"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NpcDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1046,6 +1110,106 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "NpcDto": {
+        "required": [
+          "id",
+          "name",
+          "isBoss",
+          "hp",
+          "wp",
+          "damageBonusAttribute",
+          "damageBonusDice",
+          "skills",
+          "heroicAbilities",
+          "gear"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isBoss": {
+            "type": "boolean"
+          },
+          "hp": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "damageBonusAttribute": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "damageBonusDice": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NpcSkillDto"
+            }
+          },
+          "heroicAbilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NpcHeroicAbilityDto"
+            }
+          },
+          "gear": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "NpcHeroicAbilityDto": {
+        "required": [
+          "name",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "NpcSkillDto": {
+        "required": [
+          "name",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1468,6 +1632,9 @@
     },
     {
       "name": "treasure"
+    },
+    {
+      "name": "npcs"
     }
   ]
 }

@@ -935,6 +935,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/npcs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NpcDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/npcs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NpcDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1008,6 +1089,31 @@ export interface components {
             name: string;
             description: string;
             note: null | string;
+        };
+        NpcDto: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+            isBoss: boolean;
+            /** Format: int32 */
+            hp: number;
+            /** Format: int32 */
+            wp: null | number;
+            damageBonusAttribute: null | string;
+            damageBonusDice: null | string;
+            skills: components["schemas"]["NpcSkillDto"][];
+            heroicAbilities: components["schemas"]["NpcHeroicAbilityDto"][];
+            gear: string[];
+        };
+        NpcHeroicAbilityDto: {
+            name: string;
+            /** Format: int32 */
+            count: number;
+        };
+        NpcSkillDto: {
+            name: string;
+            /** Format: int32 */
+            level: number;
         };
         RankedSpellDto: {
             prerequisite: string;

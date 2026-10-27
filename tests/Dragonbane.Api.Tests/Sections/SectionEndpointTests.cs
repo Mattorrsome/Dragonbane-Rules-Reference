@@ -26,8 +26,48 @@ public class SectionEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory
     [InlineData("equipment", 157)]
     [InlineData("treasure", 40)]
     [InlineData("magic-schools", 13)]
+    [InlineData("npcs", 11)]
     public async Task List_returns_all_rows(string section, int count) =>
         Assert.Equal(count, (await List($"/api/{section}")).Length);
+
+    [Fact]
+    public async Task Npcs_list_in_source_order()
+    {
+        var npcs = await List("/api/npcs");
+
+        Assert.Equal("Guard", npcs[0].GetProperty("name").GetString());
+        Assert.Equal(JsonValueKind.Null, npcs[0].GetProperty("wp").ValueKind);
+        Assert.Equal("Villager", npcs[3].GetProperty("name").GetString());
+        Assert.Equal(JsonValueKind.Null, npcs[3].GetProperty("damageBonusAttribute").ValueKind);
+        Assert.Equal(JsonValueKind.Null, npcs[3].GetProperty("damageBonusDice").ValueKind);
+        Assert.Equal(
+            ["Awareness 10", "Swords 12"],
+            npcs[0].GetProperty("skills").EnumerateArray().Select(s => $"{s.GetProperty("name").GetString()} {s.GetProperty("level").GetInt32()}"));
+    }
+
+    [Fact]
+    public async Task Npc_by_id()
+    {
+        var id = await IdOf("npcs", "Bandit chief");
+        var chief = (await _client.GetFromJsonAsync<JsonElement>($"/api/npcs/{id}", Json))!;
+
+        Assert.True(chief.GetProperty("isBoss").GetBoolean());
+        Assert.Equal((30, 16), (chief.GetProperty("hp").GetInt32(), chief.GetProperty("wp").GetInt32()));
+        Assert.Equal(("STR", "D6"), (chief.GetProperty("damageBonusAttribute").GetString(), chief.GetProperty("damageBonusDice").GetString()));
+        Assert.Equal(
+            ["Berserker 1", "Robust 6", "Veteran 1"],
+            chief.GetProperty("heroicAbilities").EnumerateArray().Select(a => $"{a.GetProperty("name").GetString()} {a.GetProperty("count").GetInt32()}"));
+        Assert.Equal(["Heavy warhammer", "Chainmail", "Open helmet"], chief.GetProperty("gear").EnumerateArray().Select(g => g.GetString()));
+    }
+
+    [Fact]
+    public async Task Archmage_magic_school_has_its_name()
+    {
+        var archmage = (await List("/api/npcs?search=Archmage")).Single();
+
+        Assert.Contains(archmage.GetProperty("skills").EnumerateArray(),
+            s => s.GetProperty("name").GetString() == "Magic school" && s.GetProperty("level").GetInt32() == 15);
+    }
 
     [Fact]
     public async Task Filters_skills_by_type()

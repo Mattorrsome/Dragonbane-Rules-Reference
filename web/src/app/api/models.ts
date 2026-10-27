@@ -22,6 +22,9 @@ export type TreasureRollDto = Schemas['TreasureRollDto'];
 export type TreasureOutcomeDto = Schemas['TreasureOutcomeDto'];
 export type RollPurpose = Schemas['RollPurpose'];
 export type CurrencyRateDto = Schemas['CurrencyRateDto'];
+export type NpcDto = Schemas['NpcDto'];
+export type NpcSkillDto = Schemas['NpcSkillDto'];
+export type NpcHeroicAbilityDto = Schemas['NpcHeroicAbilityDto'];
 
 /** How prices are shown: as written in the source, or converted into one coin. */
 export type CoinStandard = 'written' | 'copper' | 'silver' | 'gold';

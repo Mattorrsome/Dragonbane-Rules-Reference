@@ -96,3 +96,19 @@ public sealed record TreasureEntryDto(int Id, int Roll, string Name, string Effe
 }
 
 public sealed record CurrencyRateDto(string Name, int CopperValue);
+
+/// <summary>A skill level by name: the linked skill's name, or "Magic school" for the one kept unlinked.</summary>
+public sealed record NpcSkillDto(string Name, int Level);
+
+public sealed record NpcHeroicAbilityDto(string Name, int Count);
+
+/// <summary>A typical NPC; lists are in source order and name rows of the other sections (gear by item name).</summary>
+public sealed record NpcDto(int Id, string Name, bool IsBoss, int Hp, int? Wp, string? DamageBonusAttribute, string? DamageBonusDice,
+    NpcSkillDto[] Skills, NpcHeroicAbilityDto[] HeroicAbilities, string[] Gear) : ISectionDto<Npc, NpcDto>
+{
+    public static Expression<Func<Npc, NpcDto>> Projection { get; } = n => new NpcDto(
+        n.Id, n.Name, n.IsBoss, n.Hp, n.Wp, n.DamageBonusAttribute!.Code, n.DamageBonusDice,
+        n.Skills.OrderBy(s => s.Id).Select(s => new NpcSkillDto(s.Skill != null ? s.Skill.Name : s.UnlinkedName!, s.Level)).ToArray(),
+        n.HeroicAbilities.OrderBy(a => a.Id).Select(a => new NpcHeroicAbilityDto(a.HeroicAbility.Name, a.Count)).ToArray(),
+        n.Gear.OrderBy(g => g.Id).Select(g => g.EquipmentItem.Name).ToArray());
+}
