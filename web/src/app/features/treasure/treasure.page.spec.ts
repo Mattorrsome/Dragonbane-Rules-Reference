@@ -258,8 +258,19 @@ describe('TreasurePage', () => {
     const close = page.button('Close');
     expect(close.classList).toContain('dialog-close');
     expect(close.textContent?.trim()).toBe('');
-    expect(dialog.lastElementChild?.classList).toContain('dialog-actions');
-    expect(dialog.lastElementChild?.textContent?.trim()).toBe('Re-roll');
+    // Close sits outside the scrolling body so it can hang over the corner.
+    expect(dialog.firstElementChild).toBe(close);
+    const body = dialog.querySelector('.dialog-body')!;
+    expect(body.lastElementChild?.classList).toContain('dialog-actions');
+    expect(body.lastElementChild?.textContent?.trim()).toBe('Re-roll');
+  });
+
+  it('result lines are not centred (the block is, the text is left-aligned)', async () => {
+    const page = await render();
+    await page.roll('Rat', 40, 2);
+
+    expect(page.dialog().querySelector('app-treasure-result p')).not.toBeNull();
+    expect(page.dialog().querySelectorAll('app-treasure-result .center-text').length).toBe(0);
   });
 
   it('a click outside the dialog closes it; a click inside does not', async () => {

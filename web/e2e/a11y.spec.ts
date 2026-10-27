@@ -134,3 +134,61 @@ test('treasure roll opens an accessible dialog', async ({ page }) => {
   await expect(dialog).toBeHidden();
   await expect(roll).toBeFocused();
 });
+
+/** Rolls one treasure row and waits for its result (the spinner takes 0.5 s). */
+async function rollRow(page: import('@playwright/test').Page, name: string, roll: number) {
+  await page.getByRole('button', { name: `Roll ${name} (${roll})` }).click();
+  await expect(page.getByRole('dialog').getByRole('heading', { level: 2 })).toHaveText(`${roll} - ${name}`);
+}
+
+for (const viewport of viewports) {
+  test.describe(`treasure dialog layout ${viewport.width}×${viewport.height}`, () => {
+    test.use({ viewport });
+
+    test('Close sits on the top-right corner, inside the window', async ({ page }) => {
+      await page.goto('/treasure');
+      await page.locator('table').first().waitFor();
+      await rollRow(page, 'Rat', 40);
+
+      const dialog = page.getByRole('dialog');
+      const d = (await dialog.boundingBox())!;
+      const c = (await dialog.getByRole('button', { name: 'Close' }).boundingBox())!;
+      expect(Math.abs(c.x + c.width / 2 - (d.x + d.width))).toBeLessThanOrEqual(1);
+      expect(Math.abs(c.y + c.height / 2 - d.y)).toBeLessThanOrEqual(1);
+      expect(c.width).toBeGreaterThanOrEqual(44);
+      expect(c.x + c.width).toBeLessThanOrEqual(viewport.width);
+      expect(c.y).toBeGreaterThanOrEqual(0);
+    });
+
+    test('a short result sits in the middle, text left-aligned, and Re-roll does not move', async ({ page }) => {
+      await page.goto('/treasure');
+      await page.locator('table').first().waitFor();
+      await rollRow(page, 'Rat', 40);
+
+      const dialog = page.getByRole('dialog');
+      const layout = await dialog.evaluate(el => {
+        const box = (s: string) => el.querySelector(s)!.getBoundingClientRect();
+        const body = box('.dialog-body'), head = box('.dialog-head'), actions = box('.dialog-actions'), result = box('.treasure-result');
+        const style = getComputedStyle(el.querySelector('.dialog-body')!);
+        const left = body.left + parseFloat(style.paddingLeft), right = body.right - parseFloat(style.paddingRight);
+        return {
+          dx: (result.left + result.right) / 2 - (left + right) / 2,
+          dy: (result.top + result.bottom) / 2 - (head.bottom + actions.top) / 2,
+          align: [...el.querySelectorAll('.treasure-result p')].map(p => getComputedStyle(p).textAlign),
+          reroll: actions.top,
+        };
+      });
+      expect(Math.abs(layout.dx)).toBeLessThanOrEqual(1);
+      // The margins between the blocks are uneven by a few pixels; the block must sit near the middle, not the top.
+      expect(Math.abs(layout.dy)).toBeLessThanOrEqual(12);
+      expect(new Set(layout.align)).toEqual(new Set(['start']));
+
+      // Only laptop widths keep one box size; on a phone the box grows to fit a long result.
+      if (viewport.width < 1000) return;
+      await dialog.getByRole('button', { name: 'Close' }).click();
+      await rollRow(page, 'Bottle', 36);
+      expect(await dialog.evaluate(el => el.querySelector('.dialog-actions')!.getBoundingClientRect().top)).toBeCloseTo(layout.reroll, 0);
+      expect(await dialog.evaluate(el => el.querySelector('.dialog-body')!.scrollHeight <= el.querySelector('.dialog-body')!.clientHeight)).toBe(true);
+    });
+  });
+}

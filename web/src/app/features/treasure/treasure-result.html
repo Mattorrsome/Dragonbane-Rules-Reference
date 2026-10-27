@@ -2,7 +2,7 @@
   <p class="multiline">{{ result().entry.effectText }}</p>
   @for (line of lines(); track $index) {
     <div class="result-line" [style.margin-left.rem]="line.depth * 1.5">
-      <p class="center-text">{{ line.text }}@if (line.link; as link) {<a routerLink="/equipment" [queryParams]="link.queryParams">{{ link.text }}</a>}{{ line.suffix }}</p>
+      <p>{{ line.text }}@if (line.link; as link) {<a routerLink="/equipment" [queryParams]="link.queryParams">{{ link.text }}</a>}{{ line.suffix }}</p>
       @if (line.stats?.length) {
         <dl class="item-stats">
           @for (stat of line.stats; track stat.label) {

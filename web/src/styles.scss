@@ -409,26 +409,18 @@ input[type='checkbox'] {
   }
 }
 
-/* Treasure result popup: a native modal dialog on the parchment, Close first so it sits top left. */
 /*
- * Treasure result popup. Anchored near the top with a fixed width; the minimum height fits the tallest result,
- * so at laptop widths the box is the same size for every roll and Re-roll, pinned to the bottom centre, never
- * moves. It scrolls only when the window is too short for it at all.
+ * Shared modal dialog. The box itself never scrolls, so the round Close can hang over its top-right corner;
+ * the body inside it scrolls instead (only when the window is too short for the box at all).
  */
-.treasure-dialog[open] {
+.app-dialog[open] {
   display: flex;
   flex-direction: column;
 }
 
-.treasure-dialog {
-  margin: 8vh auto auto;
-  width: min(46rem, 100vw - 2rem);
-  /* The tallest result plus the Re-roll row (a bottle, 24.2em when measured) fits, so every roll is the same size. */
-  --treasure-dialog-min: 24.5em;
-  min-height: min(var(--treasure-dialog-min), 100dvh - 8vh - 1rem);
-  max-height: calc(100dvh - 8vh - 1rem);
-  overflow-y: auto;
-  padding: var(--spacing-md);
+.app-dialog {
+  overflow: visible;
+  padding: 0;
   border: 2px solid var(--parchment-darker);
   border-radius: 2px;
   background: var(--bone-white);
@@ -439,10 +431,54 @@ input[type='checkbox'] {
     background: rgba(0, 0, 0, 0.6);
   }
 
+  .dialog-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+  }
+
+  /*
+   * Close is centred on the box's top-right corner: a 44px ring with an X, filled with the dialog colour and drawn
+   * in demon green dark so it holds 3:1 against both the dialog and the dark backdrop.
+   */
+  .dialog-close {
+    position: absolute;
+    /* Offsets run from inside the 2px border; step out over it to the true corner. */
+    top: -2px;
+    right: -2px;
+    z-index: 1;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+    background: center / 100% no-repeat
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.75' fill='%23f5f2eb' stroke='%2314443a' stroke-width='2.5'/%3E%3Cpath d='M6.8 6.8L13.2 13.2M13.2 6.8L6.8 13.2' stroke='%2314443a' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+    cursor: pointer;
+  }
+}
+
+/*
+ * Treasure result popup. Anchored near the top with a fixed width; the minimum height fits the tallest result,
+ * so at laptop widths the box is the same size for every roll and Re-roll, pinned to the bottom centre, never
+ * moves. The width leaves room for the half of Close that hangs outside, even at 375px.
+ */
+.treasure-dialog {
+  margin: 8vh auto auto;
+  width: min(46rem, 100vw - 3.5rem);
+  /* The tallest result plus the Re-roll row (a bottle, 24.2em when measured) fits, so every roll is the same size. */
+  --treasure-dialog-min: 24.5em;
+  min-height: min(var(--treasure-dialog-min), 100dvh - 8vh - 1rem);
+  max-height: calc(100dvh - 8vh - 1rem);
+
   .dialog-head {
     margin-bottom: var(--spacing-sm);
-    /* Room for the corner Close. */
-    padding-right: 2.5em;
+    /* Clear of the half of Close that hangs inside the corner. */
+    padding-right: 1.5rem;
 
     /* One line whatever the entry name, so the result below never shifts. */
     h2 {
@@ -454,19 +490,19 @@ input[type='checkbox'] {
     }
   }
 
-  /* Close floats in the top right corner: a ring with an X, drawn like the radio buttons (SVG, demon green). */
-  .dialog-close {
-    position: absolute;
-    top: var(--spacing-sm);
-    right: var(--spacing-sm);
-    width: 1.75em;
-    height: 1.75em;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: center / 100% no-repeat
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.75' fill='%23f5f2eb' stroke='%23227262' stroke-width='2.5'/%3E%3Cpath d='M6.8 6.8L13.2 13.2M13.2 6.8L6.8 13.2' stroke='%23227262' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
-    cursor: pointer;
+  /* The result fills the space between title and Re-roll; its block sits in the middle, its text left-aligned. */
+  app-treasure-result {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .treasure-result {
+      width: fit-content;
+      max-width: 100%;
+      margin-bottom: 0;
+    }
   }
 
   /* While rolling: the dragon spins in the middle of the result area, with the text under it. */

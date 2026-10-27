@@ -7,19 +7,21 @@
   </div>
 
   <!-- Same size for every roll, so the title, the corner Close and the bottom Re-roll never move. -->
-  <dialog #dialog class="treasure-dialog" aria-labelledby="treasure-result-title" (click)="closeOnBackdrop($event)">
+  <dialog #dialog class="app-dialog treasure-dialog" aria-labelledby="treasure-result-title" (click)="closeOnBackdrop($event)">
     <button type="button" class="dialog-close" aria-label="Close" (click)="close()"></button>
-    <div class="dialog-head">
-      <h2 id="treasure-result-title">{{ result() ? result()!.entry.roll + ' - ' + result()!.entry.name : 'Treasure' }}</h2>
-    </div>
-    @if (rolling()) {
-      <div class="rolling" role="status"><span class="spinner" aria-hidden="true"></span>Rolling…</div>
-    } @else if (result(); as current) {
-      <app-treasure-result [result]="current" [items]="items()" [categories]="categories()" [suggested]="suggested()"
-        [standard]="coins.standard()" [rates]="rates()!" />
-    }
-    <div class="dialog-actions">
-      <button type="button" class="btn btn-primary" [attr.aria-disabled]="rolling() || null" (click)="rollAgain()">Re-roll</button>
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h2 id="treasure-result-title">{{ result() ? result()!.entry.roll + ' - ' + result()!.entry.name : 'Treasure' }}</h2>
+      </div>
+      @if (rolling()) {
+        <div class="rolling" role="status"><span class="spinner" aria-hidden="true"></span>Rolling…</div>
+      } @else if (result(); as current) {
+        <app-treasure-result [result]="current" [items]="items()" [categories]="categories()" [suggested]="suggested()"
+          [standard]="coins.standard()" [rates]="rates()!" />
+      }
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-primary" [attr.aria-disabled]="rolling() || null" (click)="rollAgain()">Re-roll</button>
+      </div>
     </div>
   </dialog>
 
