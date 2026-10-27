@@ -613,3 +613,55 @@ input[type='checkbox'] {
 .center-text {
   text-align: center;
 }
+
+/* NPC Manager: section headings under the chapter title, and the names in a typical NPC's cells. */
+.npc-heading {
+  margin: var(--spacing-lg) 0 var(--spacing-xs);
+  font-family: var(--font-display);
+  font-size: 1.3em;
+  color: var(--accent);
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.npc-names {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  /* The disclosure triangle marks each name; no star bullet as well. */
+  li {
+    padding-left: 0;
+    margin-bottom: 0.15em;
+
+    &::before {
+      content: none;
+    }
+  }
+
+  /* A name opens to its Reference description, in smaller text under it. */
+  summary {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+  }
+
+  details[open] p {
+    margin: var(--spacing-xs) 0 var(--spacing-sm);
+    font-size: 0.85em;
+    line-height: 1.4;
+  }
+}
+
+.npc-table [data-label='Bonus'] {
+  white-space: nowrap;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs);
+}

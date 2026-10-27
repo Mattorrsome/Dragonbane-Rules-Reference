@@ -1,3 +1,99 @@
 <section class="section">
   <h1 class="chapter-title">NPC Manager</h1>
+
+  <h2 class="npc-heading">Typical NPCs</h2>
+  @if (npcs.error()) {
+    <p class="status" role="alert">The NPC table could not be loaded. Is the API running?</p>
+  } @else {
+    <p class="status" aria-live="polite">
+      @if (npcs.isLoading()) { Loading… } @else { {{ npcs.value()?.length ?? 0 }} typical NPCs }
+    </p>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Typical NPCs table">
+      <table class="data-table stack npc-table">
+        <caption>Typical NPCs</caption>
+        <thead>
+          <tr>
+            <th scope="col">Type</th>
+            <th scope="col">Skills</th>
+            <th scope="col">Heroic abilities</th>
+            <th scope="col">Bonus</th>
+            <th scope="col">HP</th>
+            <th scope="col">WP</th>
+            <th scope="col">Typical gear</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (npc of npcs.value() ?? []; track npc.id) {
+            <tr>
+              <td class="row-title">{{ npc.name }}</td>
+              <td data-label="Skills"><ng-container *ngTemplateOutlet="names; context: { $implicit: skillCells(npc) }" /></td>
+              <td data-label="Heroic abilities"><ng-container *ngTemplateOutlet="names; context: { $implicit: abilityCells(npc) }" /></td>
+              <td data-label="Bonus">{{ npc.damageBonusAttribute ? npc.damageBonusAttribute + ' +' + npc.damageBonusDice : '-' }}</td>
+              <td data-label="HP">{{ npc.hp }}</td>
+              <td data-label="WP">{{ npc.wp ?? '-' }}</td>
+              <td data-label="Typical gear"><ng-container *ngTemplateOutlet="names; context: { $implicit: gearCells(npc) }" /></td>
+              <td>
+                <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                  [attr.aria-label]="'Tweak ' + npc.name" (click)="tweak(npc)">Tweak</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <h2 class="npc-heading" id="my-npcs-heading" tabindex="-1" #myHeading>My NPCs</h2>
+  @if (store.npcs().length === 0) {
+    <p class="status">No saved NPCs yet. Tweak a typical NPC to make one.</p>
+  } @else {
+    <div class="table-wrap" tabindex="0" role="region" aria-label="My NPCs table">
+      <table class="data-table stack">
+        <caption>My NPCs</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Based on</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (npc of store.npcs(); track npc.id) {
+            <tr>
+              <td class="row-title">{{ npc.name }}</td>
+              <td data-label="Based on">{{ npc.basedOn }}</td>
+              <td class="row-actions">
+                @if (confirmingDelete() === npc.id) {
+                  <span>Delete {{ npc.name }}?</span>
+                  <button type="button" class="btn btn-primary btn-small" (click)="remove(npc)">Yes, delete</button>
+                  <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
+                } @else {
+                  <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                    [attr.aria-label]="'Edit ' + npc.name" (click)="edit(npc)">Edit</button>
+                  <button type="button" class="btn btn-secondary btn-small"
+                    [attr.aria-label]="'Delete ' + npc.name" (click)="confirmingDelete.set(npc.id)">Delete</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </section>
+
+<!-- A cell's names: each with a description opens like a disclosure; one without stays plain text. -->
+<ng-template #names let-items>
+  <ul class="npc-names">
+    @for (item of items; track $index) {
+      <li>
+        @if (item.description) {
+          <details><summary>{{ item.text }}</summary><p>{{ item.description }}</p></details>
+        } @else {
+          {{ item.text }}
+        }
+      </li>
+    }
+  </ul>
+</ng-template>
