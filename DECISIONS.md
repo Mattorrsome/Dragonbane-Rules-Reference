@@ -267,3 +267,9 @@ One entry per significant technical decision. Template:
 - Decision: The global styles live in `web/src/styles/`: `tokens.css` (every custom property: colours, fonts, spacing, width), `parchment.css` (the rest of the old `dragonbane.css`) and `app.scss` (the old `styles.scss`), loaded in that order from `angular.json`. `CLAUDE.md` names this folder as the source of truth; the skill is only where the style came from. Pure move: no rule changed.
 - Alternatives: Keep the two files where they were and only change `CLAUDE.md`; Sass partials with `@use` (the token file is plain CSS custom properties, which need no Sass).
 - Why: One file holds every token, so new work reuses them instead of copying raw colours, and nothing outside the repo decides how the app looks.
+
+## Menu switches apps; Reference keeps its tabs (2026-10-27)
+- Context: Feedback: the app gains an NPC Manager next to the Reference, reached from a hamburger menu, with the Reference as the default page.
+- Decision: A hamburger button opens a native `popover` menu with two links, Dragonbane Reference (`/reference`) and NPC Manager (`/npcs`). The brand shows the current app. On the Reference the five section tabs and the coin standard select stay in the bar as before; the NPC Manager shows neither. Sections move under `/reference/<section>`; `''`, unknown paths and the old `/<section>` paths redirect there (query parameters carry over). The menu sits under its button with CSS anchor positioning, falling back to the bar's left edge.
+- Alternatives: Put the five sections inside the menu too (chosen against in the mockup: two clicks to change section); a hand-rolled open/close signal (the native popover already gives Escape, light dismiss and focus return).
+- Why: Changing section stays one click at the table; the native popover needs no code for its keyboard behaviour; redirects keep existing bookmarks and treasure-result links working.

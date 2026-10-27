@@ -15,6 +15,70 @@
   }
 }
 
+.nav-start {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* 44px target, drawn like the coin select: parchment on the green band. */
+.menu-button {
+  anchor-name: --app-menu;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 2px solid var(--parchment-darker);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--parchment);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+/* Opens under the button where anchor positioning exists, else under the bar's left edge. */
+.app-menu {
+  inset: auto;
+  top: 4.5rem;
+  left: var(--spacing-md);
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+  min-width: 14rem;
+  border: 2px solid var(--demon-green);
+  border-radius: 2px;
+  background: var(--demon-green-dark);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+
+  @supports (position-area: bottom) {
+    position-anchor: --app-menu;
+    position-area: bottom span-right;
+    top: auto;
+    left: auto;
+    margin-top: var(--spacing-xs);
+  }
+
+  a {
+    display: block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    color: var(--parchment);
+    font-size: 1.15rem;
+
+    &:hover,
+    &:focus-visible {
+      color: #fff;
+      background: var(--demon-green);
+      text-decoration: none;
+    }
+
+    &.active {
+      border-left: 3px solid var(--dragon-red-light);
+    }
+  }
+}
+
 .coin-standard {
   display: flex;
   align-items: center;

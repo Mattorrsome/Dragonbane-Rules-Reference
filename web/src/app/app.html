@@ -1,20 +1,31 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="navbar">
   <div class="nav-content">
-    <a class="nav-brand" routerLink="/">Dragonbane Reference</a>
-    <nav class="nav-links" aria-label="Sections">
-      @for (section of sections; track section.path) {
-        <a [routerLink]="section.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ section.label }}</a>
-      }
-    </nav>
-    <div class="coin-standard">
-      <label for="coin-standard">Coin standard</label>
-      <select id="coin-standard" (change)="onStandardChange($event)">
-        @for (standard of standards; track standard.value) {
-          <option [value]="standard.value" [selected]="standard.value === coins.standard()">{{ standard.label }}</option>
+    <div class="nav-start">
+      <!-- Native popover: Escape and a click outside close it, and focus returns to the button. -->
+      <button type="button" class="menu-button" popovertarget="app-menu" aria-label="Menu"><span aria-hidden="true">☰</span></button>
+      <nav id="app-menu" class="app-menu" popover aria-label="Apps" #menu>
+        @for (app of apps; track app.path) {
+          <a [routerLink]="app.path" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="menu.hidePopover()">{{ app.label }}</a>
         }
-      </select>
+      </nav>
+      <a class="nav-brand" [routerLink]="currentApp() === 'reference' ? '/reference' : '/npcs'">{{ currentApp() === 'reference' ? 'Dragonbane Reference' : 'NPC Manager' }}</a>
     </div>
+    @if (currentApp() === 'reference') {
+      <nav class="nav-links" aria-label="Sections">
+        @for (section of sections; track section.path) {
+          <a [routerLink]="section.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ section.label }}</a>
+        }
+      </nav>
+      <div class="coin-standard">
+        <label for="coin-standard">Coin standard</label>
+        <select id="coin-standard" (change)="onStandardChange($event)">
+          @for (standard of standards; track standard.value) {
+            <option [value]="standard.value" [selected]="standard.value === coins.standard()">{{ standard.label }}</option>
+          }
+        </select>
+      </div>
+    }
   </div>
 </header>
 

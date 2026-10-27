@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-const routes = ['/skills', '/heroic-abilities', '/spells', '/equipment', '/treasure'];
+const routes = ['/reference/skills', '/reference/heroic-abilities', '/reference/spells', '/reference/equipment', '/reference/treasure'];
 
 /**
  * Content that does not fit. The page itself never scrolls sideways because `.page-scroll` clips with
@@ -66,7 +66,7 @@ test.describe('filter rows line up', () => {
 });
 
 test('equipment controls by keyboard', async ({ page }) => {
-  await page.goto('/equipment');
+  await page.goto('/reference/equipment');
   await page.locator('table').first().waitFor();
 
   await page.locator('input[name="price-mode"][value="buy"]').focus();
@@ -90,7 +90,7 @@ test('equipment controls by keyboard', async ({ page }) => {
  * button's text against the row tint laid over the sandiest parchment tone in the scroll tile (#e8dbbf).
  */
 test('pressed mastercrafted button keeps AA contrast on the tinted row', async ({ page }) => {
-  await page.goto('/equipment');
+  await page.goto('/reference/equipment');
   await page.locator('table').first().waitFor();
   const button = page.getByRole('button', { name: 'Mastercrafted' }).first();
   await button.click();
@@ -112,7 +112,7 @@ test('pressed mastercrafted button keeps AA contrast on the tinted row', async (
 });
 
 test('treasure roll opens an accessible dialog', async ({ page }) => {
-  await page.goto('/treasure');
+  await page.goto('/reference/treasure');
   await page.locator('table').first().waitFor();
   const roll = page.getByRole('button', { name: 'Roll treasure (D40)' });
 
@@ -146,7 +146,7 @@ for (const viewport of viewports) {
     test.use({ viewport });
 
     test('Close sits on the top-right corner, inside the window', async ({ page }) => {
-      await page.goto('/treasure');
+      await page.goto('/reference/treasure');
       await page.locator('table').first().waitFor();
       await rollRow(page, 'Rat', 40);
 
@@ -161,7 +161,7 @@ for (const viewport of viewports) {
     });
 
     test('a short result sits in the middle, text left-aligned, and Re-roll does not move', async ({ page }) => {
-      await page.goto('/treasure');
+      await page.goto('/reference/treasure');
       await page.locator('table').first().waitFor();
       await rollRow(page, 'Rat', 40);
 
@@ -196,3 +196,25 @@ for (const viewport of viewports) {
     });
   });
 }
+
+test('app menu opens, closes on Escape back to its button, and switches apps', async ({ page }) => {
+  await page.goto('/reference/skills');
+  await page.locator('table').first().waitFor();
+  const button = page.getByRole('button', { name: 'Menu' });
+  const menu = page.getByRole('navigation', { name: 'Apps' });
+
+  await button.click();
+  await expect(menu).toBeVisible();
+  const results = await new AxeBuilder({ page }).include('#app-menu').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  expect(results.violations.map(v => v.id)).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(button).toBeFocused();
+
+  await button.click();
+  await menu.getByRole('link', { name: 'NPC Manager' }).click();
+  await expect(page).toHaveURL(/\/npcs$/);
+  await expect(menu).toBeHidden();
+  await expect(page.locator('.nav-brand')).toHaveText('NPC Manager');
+  await expect(page.getByRole('navigation', { name: 'Sections' })).toHaveCount(0);
+});

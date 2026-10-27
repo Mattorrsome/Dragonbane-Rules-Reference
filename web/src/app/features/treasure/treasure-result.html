@@ -2,7 +2,7 @@
   <p class="multiline">{{ withoutFinalStop(result().entry.effectText) }}<span class="lead-colon">:</span></p>
   @for (line of lines(); track $index) {
     <div class="result-line" [style.margin-left.rem]="line.depth * 1.5">
-      <p>{{ line.text }}@if (line.link; as link) {<a routerLink="/equipment" [queryParams]="link.queryParams">{{ link.text }}</a>}{{ line.suffix }}</p>
+      <p>{{ line.text }}@if (line.link; as link) {<a routerLink="/reference/equipment" [queryParams]="link.queryParams">{{ link.text }}</a>}{{ line.suffix }}</p>
       @if (line.stats?.length) {
         <dl class="item-stats">
           @for (stat of line.stats; track stat.label) {
@@ -15,11 +15,11 @@
   @if (suggested().length) {
     <ul class="spell-suggestions">
       @for (spell of suggested(); track spell.id) {
-        <li><a routerLink="/spells" [queryParams]="{ search: spell.name }">{{ sentenceCase(spell.name) }}</a></li>
+        <li><a routerLink="/reference/spells" [queryParams]="{ search: spell.name }">{{ sentenceCase(spell.name) }}</a></li>
       }
     </ul>
   }
   @if (spellsLink(); as params) {
-    <p><a routerLink="/spells" [queryParams]="params">Show matching spells</a></p>
+    <p><a routerLink="/reference/spells" [queryParams]="params">Show matching spells</a></p>
   }
 </article>

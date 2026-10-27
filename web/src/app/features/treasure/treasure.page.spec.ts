@@ -192,7 +192,7 @@ describe('TreasurePage', () => {
 
     const link = page.dialog().querySelector('a')!;
     expect(link.textContent?.trim()).toBe('Mastercrafted Battleaxe');
-    expect(link.getAttribute('href')).toContain('/equipment');
+    expect(link.getAttribute('href')).toContain('/reference/equipment');
     const stats = Object.fromEntries([...page.dialog().querySelectorAll('.item-stats div')]
       .map(d => [d.querySelector('dt')!.textContent!.trim(), d.querySelector('dd')!.textContent!.trim()]));
     expect(stats).toEqual({ Grip: '1H', STR: '10', Range: '2', Damage: '2D8', Durability: '12', Cost: '100 gold', Features: 'Toppling, slashing' });
