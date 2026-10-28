@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, injec
 import { NgTemplateOutlet } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../../api/models';
-import { fromTypical, Npc, NpcReference, SavedNpc, stackingLast } from '../../npc/npc';
+import { describeItem, fromTypical, Npc, NpcReference, SavedNpc, stackingLast } from '../../npc/npc';
+import { download } from '../../npc/npc-export';
 import { NpcStore } from '../../npc/npc.store';
 import { NpcEditor } from './npc-editor';
 import { NpcExportMenu } from './npc-export-menu';
@@ -42,6 +43,8 @@ export class NpcsPage {
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   /** The saved NPC open in the export menu. */
   protected readonly exporting = signal<Npc | null>(null);
+  /** What the last JSON import did. */
+  protected readonly importStatus = signal('');
   private readonly exportDialog = viewChild.required<ElementRef<HTMLDialogElement>>('exportDialog');
 
   constructor() {
@@ -83,6 +86,24 @@ export class NpcsPage {
   /** Exports the typical NPC as it is, without saving a copy. */
   protected exportTypical(dto: NpcDto): void {
     this.exporting.set(fromTypical(dto, this.ref()!));
+  }
+
+  protected exportAll(): void {
+    download(new Blob([this.store.exportJson()], { type: 'application/json' }), 'dragonbane-npcs.json');
+  }
+
+  protected async importFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const count = this.store.importJson(await file.text());
+      this.importStatus.set(`Imported ${count} NPC${count === 1 ? '' : 's'}.`);
+    } catch {
+      this.importStatus.set('That file is not an NPC list. Nothing was imported.');
+    }
+    // Choosing the same file again still fires change.
+    input.value = '';
   }
 
   protected edit(npc: SavedNpc): void {
@@ -127,14 +148,4 @@ function onBackdrop(event: MouseEvent): boolean {
 function toggle(dialog: HTMLDialogElement, open: boolean): void {
   if (open && !dialog.open) dialog.showModal();
   if (!open && dialog.open) dialog.close();
-}
-
-/** A weapon's or armour's stats first (their effect is often empty), then the item's effect. */
-function describeItem(item: EquipmentItemDto): string | null {
-  const parts = [
-    item.weapon ? `Damage ${item.weapon.damage}, ${item.weapon.featuresText.toLowerCase()}` : null,
-    item.armour ? `Armour rating ${item.armour.rating}` : null,
-    item.weapon ? null : item.effect,
-  ].filter(Boolean);
-  return parts.length ? parts.join('. ') : null;
 }

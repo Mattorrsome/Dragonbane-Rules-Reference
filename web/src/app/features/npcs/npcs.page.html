@@ -47,6 +47,13 @@
   }
 
   <h2 class="npc-heading" id="my-npcs-heading" tabindex="-1" #myHeading>My NPCs</h2>
+  <!-- The whole list as a JSON file: a backup, or a way to move NPCs to another browser. -->
+  <div class="npc-file-actions">
+    <button type="button" class="btn btn-secondary btn-small" [disabled]="store.npcs().length === 0" (click)="exportAll()">Export JSON</button>
+    <button type="button" class="btn btn-secondary btn-small" (click)="fileInput.click()">Import JSON</button>
+    <input #fileInput type="file" accept=".json,application/json" hidden (change)="importFile($event)" />
+    <p class="import-status" role="status">{{ importStatus() }}</p>
+  </div>
   @if (store.npcs().length === 0) {
     <p class="status">No saved NPCs yet. Tweak a typical NPC to make one.</p>
   } @else {

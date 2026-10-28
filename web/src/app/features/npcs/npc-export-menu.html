@@ -1,20 +1,23 @@
 <div class="npc-export">
   <div class="npc-export-actions">
     <div class="field-check">
-      <input id="export-descriptions" type="checkbox" [checked]="withDescriptions()" (change)="withDescriptions.set($any($event.target).checked)" />
+      <input id="export-descriptions" type="checkbox" [checked]="withDescriptions()" (change)="setDescriptions($any($event.target).checked)" />
       <label for="export-descriptions">Include spell and heroic ability descriptions</label>
     </div>
-    <div class="export-group" role="group" aria-label="Image">
-      <button type="button" class="btn btn-primary btn-small" (click)="copyImage()">Copy image</button>
-      <button type="button" class="btn btn-secondary btn-small" (click)="downloadImage()">Download image</button>
-    </div>
-    <div class="export-group" role="group" aria-label="Plain text">
-      <button type="button" class="btn btn-primary btn-small" (click)="copyText(false)">Copy text</button>
-      <button type="button" class="btn btn-secondary btn-small" (click)="downloadText(false)">Download text</button>
-    </div>
-    <div class="export-group" role="group" aria-label="Markdown">
-      <button type="button" class="btn btn-primary btn-small" (click)="copyText(true)">Copy Markdown</button>
-      <button type="button" class="btn btn-secondary btn-small" (click)="downloadText(true)">Download Markdown</button>
+    <!-- Copy and Download each open a native popover listing the formats; Escape or a click outside closes it. -->
+    <div class="export-buttons">
+      <button type="button" class="btn btn-primary btn-small export-opener" popovertarget="export-copy-menu">Copy <span aria-hidden="true">▾</span></button>
+      <div id="export-copy-menu" class="export-menu" popover role="group" aria-label="Copy as">
+        <button type="button" aria-label="Copy image" popovertarget="export-copy-menu" popovertargetaction="hide" (click)="copyImage()">Image</button>
+        <button type="button" aria-label="Copy text" popovertarget="export-copy-menu" popovertargetaction="hide" (click)="copyText(false)">Text</button>
+        <button type="button" aria-label="Copy Markdown" popovertarget="export-copy-menu" popovertargetaction="hide" (click)="copyText(true)">Markdown</button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-small export-opener export-opener-download" popovertarget="export-download-menu">Download <span aria-hidden="true">▾</span></button>
+      <div id="export-download-menu" class="export-menu export-menu-download" popover role="group" aria-label="Download as">
+        <button type="button" aria-label="Download image" popovertarget="export-download-menu" popovertargetaction="hide" (click)="downloadImage()">Image</button>
+        <button type="button" aria-label="Download text" popovertarget="export-download-menu" popovertargetaction="hide" (click)="downloadText(false)">Text</button>
+        <button type="button" aria-label="Download Markdown" popovertarget="export-download-menu" popovertargetaction="hide" (click)="downloadText(true)">Markdown</button>
+      </div>
     </div>
     <p class="export-status" role="status">{{ status() }}</p>
   </div>

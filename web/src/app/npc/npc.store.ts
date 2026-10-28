@@ -34,6 +34,26 @@ export class NpcStore {
     this.write(this.value().filter(n => n.id !== id));
   }
 
+  /** Every saved NPC, as a file another browser can import. */
+  exportJson(): string {
+    return JSON.stringify(this.value(), null, 2);
+  }
+
+  /**
+   * Adds the NPCs in an exported file: one with a saved NPC's id replaces it, the rest are added. Unreadable entries
+   * are skipped. Throws, changing nothing, when the text is not a list holding at least one readable NPC.
+   */
+  importJson(text: string): number {
+    const parsed: unknown = JSON.parse(text);
+    const found = Array.isArray(parsed) ? parsed.filter(isSaved).map(withDefaults) : [];
+    if (!found.length) throw new Error('No NPCs in that file.');
+    // Keyed by id in list order: a file entry replaces the saved one in place, new ids go at the end.
+    const byId = new Map(this.value().map(n => [n.id, n]));
+    for (const npc of found) byId.set(npc.id, npc);
+    this.write([...byId.values()]);
+    return new Set(found.map(n => n.id)).size;
+  }
+
   private write(list: readonly SavedNpc[]): void {
     this.value.set(list);
     try {

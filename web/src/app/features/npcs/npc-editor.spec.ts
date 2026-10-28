@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { fromTypical, Npc } from '../../npc/npc';
+import { addSpell, fromTypical, Npc } from '../../npc/npc';
 import { BANDIT_CHIEF, GUARD, NPC_REFERENCE as ref } from '../../npc/npc.fixture';
 import { NpcEditor } from './npc-editor';
 
@@ -130,17 +130,54 @@ describe('NpcEditor', () => {
     expect(e.saved[0].skills[0]).toEqual({ name: 'Awareness', level: 12 });
   });
 
-  it('the preview follows the draft and the descriptions checkbox', () => {
+  it('the preview follows the draft and shows descriptions until the box is unticked', () => {
     const e = render(fromTypical(BANDIT_CHIEF, ref));
 
     e.type(e.field('Name'), 'Grok');
     expect(e.preview().querySelector('.npc-card-name')?.textContent?.trim()).toBe('Grok');
-    expect(e.preview().querySelector('.entry-detail')).toBeNull();
+    const box = e.field<HTMLInputElement>('Show spell and heroic ability descriptions');
+    expect(box.checked).toBe(true);
+    expect(e.preview().querySelector('.entry-detail')).not.toBeNull();
 
-    const box = e.field<HTMLInputElement>('Include spell and heroic ability descriptions');
     box.click();
     e.click('Remove Awareness');
-    expect(e.preview().querySelector('.entry-detail')).not.toBeNull();
+    expect(e.preview().querySelector('.entry-detail')).toBeNull();
+  });
+
+  it('each picker sits above its chips with an unlabelled box and a plain "Add" button', () => {
+    const e = render(fromTypical(BANDIT_CHIEF, ref));
+
+    for (const group of e.host.querySelectorAll('fieldset.chip-group')) {
+      expect(group.querySelector('.picker')!.compareDocumentPosition(group.querySelector('ul.chips')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(group.querySelector('.picker label')).toBeNull();
+      expect(group.querySelector('.picker .btn')?.textContent?.trim()).toBe('Add');
+    }
+    expect(e.field('Gear to add')).not.toBeNull();
+    expect(e.button('Add gear').textContent?.trim()).toBe('Add');
+  });
+
+  it('a clear button empties the picker box and appears only while it holds text', () => {
+    const e = render(fromTypical(BANDIT_CHIEF, ref));
+    const box = e.field<HTMLInputElement>('Spell to add');
+
+    expect(e.button('Clear spell')).toBeUndefined();
+    e.type(box, 'Dis');
+    e.click('Clear spell');
+
+    expect(box.value).toBe('');
+    expect(e.button('Clear spell')).toBeUndefined();
+  });
+
+  it('each chip shows its description as a tooltip', () => {
+    const npc = addSpell(fromTypical(BANDIT_CHIEF, ref), { name: 'DISPEL', school: 'General Magic', kind: 'Spell' });
+    const e = render(npc);
+    const title = (list: string, name: string) =>
+      [...e.host.querySelectorAll(`[aria-label="${list}"] li`)].find(li => li.querySelector('.chip-name')?.textContent?.trim() === name)?.getAttribute('title');
+
+    expect(title('Skills', 'Awareness')).toBe(ref.skills.find(s => s.name === 'Awareness')!.description);
+    expect(title('Heroic abilities', 'Berserker')).toBe(ref.abilities.find(a => a.name === 'Berserker')!.effect);
+    expect(title('Gear', 'Chainmail')).toBe('Armour rating 4. Bane to EVADE and SNEAKING.');
+    expect(title('Spells', 'Dispel (General Magic)')).toBe(ref.spells.find(s => s.name === 'DISPEL')!.description);
   });
 
   it('Save needs a name and numbers of 0 or more', () => {

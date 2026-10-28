@@ -37,31 +37,24 @@
 
     <fieldset class="chip-group">
       <legend>Skills</legend>
+      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'skill', noun: 'skill' }" />
       <ul class="chips" aria-label="Skills">
         @for (skill of d.skills; track skill.name) {
-          <li>
+          <li [attr.title]="tip('skill', skill.name)">
             <span class="chip-name">{{ skill.name }}</span>
             <input type="number" min="0" class="chip-number" [attr.aria-label]="skill.name + ' level'" [value]="skill.level" (input)="setLevel(skill.name, $event)" />
             <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + skill.name" (click)="removeSkill(skill.name)">✕</button>
           </li>
         }
       </ul>
-      <div class="picker">
-        <label for="skill-to-add">Skill to add</label>
-        <input id="skill-to-add" list="skill-options" [value]="toAdd().skill" (input)="typed('skill', $event)" (keydown.enter)="$event.preventDefault(); add('skill')" />
-        <datalist id="skill-options">
-          @for (s of ref().skills; track s.id) { <option [value]="s.name"></option> }
-        </datalist>
-        <button type="button" class="btn btn-secondary btn-small" (click)="add('skill')">Add skill</button>
-      </div>
-      @if (pickError() === 'skill') { <p class="field-error" role="alert">Pick a skill from the list.</p> }
     </fieldset>
 
     <fieldset class="chip-group">
       <legend>Heroic abilities</legend>
+      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'ability', noun: 'heroic ability' }" />
       <ul class="chips" aria-label="Heroic abilities">
         @for (ability of d.abilities; track ability.name) {
-          <li>
+          <li [attr.title]="tip('ability', ability.name)">
             <span class="chip-name">{{ ability.name }}</span>
             @if (isStacking(ability.name)) {
               <input type="number" min="0" class="chip-number" [attr.aria-label]="ability.name + ' count'" [value]="ability.count" (input)="setCount(ability.name, $event)" />
@@ -70,56 +63,32 @@
           </li>
         }
       </ul>
-      <div class="picker">
-        <label for="ability-to-add">Heroic ability to add</label>
-        <input id="ability-to-add" list="ability-options" [value]="toAdd().ability" (input)="typed('ability', $event)" (keydown.enter)="$event.preventDefault(); add('ability')" />
-        <datalist id="ability-options">
-          @for (a of ref().abilities; track a.id) { <option [value]="a.name"></option> }
-        </datalist>
-        <button type="button" class="btn btn-secondary btn-small" (click)="add('ability')">Add heroic ability</button>
-      </div>
-      @if (pickError() === 'ability') { <p class="field-error" role="alert">Pick a heroic ability from the list.</p> }
     </fieldset>
 
     <fieldset class="chip-group">
       <legend>Gear</legend>
+      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'gear', noun: 'gear' }" />
       <ul class="chips" aria-label="Gear">
         @for (item of d.gear; track $index) {
-          <li>
+          <li [attr.title]="tip('gear', item)">
             <span class="chip-name">{{ item }}</span>
             <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + item" (click)="removeGear(item)">✕</button>
           </li>
         }
       </ul>
-      <div class="picker">
-        <label for="gear-to-add">Gear to add</label>
-        <input id="gear-to-add" list="gear-options" [value]="toAdd().gear" (input)="typed('gear', $event)" (keydown.enter)="$event.preventDefault(); add('gear')" />
-        <datalist id="gear-options">
-          @for (i of ref().equipment; track i.id) { <option [value]="i.name"></option> }
-        </datalist>
-        <button type="button" class="btn btn-secondary btn-small" (click)="add('gear')">Add gear</button>
-      </div>
     </fieldset>
 
     <fieldset class="chip-group">
       <legend>Spells</legend>
+      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'spell', noun: 'spell' }" />
       <ul class="chips" aria-label="Spells">
         @for (spell of d.spells; track spellLabel(spell)) {
-          <li>
+          <li [attr.title]="spellTip(spell)">
             <span class="chip-name">{{ spellLabel(spell) }}</span>
             <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + spellLabel(spell)" (click)="removeSpell(spell)">✕</button>
           </li>
         }
       </ul>
-      <div class="picker">
-        <label for="spell-to-add">Spell to add</label>
-        <input id="spell-to-add" list="spell-options" [value]="toAdd().spell" (input)="typed('spell', $event)" (keydown.enter)="$event.preventDefault(); add('spell')" />
-        <datalist id="spell-options">
-          @for (o of spellOptions(); track o.label) { <option [value]="o.label"></option> }
-        </datalist>
-        <button type="button" class="btn btn-secondary btn-small" (click)="add('spell')">Add spell</button>
-      </div>
-      @if (pickError() === 'spell') { <p class="field-error" role="alert">Pick a spell from the list.</p> }
     </fieldset>
 
     @if (errors().length) {
@@ -136,8 +105,30 @@
   <div class="npc-preview">
     <div class="field-check">
       <input id="npc-descriptions" type="checkbox" [checked]="withDescriptions()" (change)="withDescriptions.set($any($event.target).checked)" />
-      <label for="npc-descriptions">Include spell and heroic ability descriptions</label>
+      <label for="npc-descriptions">Show spell and heroic ability descriptions</label>
     </div>
     <app-npc-card [card]="card()" />
   </div>
 </div>
+
+<!--
+  A picker: type or choose a name from the list, then Add. The box has no visible label (the fieldset's legend names
+  it); its aria-label does. The clear button sits inside the box, beside the list arrow, while there is text.
+-->
+<ng-template #picker let-anyKind let-noun="noun">
+  @let kind = asPicker(anyKind);
+  <div class="picker">
+    <div class="picker-box">
+      <input #box [id]="kind + '-to-add'" [attr.list]="kind + '-options'" [attr.aria-label]="sentenceCase(noun) + ' to add'"
+        [value]="toAdd()[kind]" (input)="typed(kind, $event)" (keydown.enter)="$event.preventDefault(); add(kind)" />
+      @if (toAdd()[kind]) {
+        <button type="button" class="picker-clear" [attr.aria-label]="'Clear ' + noun" (click)="clear(kind, box)">✕</button>
+      }
+    </div>
+    <datalist [id]="kind + '-options'">
+      @for (option of options()[kind]; track option) { <option [value]="option"></option> }
+    </datalist>
+    <button type="button" class="btn btn-secondary btn-small" [attr.aria-label]="'Add ' + noun" (click)="add(kind)">Add</button>
+  </div>
+  @if (pickError() === kind) { <p class="field-error" role="alert">Pick a {{ noun }} from the list.</p> }
+</ng-template>

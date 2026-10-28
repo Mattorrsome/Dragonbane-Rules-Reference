@@ -12,6 +12,15 @@ export const CARD_RENDERER = new InjectionToken<(node: HTMLElement) => Promise<B
 });
 
 const BLOCKED = 'Your browser blocked the clipboard. Use Download instead.';
+const DESCRIPTIONS_KEY = 'dragonbane.npcExport.descriptions';
+
+function readDescriptions(): boolean {
+  try {
+    return localStorage.getItem(DESCRIPTIONS_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
 
 /** Copy or download one NPC as a card image, plain text or Markdown, with or without descriptions. */
 @Component({
@@ -25,10 +34,20 @@ export class NpcExportMenu {
   readonly ref = input.required<NpcReference>();
 
   private readonly render = inject(CARD_RENDERER);
-  protected readonly withDescriptions = signal(false);
+  protected readonly withDescriptions = signal(readDescriptions());
   protected readonly card = computed(() => buildCard(this.npc(), this.ref(), this.withDescriptions()));
   protected readonly status = signal('');
   private readonly cardHost = viewChild.required<ElementRef<HTMLElement>>('cardHost');
+
+  /** Remembered for the next export, when the browser allows it. */
+  protected setDescriptions(on: boolean): void {
+    this.withDescriptions.set(on);
+    try {
+      localStorage.setItem(DESCRIPTIONS_KEY, String(on));
+    } catch {
+      // Storage blocked: keep the choice for this dialog only.
+    }
+  }
 
   protected async copyText(markdown: boolean): Promise<void> {
     const text = markdown ? cardToMarkdown(this.card()) : cardToText(this.card());

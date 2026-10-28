@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { SpellDto } from '../../api/models';
 import {
-  addGear, addSpell, DAMAGE_BONUS_ATTRIBUTES, isStacking, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, removeSpell,
+  addGear, addSpell, DAMAGE_BONUS_ATTRIBUTES, describeItem, findItem, isStacking, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, removeSpell,
   setAbilityCount, setDamageBonus,
 } from '../../npc/npc';
 import { buildCard } from '../../npc/npc-card';
@@ -25,7 +26,7 @@ function typedInteger(event: Event): number | null {
 /** Edits a copy of an NPC with a live card preview; emits the edited NPC on Save. */
 @Component({
   selector: 'app-npc-editor',
-  imports: [NpcCardView],
+  imports: [NgTemplateOutlet, NpcCardView],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './npc-editor.html',
 })
@@ -36,7 +37,7 @@ export class NpcEditor {
   readonly cancelled = output<void>();
 
   protected readonly draft = linkedSignal(() => ({ ...this.npc() }));
-  protected readonly withDescriptions = signal(false);
+  protected readonly withDescriptions = signal(true);
   protected readonly card = computed(() => buildCard(this.draft(), this.ref(), this.withDescriptions()));
   protected readonly errors = signal<string[]>([]);
 
@@ -45,6 +46,16 @@ export class NpcEditor {
   protected readonly spellOptions = computed(() =>
     this.ref().spells.map((s: SpellDto) => ({ label: spellLabel(s), spell: { name: s.name, school: s.school, kind: s.kind } })),
   );
+  /** Each picker's list: Reference names, and for spells the unique labels. */
+  protected readonly options = computed<Record<Picker, string[]>>(() => ({
+    skill: this.ref().skills.map(s => s.name),
+    ability: this.ref().abilities.map(a => a.name),
+    gear: this.ref().equipment.map(i => i.name),
+    spell: this.spellOptions().map(o => o.label),
+  }));
+  protected readonly sentenceCase = sentenceCase;
+  /** Types the picker template's context value (ng-template contexts are untyped). */
+  protected readonly asPicker = (kind: unknown) => kind as Picker;
 
   protected readonly isStacking = isStacking;
   protected readonly bonusAttributes = DAMAGE_BONUS_ATTRIBUTES;
@@ -97,6 +108,27 @@ export class NpcEditor {
 
   protected removeSpell(spell: NpcSpellRef): void {
     this.draft.update(d => removeSpell(d, spell));
+  }
+
+  /** Empties a picker box and keeps focus in it, since the clear button goes away. */
+  protected clear(picker: Picker, box: HTMLInputElement): void {
+    this.toAdd.update(t => ({ ...t, [picker]: '' }));
+    this.pickError.set(null);
+    box.focus();
+  }
+
+  /** A chip's tooltip: its Reference description, or none when the name is not in the Reference. */
+  protected tip(picker: Picker, name: string): string | null {
+    const ref = this.ref();
+    const same = (a: string) => a.toLowerCase() === name.toLowerCase();
+    if (picker === 'skill') return ref.skills.find(s => same(s.name))?.description ?? null;
+    if (picker === 'ability') return ref.abilities.find(a => same(a.name))?.effect ?? null;
+    const item = findItem(ref, name);
+    return item ? describeItem(item) : null;
+  }
+
+  protected spellTip(spell: NpcSpellRef): string | null {
+    return this.ref().spells.find(s => s.name === spell.name && s.school === spell.school && s.kind === spell.kind)?.description ?? null;
   }
 
   protected typed(picker: Picker, event: Event): void {

@@ -303,3 +303,9 @@ One entry per significant technical decision. Template:
 - Decision: `Npc.damageBonuses` is a list with at most one entry per attribute, STR before AGL (`setDamageBonus`). The editor has a "STR damage bonus" and an "AGL damage bonus" select, each with None, +D4 and +D6. The card shows "STR: +D6, AGL: +D4". The API and importer are unchanged. `NpcStore` reads an older entry's single `damageBonus` as a one-item list.
 - Alternatives: A fixed `{ STR, AGL }` record (adding an attribute later means a new field); keeping one bonus (does not allow the case).
 - Why: It is the smallest change that allows both, and NPCs saved before the change keep their bonus.
+
+## NPC export menus and JSON import/export (2026-10-28)
+- Context: The export dialog had six buttons (copy or download, for each of three formats). The GM also wanted to back up the saved NPCs or move them to another browser.
+- Decision: The export dialog has a Copy ▾ and a Download ▾ button. Each opens a native `popover` that lists Image, Text and Markdown, anchored under its button with CSS anchor positioning. The "include descriptions" choice is remembered in localStorage. My NPCs has Export JSON (downloads `dragonbane-npcs.json`) and Import JSON. An import merges by id: a file entry replaces the saved NPC with the same id, and new ids are added at the end. Entries are validated with the same checks as stored ones, and a file with no readable NPC changes nothing.
+- Alternatives: A format radio group with two buttons (one more click for every export); import replacing the whole list (one wrong file would wipe the GM's NPCs).
+- Why: The popover gives Escape, light dismiss and focus return with no script. Merging on import cannot lose saved NPCs.

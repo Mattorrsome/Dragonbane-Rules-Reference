@@ -755,9 +755,59 @@ input[type='checkbox'] {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--spacing-xs);
+  }
+
+  /* The box, with the clear button inside it beside the list arrow (both in the accent green). */
+  .picker-box {
+    position: relative;
+    display: flex;
+    flex: 1 1 10rem;
 
     input {
-      flex: 1 1 10rem;
+      flex: 1;
+    }
+
+    /* The arrow stays at the box's right edge; its left margin keeps the text clear of the clear button. */
+    input::-webkit-calendar-picker-indicator {
+      opacity: 1;
+      width: 1.1rem;
+      height: 1.1rem;
+      margin-left: 2.3rem;
+      background: var(--accent);
+      -webkit-mask: var(--chevron-down) center / contain no-repeat;
+      mask: var(--chevron-down) center / contain no-repeat;
+      cursor: pointer;
+    }
+  }
+
+  .picker-clear {
+    position: absolute;
+    top: 50%;
+    right: 2rem;
+    transform: translateY(-50%);
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--accent-light);
+    }
+  }
+
+  /* Browsers without the list arrow (Firefox): the clear button takes the right edge. */
+  @supports not selector(::-webkit-calendar-picker-indicator) {
+    .picker-box input {
+      padding-right: 2.2rem;
+    }
+
+    .picker-clear {
+      right: 0.25rem;
     }
   }
 }
@@ -943,10 +993,74 @@ input[type='checkbox'] {
   gap: var(--spacing-sm);
 }
 
-.export-group {
+.export-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
+}
+
+.export-opener {
+  anchor-name: --export-copy;
+}
+
+.export-opener-download {
+  anchor-name: --export-download;
+}
+
+/* A format list under its button where anchor positioning exists; otherwise the browser centres the popover. */
+.export-menu {
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+  min-width: 10rem;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  background: var(--bone-white);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+
+  @supports (position-area: bottom) {
+    position-anchor: --export-copy;
+    position-area: bottom span-right;
+    margin-top: var(--spacing-xs);
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 var(--spacing-md);
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--accent);
+      color: var(--bone-white);
+    }
+  }
+}
+
+.export-menu-download {
+  @supports (position-area: bottom) {
+    position-anchor: --export-download;
+  }
+}
+
+/* Export JSON / Import JSON under the My NPCs heading, with what the last import did. */
+.npc-file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+
+  .import-status {
+    margin: 0;
+    font-style: italic;
+  }
 }
 
 .export-status {

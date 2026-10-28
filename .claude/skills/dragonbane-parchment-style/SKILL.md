@@ -14,7 +14,7 @@ This skill reproduces the look of https://cardinitiativefordragonbane.netlify.ap
 - `assets/Colus.otf` — the title font.
 - `assets/scroll-top.webp`, `assets/scroll-tile.webp`, `assets/scroll-bottom.webp` — the scroll texture split into a top cap, a loop-safe middle tile and a bottom cap, so a scroll of any height has no seams.
 - `scripts/inline_assets.py` — embeds the CSS, font and the three scroll pieces into the HTML so the page is one self-contained file.
-- `references/components.md` — snippets and when to use each component. Read it when building anything beyond a simple page.
+- `references/components.md` — snippets and when to use each component, including interactive pieces (disclosure names, chips, pickers, format menus, dialog Close). Read it when building anything beyond a simple page.
 - `references/original-landing.css` — the untouched original, only for checking a detail.
 
 ## Workflow

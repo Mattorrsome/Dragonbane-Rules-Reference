@@ -107,6 +107,56 @@ describe('NpcsPage', () => {
     expect(page.table('My NPCs')).toBeUndefined();
   });
 
+  it('Export JSON downloads every saved NPC; it is disabled while there are none', async () => {
+    const store = TestBed.inject(NpcStore);
+    let saved: { name: string; text: Promise<string> } | undefined;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(blob => ((saved = { name: '', text: (blob as Blob).text() }), 'blob:x'));
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      saved!.name = this.download;
+    });
+    const page = await render();
+    expect(page.button('Export JSON').disabled).toBe(true);
+
+    store.save({ ...fromTypical(BANDIT_CHIEF, ref), name: 'Grok' });
+    await page.settle();
+    page.button('Export JSON').click();
+
+    expect(saved!.name).toBe('dragonbane-npcs.json');
+    expect(JSON.parse(await saved!.text)).toEqual(store.npcs());
+    vi.restoreAllMocks();
+  });
+
+  it('Import JSON adds the NPCs from the chosen file and says how many', async () => {
+    const page = await render();
+    const file = new File([JSON.stringify([{ ...fromTypical(GUARD, ref), id: 'f1', name: 'From file' }])], 'npcs.json');
+    const input = page.host.querySelector<HTMLInputElement>('input[type="file"]')!;
+    let picked = false;
+    input.addEventListener('click', e => ((picked = true), e.preventDefault()));
+
+    page.button('Import JSON').click();
+    expect(picked).toBe(true);
+    Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+    input.dispatchEvent(new Event('change'));
+    await new Promise(r => setTimeout(r));
+    await page.settle();
+
+    expect(TestBed.inject(NpcStore).npcs().map(n => n.name)).toEqual(['From file']);
+    expect(page.host.querySelector('.import-status')?.textContent?.trim()).toBe('Imported 1 NPC.');
+  });
+
+  it('Import JSON says so when the file is not an NPC list', async () => {
+    const page = await render();
+    const input = page.host.querySelector<HTMLInputElement>('input[type="file"]')!;
+
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['{bad'], 'x.json')] });
+    input.dispatchEvent(new Event('change'));
+    await new Promise(r => setTimeout(r));
+    await page.settle();
+
+    expect(page.host.querySelector('.import-status')?.textContent?.trim()).toBe('That file is not an NPC list. Nothing was imported.');
+  });
+
   it('lists saved NPCs with Edit and Delete', async () => {
     const store = TestBed.inject(NpcStore);
     store.save({ ...fromTypical(BANDIT_CHIEF, ref), name: 'Grok' });

@@ -60,6 +60,16 @@ export function findItem(ref: NpcReference, name: string): EquipmentItemDto | un
   return ref.equipment.find(i => same(i.name, name));
 }
 
+/** A weapon's or armour's stats first (their effect is often empty), then the item's effect. */
+export function describeItem(item: EquipmentItemDto): string | null {
+  const parts = [
+    item.weapon ? `Damage ${item.weapon.damage}, ${item.weapon.featuresText.toLowerCase()}` : null,
+    item.armour ? `Armour rating ${item.armour.rating}` : null,
+    item.weapon ? null : item.effect,
+  ].filter(Boolean);
+  return parts.length ? parts.join('. ') : null;
+}
+
 export function isStacking(name: string): boolean {
   return STACKING_ABILITIES.some(s => same(s, name));
 }

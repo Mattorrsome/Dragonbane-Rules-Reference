@@ -105,6 +105,48 @@ describe('NpcStore', () => {
     expect(here.npcs().map(n => n.name)).toEqual(['Here']);
   });
 
+  it('exports every saved NPC as JSON that imports back unchanged', () => {
+    const s = store();
+    s.save({ ...guard(), name: 'A' });
+    s.save({ ...guard(), name: 'B' });
+    const json = s.exportJson();
+    localStorage.clear();
+
+    const fresh = store();
+    expect(fresh.importJson(json)).toBe(2);
+    expect(fresh.npcs()).toEqual(s.npcs());
+  });
+
+  it('import replaces NPCs with the same id, adds new ones and keeps the rest', () => {
+    const s = store();
+    const a = s.save({ ...guard(), name: 'A' });
+    s.save({ ...guard(), name: 'B' });
+
+    s.importJson(JSON.stringify([{ ...a, name: 'A from file' }, { ...guard(), id: 'new', name: 'C' }]));
+
+    expect(s.npcs().map(n => n.name)).toEqual(['A from file', 'B', 'C']);
+    expect(store().npcs().map(n => n.name)).toEqual(['A from file', 'B', 'C']);
+  });
+
+  it('import skips unreadable entries and fills missing fields', () => {
+    const count = store().importJson(JSON.stringify([{ id: 'x', name: 'Bare' }, { name: 'No id' }]));
+
+    expect(count).toBe(1);
+    expect(store().npcs()[0].skills).toEqual([]);
+  });
+
+  it.each([
+    ['invalid JSON', '{bad'],
+    ['a non-array', '{"id":"x","name":"Y"}'],
+    ['no readable NPCs', '[{"name":"No id"}]'],
+  ])('import refuses %s and changes nothing', (_, text) => {
+    const s = store();
+    s.save({ ...guard(), name: 'Kept' });
+
+    expect(() => s.importJson(text)).toThrow();
+    expect(store().npcs().map(n => n.name)).toEqual(['Kept']);
+  });
+
   it('keeps NPCs in memory when storage is blocked', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');

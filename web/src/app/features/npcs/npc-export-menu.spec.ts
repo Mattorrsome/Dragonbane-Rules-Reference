@@ -15,6 +15,7 @@ describe('NpcExportMenu', () => {
   let downloads: { name: string; type: string; text: Promise<string> }[];
 
   beforeEach(() => {
+    localStorage.clear();
     rendered = [];
     downloads = [];
     clipboard = { writeText: vi.fn().mockResolvedValue(undefined), write: vi.fn().mockResolvedValue(undefined) };
@@ -43,21 +44,41 @@ describe('NpcExportMenu', () => {
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
     const click = async (name: string) => {
-      [...host.querySelectorAll('button')].find(b => b.textContent?.trim() === name)!.click();
+      [...host.querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent?.trim()) === name)!.click();
       await fixture.whenStable();
     };
     const status = () => host.querySelector('[role="status"]')?.textContent?.trim() ?? '';
     return { host, click, status };
   }
 
-  it('offers the descriptions checkbox and six actions', async () => {
+  it('offers the descriptions checkbox, and a Copy and a Download button that each open Image, Text and Markdown', async () => {
     const m = await render();
 
     expect(m.host.querySelector('label[for="export-descriptions"]')?.textContent?.trim()).toBe('Include spell and heroic ability descriptions');
-    expect([...m.host.querySelectorAll('button')].map(b => b.textContent?.trim())).toEqual([
-      'Copy image', 'Download image', 'Copy text', 'Download text', 'Copy Markdown', 'Download Markdown',
+    const menus = ['Copy', 'Download'].map(name => {
+      const opener = [...m.host.querySelectorAll('button')].find(b => b.textContent?.trim().startsWith(name) && b.hasAttribute('popovertarget'))!;
+      const menu = m.host.querySelector(`#${opener.getAttribute('popovertarget')}`)!;
+      return [menu.hasAttribute('popover'), [...menu.querySelectorAll('button')].map(b => [b.textContent?.trim(), b.getAttribute('aria-label')])];
+    });
+    expect(menus).toEqual([
+      [true, [['Image', 'Copy image'], ['Text', 'Copy text'], ['Markdown', 'Copy Markdown']]],
+      [true, [['Image', 'Download image'], ['Text', 'Download text'], ['Markdown', 'Download Markdown']]],
     ]);
     expect(m.host.querySelector('app-npc-card .npc-card')).not.toBeNull();
+  });
+
+  it('remembers the descriptions choice for the next export', async () => {
+    localStorage.clear();
+    const first = await render();
+    expect(first.host.querySelector<HTMLInputElement>('#export-descriptions')!.checked).toBe(false);
+
+    first.host.querySelector<HTMLInputElement>('#export-descriptions')!.click();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [NpcExportMenu], providers: [{ provide: CARD_RENDERER, useValue: () => Promise.resolve(png) }] });
+    const next = await render();
+
+    expect(next.host.querySelector<HTMLInputElement>('#export-descriptions')!.checked).toBe(true);
+    localStorage.clear();
   });
 
   it('Copy text puts the card text on the clipboard', async () => {
