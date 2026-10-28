@@ -22,21 +22,17 @@
         <label for="npc-wp">WP</label>
         <input id="npc-wp" type="number" min="0" [value]="d.wp ?? ''" (input)="setNumber('wp', $event)" />
       </div>
-      <div class="field">
-        <label for="npc-bonus-attribute">Damage bonus attribute</label>
-        <select id="npc-bonus-attribute" (change)="setBonus('attribute', $event)">
-          <option value="" [selected]="!d.damageBonus">None</option>
-          <option value="STR" [selected]="d.damageBonus?.attribute === 'STR'">STR</option>
-          <option value="AGL" [selected]="d.damageBonus?.attribute === 'AGL'">AGL</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="npc-bonus-dice">Damage bonus dice</label>
-        <select id="npc-bonus-dice" [disabled]="!d.damageBonus" (change)="setBonus('dice', $event)">
-          <option value="D4" [selected]="d.damageBonus?.dice === 'D4'">+D4</option>
-          <option value="D6" [selected]="d.damageBonus?.dice === 'D6'">+D6</option>
-        </select>
-      </div>
+      @for (attribute of bonusAttributes; track attribute) {
+        @let dice = bonusDice(d, attribute);
+        <div class="field">
+          <label [for]="'npc-bonus-' + attribute">{{ attribute }} damage bonus</label>
+          <select [id]="'npc-bonus-' + attribute" (change)="setBonus(attribute, $event)">
+            <option value="" [selected]="!dice">None</option>
+            <option value="D4" [selected]="dice === 'D4'">+D4</option>
+            <option value="D6" [selected]="dice === 'D6'">+D6</option>
+          </select>
+        </div>
+      }
     </div>
 
     <fieldset class="chip-group">

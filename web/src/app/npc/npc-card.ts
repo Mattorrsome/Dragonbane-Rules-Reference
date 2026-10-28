@@ -1,5 +1,5 @@
 import { sentenceCase } from '../shared/text';
-import { findItem, isStacking, Npc, NpcReference, STACKING_ABILITIES } from './npc';
+import { findItem, isStacking, Npc, NpcReference, stackingLast } from './npc';
 
 /** One entry in a list row; `detail` is the smaller description line, shown only when descriptions are on. */
 export interface CardEntry {
@@ -40,7 +40,7 @@ export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean
     name: npc.name,
     description: npc.description.trim(),
     movement: npc.movement,
-    damageBonus: npc.damageBonus ? `${npc.damageBonus.attribute}: +${npc.damageBonus.dice}` : null,
+    damageBonus: npc.damageBonuses.map(b => `${b.attribute}: +${b.dice}`).join(', ') || null,
     armour: armour.length
       ? `${bookList(armour.map(a => a.name))} (${armour.reduce((sum, a) => sum + a.item!.armour!.rating, 0)})`
       : null,
@@ -66,9 +66,7 @@ export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean
 
 /** Non-stacking abilities in NPC order, then Robust, then Focused; stacking ones show "×N" and never a description. */
 function abilityEntries(npc: Npc, ref: NpcReference, withDescriptions: boolean): CardEntry[] {
-  const rank = (name: string) => STACKING_ABILITIES.findIndex(s => s.toLowerCase() === name.toLowerCase());
-  const ordered = [...npc.abilities].sort((a, b) => rank(a.name) - rank(b.name));
-  return ordered.map(a => {
+  return stackingLast(npc.abilities).map(a => {
     if (isStacking(a.name)) return { text: `${a.name} ×${a.count}`, detail: null };
     const ability = ref.abilities.find(h => h.name.toLowerCase() === a.name.toLowerCase());
     return withDescriptions && ability

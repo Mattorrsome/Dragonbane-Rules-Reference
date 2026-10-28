@@ -1,5 +1,5 @@
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { DEFAULT_MOVEMENT, Npc, SavedNpc } from './npc';
+import { DamageBonus, DEFAULT_MOVEMENT, Npc, SavedNpc } from './npc';
 
 const KEY = 'dragonbane.npcs.v1';
 
@@ -64,13 +64,16 @@ function withDefaults(e: SavedNpc): SavedNpc {
     movement: typeof e.movement === 'number' ? e.movement : DEFAULT_MOVEMENT,
     hp: typeof e.hp === 'number' ? e.hp : 0,
     wp: typeof e.wp === 'number' ? e.wp : null,
-    damageBonus: e.damageBonus ?? null,
+    damageBonuses: Array.isArray(e.damageBonuses) ? e.damageBonuses : legacy(e).damageBonus ? [legacy(e).damageBonus!] : [],
     skills: list(e.skills),
     abilities: list(e.abilities),
     gear: list(e.gear),
     spells: list(e.spells),
   };
 }
+
+/** Entries saved before an NPC could have both a STR and an AGL bonus held one, or null. */
+const legacy = (e: SavedNpc) => e as SavedNpc & { damageBonus?: DamageBonus | null };
 
 /** The minimum a saved entry needs to be listed and edited; the rest is read as the editor wrote it. */
 function isSaved(entry: unknown): entry is SavedNpc {

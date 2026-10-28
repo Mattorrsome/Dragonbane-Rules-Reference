@@ -50,8 +50,8 @@ describe('NpcEditor', () => {
     expect(e.field<HTMLInputElement>('Movement').value).toBe('10');
     expect(e.field<HTMLInputElement>('HP').value).toBe('30');
     expect(e.field<HTMLInputElement>('WP').value).toBe('16');
-    expect(e.field<HTMLSelectElement>('Damage bonus attribute').value).toBe('STR');
-    expect(e.field<HTMLSelectElement>('Damage bonus dice').value).toBe('D6');
+    expect(e.field<HTMLSelectElement>('STR damage bonus').value).toBe('D6');
+    expect(e.field<HTMLSelectElement>('AGL damage bonus').value).toBe('');
   });
 
   it('lists skills, abilities, gear and spells as removable chips', () => {
@@ -173,10 +173,19 @@ describe('NpcEditor', () => {
   it('damage bonus can be removed', () => {
     const e = render(fromTypical(BANDIT_CHIEF, ref));
 
-    e.choose(e.field('Damage bonus attribute'), '');
+    e.choose(e.field('STR damage bonus'), '');
     e.click('Save');
 
-    expect(e.saved[0].damageBonus).toBeNull();
+    expect(e.saved[0].damageBonuses).toEqual([]);
+  });
+
+  it('an NPC can have both a STR and an AGL damage bonus', () => {
+    const e = render(fromTypical(BANDIT_CHIEF, ref));
+
+    e.choose(e.field('AGL damage bonus'), 'D4');
+    e.click('Save');
+
+    expect(e.saved[0].damageBonuses).toEqual([{ attribute: 'STR', dice: 'D6' }, { attribute: 'AGL', dice: 'D4' }]);
   });
 
   it('Cancel emits cancelled', () => {

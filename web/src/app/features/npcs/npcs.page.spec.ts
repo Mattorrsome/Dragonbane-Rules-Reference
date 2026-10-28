@@ -60,6 +60,22 @@ describe('NpcsPage', () => {
     expect(page.button('Tweak Bandit chief')).toBeTruthy();
   });
 
+  it("lists Robust and Focused at the bottom of each NPC's heroic abilities", async () => {
+    const page = await render();
+    const archmage = page.table('Typical NPCs').querySelectorAll('tbody tr')[3];
+
+    expect([...archmage.querySelectorAll('[data-label="Heroic abilities"] li')].map(li => li.querySelector('summary')?.textContent?.trim() ?? li.textContent?.trim())).toEqual([
+      'Master Spellcaster', 'Robust ×4', 'Focused ×6',
+    ]);
+  });
+
+  it("shows each description as its name's tooltip", async () => {
+    const page = await render();
+    const summary = page.table('Typical NPCs').querySelector('summary')!;
+
+    expect(summary.getAttribute('title')).toBe(summary.nextElementSibling?.textContent);
+  });
+
   it('opens each name to its Reference description', async () => {
     const page = await render();
     const guard = page.table('Typical NPCs').querySelectorAll('tbody tr')[0];
@@ -244,6 +260,18 @@ describe('NpcsPage', () => {
       expect(exportDialog.open).toBe(true);
       expect(exportDialog.querySelector(`#${exportDialog.getAttribute('aria-labelledby')}`)?.textContent?.trim()).toBe('Export Grok');
       expect(exportDialog.querySelector('app-npc-export-menu .npc-card-name')?.textContent?.trim()).toBe('Grok');
+    });
+
+    it('a typical NPC can be exported without tweaking it', async () => {
+      const page = await render();
+
+      page.button('Export typical Bandit chief').click();
+      await page.settle();
+
+      const exportDialog = page.host.querySelector<HTMLDialogElement>('dialog.export-dialog')!;
+      expect(exportDialog.open).toBe(true);
+      expect(exportDialog.querySelector('app-npc-export-menu .npc-card-name')?.textContent?.trim()).toBe('Bandit chief');
+      expect(TestBed.inject(NpcStore).npcs()).toEqual([]);
     });
   });
 });

@@ -33,9 +33,11 @@
               <td data-label="HP">{{ npc.hp }}</td>
               <td data-label="WP">{{ npc.wp ?? '-' }}</td>
               <td data-label="Typical gear"><ng-container *ngTemplateOutlet="names; context: { $implicit: gearCells(npc) }" /></td>
-              <td>
+              <td class="row-actions">
                 <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
                   [attr.aria-label]="'Tweak ' + npc.name" (click)="tweak(npc)">Tweak</button>
+                <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                  [attr.aria-label]="'Export typical ' + npc.name" (click)="exportTypical(npc)">Export</button>
               </td>
             </tr>
           }
@@ -96,7 +98,7 @@
   </div>
 </dialog>
 
-<!-- Export: copy or download a saved NPC as an image, text or Markdown. -->
+<!-- Export: copy or download a saved or typical NPC as an image, text or Markdown. -->
 <dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (mousedown)="pressStart($event)" (click)="closeOnBackdrop($event)">
   <button type="button" class="dialog-close" aria-label="Close" (click)="exporting.set(null)"></button>
   <div class="dialog-body">
@@ -113,7 +115,7 @@
     @for (item of items; track $index) {
       <li>
         @if (item.description) {
-          <details><summary>{{ item.text }}</summary><p>{{ item.description }}</p></details>
+          <details><summary [title]="item.description">{{ item.text }}</summary><p>{{ item.description }}</p></details>
         } @else {
           {{ item.text }}
         }

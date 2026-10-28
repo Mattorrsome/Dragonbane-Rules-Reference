@@ -1,4 +1,4 @@
-import { addGear, addSpell, fromTypical, Npc, removeGear, removeSpell, setAbilityCount } from './npc';
+import { addGear, addSpell, fromTypical, Npc, removeGear, removeSpell, setAbilityCount, setDamageBonus, stackingLast } from './npc';
 import { ARCHMAGE, BANDIT_CHIEF, GUARD, NPC_REFERENCE as ref, VILLAGER } from './npc.fixture';
 
 const skills = (npc: Npc) => npc.skills.map(s => `${s.name} ${s.level}`);
@@ -10,7 +10,7 @@ describe('fromTypical', () => {
 
     expect(npc).toEqual({
       name: 'Bandit chief', description: '', basedOn: 'Bandit chief', movement: 10, hp: 30, wp: 16,
-      damageBonus: { attribute: 'STR', dice: 'D6' },
+      damageBonuses: [{ attribute: 'STR', dice: 'D6' }],
       skills: [{ name: 'Awareness', level: 12 }, { name: 'Brawling', level: 15 }, { name: 'Hammers', level: 15 }],
       abilities: [{ name: 'Berserker', count: 1 }, { name: 'Robust', count: 6 }, { name: 'Veteran', count: 1 }],
       gear: ['Heavy warhammer', 'Chainmail', 'Open helmet'],
@@ -19,7 +19,7 @@ describe('fromTypical', () => {
   });
 
   it('has no damage bonus when the source has none', () => {
-    expect(fromTypical(VILLAGER, ref).damageBonus).toBeNull();
+    expect(fromTypical(VILLAGER, ref).damageBonuses).toEqual([]);
   });
 
   it('adds missing weapon skills at 5', () => {
@@ -127,5 +127,28 @@ describe('spells', () => {
     expect(npc.spells).toHaveLength(2);
 
     expect(removeSpell(npc, trick).spells).toEqual([spell]);
+  });
+});
+
+describe('setDamageBonus', () => {
+  it('an NPC can have both a STR and an AGL bonus, always listed STR first', () => {
+    const agl = setDamageBonus(fromTypical(VILLAGER, ref), 'AGL', 'D4');
+
+    expect(setDamageBonus(agl, 'STR', 'D6').damageBonuses).toEqual([{ attribute: 'STR', dice: 'D6' }, { attribute: 'AGL', dice: 'D4' }]);
+  });
+
+  it("changes one attribute's dice, and null removes it", () => {
+    const chief = fromTypical(BANDIT_CHIEF, ref);
+
+    expect(setDamageBonus(chief, 'STR', 'D4').damageBonuses).toEqual([{ attribute: 'STR', dice: 'D4' }]);
+    expect(setDamageBonus(chief, 'STR', null).damageBonuses).toEqual([]);
+  });
+});
+
+describe('stackingLast', () => {
+  it('keeps other abilities in order, then Robust, then Focused', () => {
+    const names = stackingLast([{ name: 'Focused' }, { name: 'Defensive' }, { name: 'Robust' }, { name: 'Double Slash' }]).map(a => a.name);
+
+    expect(names).toEqual(['Defensive', 'Double Slash', 'Robust', 'Focused']);
   });
 });

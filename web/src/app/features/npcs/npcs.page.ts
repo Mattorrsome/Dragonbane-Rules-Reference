@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, injec
 import { NgTemplateOutlet } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../../api/models';
-import { fromTypical, Npc, NpcReference, SavedNpc } from '../../npc/npc';
+import { fromTypical, Npc, NpcReference, SavedNpc, stackingLast } from '../../npc/npc';
 import { NpcStore } from '../../npc/npc.store';
 import { NpcEditor } from './npc-editor';
 import { NpcExportMenu } from './npc-export-menu';
@@ -41,7 +41,7 @@ export class NpcsPage {
   private readonly myHeading = viewChild<ElementRef<HTMLElement>>('myHeading');
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   /** The saved NPC open in the export menu. */
-  protected readonly exporting = signal<SavedNpc | null>(null);
+  protected readonly exporting = signal<Npc | null>(null);
   private readonly exportDialog = viewChild.required<ElementRef<HTMLDialogElement>>('exportDialog');
 
   constructor() {
@@ -80,6 +80,11 @@ export class NpcsPage {
     this.editing.set(fromTypical(dto, this.ref()!));
   }
 
+  /** Exports the typical NPC as it is, without saving a copy. */
+  protected exportTypical(dto: NpcDto): void {
+    this.exporting.set(fromTypical(dto, this.ref()!));
+  }
+
   protected edit(npc: SavedNpc): void {
     this.editing.set(npc);
   }
@@ -96,7 +101,7 @@ export class NpcsPage {
   }
 
   protected abilityCells(dto: NpcDto): Described[] {
-    return dto.heroicAbilities.map(a => ({
+    return stackingLast(dto.heroicAbilities).map(a => ({
       text: a.count > 1 ? `${a.name} ×${a.count}` : a.name,
       description: this.ref()?.abilities.find(r => r.name === a.name)?.effect ?? null,
     }));

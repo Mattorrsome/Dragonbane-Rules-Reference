@@ -631,9 +631,12 @@ input[type='checkbox'] {
   padding: 0;
   list-style: none;
 
-  /* The disclosure triangle marks each name; no star bullet as well. */
+  /*
+   * The disclosure triangle marks each name; no star bullet as well. The triangle hangs in the indent, so the name,
+   * its description and plain names all start on one line.
+   */
   li {
-    padding-left: 0;
+    padding-left: 1em;
     margin-bottom: 0.15em;
 
     &::before {
@@ -644,8 +647,13 @@ input[type='checkbox'] {
   /* A name opens to its Reference description, in smaller text under it. */
   summary {
     cursor: pointer;
-    text-decoration: underline dotted;
+    list-style-position: outside;
+    text-decoration: underline dotted var(--accent);
     text-underline-offset: 0.2em;
+
+    &::marker {
+      color: var(--accent);
+    }
   }
 
   details[open] p {
@@ -657,6 +665,10 @@ input[type='checkbox'] {
 
 .npc-table [data-label='Bonus'] {
   white-space: nowrap;
+}
+
+.npc-table td.row-title {
+  font-weight: bold;
 }
 
 .row-actions {

@@ -72,9 +72,15 @@ describe('NpcStore', () => {
     localStorage.setItem(KEY, JSON.stringify([{ id: 'x', name: 'Bare', hp: 9 }]));
 
     expect(store().npcs()).toEqual([{
-      id: 'x', name: 'Bare', description: '', basedOn: '', movement: 10, hp: 9, wp: null, damageBonus: null,
+      id: 'x', name: 'Bare', description: '', basedOn: '', movement: 10, hp: 9, wp: null, damageBonuses: [],
       skills: [], abilities: [], gear: [], spells: [],
     }]);
+  });
+
+  it("reads an older entry's single damage bonus as a list", () => {
+    localStorage.setItem(KEY, JSON.stringify([{ id: 'x', name: 'Old', damageBonus: { attribute: 'AGL', dice: 'D4' } }]));
+
+    expect(store().npcs()[0].damageBonuses).toEqual([{ attribute: 'AGL', dice: 'D4' }]);
   });
 
   it('picks up NPCs saved in another tab, so its own next save keeps them', () => {

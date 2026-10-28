@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
 import { SpellDto } from '../../api/models';
 import {
-  addGear, addSpell, isStacking, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, removeSpell, setAbilityCount,
+  addGear, addSpell, DAMAGE_BONUS_ATTRIBUTES, isStacking, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, removeSpell,
+  setAbilityCount, setDamageBonus,
 } from '../../npc/npc';
 import { buildCard } from '../../npc/npc-card';
 import { sentenceCase } from '../../shared/text';
@@ -46,6 +47,7 @@ export class NpcEditor {
   );
 
   protected readonly isStacking = isStacking;
+  protected readonly bonusAttributes = DAMAGE_BONUS_ATTRIBUTES;
   protected readonly spellLabel = spellLabel;
 
   protected setText(field: 'name' | 'description', event: Event): void {
@@ -58,13 +60,14 @@ export class NpcEditor {
     this.draft.update(d => ({ ...d, [field]: raw === '' && field === 'wp' ? null : raw === '' ? NaN : Number(raw) }));
   }
 
-  protected setBonus(part: 'attribute' | 'dice', event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.draft.update(d => {
-      if (part === 'attribute' && !value) return { ...d, damageBonus: null };
-      const current = d.damageBonus ?? { attribute: 'STR', dice: 'D4' };
-      return { ...d, damageBonus: { ...current, [part]: value } };
-    });
+  /** "None" (an empty value) removes that attribute's bonus. */
+  protected setBonus(attribute: string, event: Event): void {
+    const dice = (event.target as HTMLSelectElement).value;
+    this.draft.update(d => setDamageBonus(d, attribute, dice || null));
+  }
+
+  protected bonusDice(npc: Npc, attribute: string): string {
+    return npc.damageBonuses.find(b => b.attribute === attribute)?.dice ?? '';
   }
 
   protected setLevel(name: string, event: Event): void {

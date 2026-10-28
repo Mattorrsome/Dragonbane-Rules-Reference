@@ -16,12 +16,21 @@ export interface Npc {
   movement: number;
   hp: number;
   wp: number | null;
-  damageBonus: { attribute: string; dice: string } | null;
+  /** At most one per attribute, STR before AGL. */
+  damageBonuses: DamageBonus[];
   skills: { name: string; level: number }[];
   abilities: { name: string; count: number }[];
   gear: string[];
   spells: NpcSpellRef[];
 }
+
+export interface DamageBonus {
+  attribute: string;
+  dice: string;
+}
+
+/** The attributes a damage bonus can come from, in the order they are listed. */
+export const DAMAGE_BONUS_ATTRIBUTES = ['STR', 'AGL'] as const;
 
 export interface SavedNpc extends Npc {
   id: string;
@@ -65,7 +74,7 @@ export function fromTypical(dto: NpcDto, ref: NpcReference): Npc {
       movement: DEFAULT_MOVEMENT,
       hp: dto.hp,
       wp: dto.wp ?? null,
-      damageBonus: dto.damageBonusAttribute && dto.damageBonusDice ? { attribute: dto.damageBonusAttribute, dice: dto.damageBonusDice } : null,
+      damageBonuses: dto.damageBonusAttribute && dto.damageBonusDice ? [{ attribute: dto.damageBonusAttribute, dice: dto.damageBonusDice }] : [],
       skills: dto.skills.map(s => ({ name: s.name, level: s.level })),
       abilities: dto.heroicAbilities.map(a => ({ name: a.name, count: a.count })),
       gear: [...dto.gear],
@@ -111,7 +120,20 @@ export function setAbilityCount(npc: Npc, name: string, count: number): Npc {
   };
 }
 
-const sameSpell = (a: NpcSpellRef, b: NpcSpellRef) => a.name === b.name && a.school === b.school && a.kind === b.kind;
+/** Sets one attribute's bonus dice; null removes it. The other attribute's bonus stays. */
+export function setDamageBonus(npc: Npc, attribute: string, dice: string | null): Npc {
+  const others = npc.damageBonuses.filter(b => b.attribute !== attribute);
+  const order = (b: DamageBonus) => DAMAGE_BONUS_ATTRIBUTES.indexOf(b.attribute as (typeof DAMAGE_BONUS_ATTRIBUTES)[number]);
+  return { ...npc, damageBonuses: (dice ? [...others, { attribute, dice }] : others).sort((a, b) => order(a) - order(b)) };
+}
+
+/** Abilities in their own order, then Robust, then Focused (as the book lists them). */
+export function stackingLast<T extends { name: string }>(abilities: readonly T[]): T[] {
+  const rank = (name: string) => STACKING_ABILITIES.findIndex(s => same(s, name));
+  return [...abilities].sort((a, b) => rank(a.name) - rank(b.name));
+}
+
+const sameSpell =(a: NpcSpellRef, b: NpcSpellRef) => a.name === b.name && a.school === b.school && a.kind === b.kind;
 
 export function addSpell(npc: Npc, spell: NpcSpellRef): Npc {
   return npc.spells.some(s => sameSpell(s, spell)) ? npc : { ...npc, spells: [...npc.spells, { ...spell }] };

@@ -1,4 +1,4 @@
-import { addGear, addSpell, fromTypical, Npc, setAbilityCount } from './npc';
+import { addGear, addSpell, fromTypical, Npc, setAbilityCount, setDamageBonus } from './npc';
 import { buildCard, cardToMarkdown, cardToText } from './npc-card';
 import { BANDIT, BANDIT_CHIEF, NPC_REFERENCE as ref } from './npc.fixture';
 
@@ -42,6 +42,10 @@ describe('buildCard', () => {
     expect(card.abilities[2].detail).toBeNull();
     expect(card.abilities[3].detail).toBeNull();
     expect(card.spells).toEqual([{ text: 'Dispel (rank 1; Action, or stretch for a ritual; 10 metres; Instant)', detail: dispelDescription }]);
+  });
+
+  it('shows both damage bonuses, STR first', () => {
+    expect(buildCard(setDamageBonus(grok(), 'AGL', 'D4'), ref, false).damageBonus).toBe('STR: +D6, AGL: +D4');
   });
 
   it('tricks read "(trick)"', () => {
