@@ -528,11 +528,14 @@ html {
   }
 
   /* The SVG is a mask, so the dragon takes the theme colour whatever the file's own fills are. */
+  /*
+   * Drawn as an image, not a mask: a mask keeps only the shape, which would merge the emblem's white detail lines
+   * into its fill. Its fill is already --demon-green-dark (#14443a).
+   */
   .spinner {
     width: 6rem;
     height: 6rem;
-    background-color: var(--demon-green-dark);
-    mask: url('/spinner-dragon.svg') center / contain no-repeat;
+    background: url('/spinner-dragon.svg') center / contain no-repeat;
     animation: spin 1.2s linear infinite;
 
     @media (prefers-reduced-motion: reduce) {
