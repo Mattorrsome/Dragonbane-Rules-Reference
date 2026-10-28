@@ -671,10 +671,12 @@ input[type='checkbox'] {
   font-weight: bold;
 }
 
+/* A div inside the actions cell: display:flex on the td itself stops it being a table cell, so it no longer fills the row. */
 .row-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--spacing-xs);
 }
 
@@ -1055,10 +1057,13 @@ input[type='checkbox'] {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-xs);
+  justify-content: flex-end;
   margin-bottom: var(--spacing-sm);
 
+  /* Buttons right; the status line takes the space to their left. */
   .import-status {
-    margin: 0;
+    order: -1;
+    margin: 0 auto 0 0;
     font-style: italic;
   }
 }

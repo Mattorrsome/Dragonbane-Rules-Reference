@@ -145,16 +145,20 @@ describe('NpcsPage', () => {
     expect(page.host.querySelector('.import-status')?.textContent?.trim()).toBe('Imported 1 NPC.');
   });
 
-  it('Import JSON says so when the file is not an NPC list', async () => {
+  it.each([
+    ['{bad', 'That file is not valid JSON. Nothing was imported.'],
+    [JSON.stringify([{ id: 'a', name: 'Grok', hp: 'lots' }]), 'NPC 1 ("Grok"): HP must be a whole number of 0 or more. Nothing was imported.'],
+  ])('Import JSON shows the first problem in a bad file and imports nothing', async (text, message) => {
     const page = await render();
     const input = page.host.querySelector<HTMLInputElement>('input[type="file"]')!;
 
-    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['{bad'], 'x.json')] });
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File([text], 'x.json')] });
     input.dispatchEvent(new Event('change'));
     await new Promise(r => setTimeout(r));
     await page.settle();
 
-    expect(page.host.querySelector('.import-status')?.textContent?.trim()).toBe('That file is not an NPC list. Nothing was imported.');
+    expect(page.host.querySelector('.import-status')?.textContent?.trim()).toBe(message);
+    expect(TestBed.inject(NpcStore).npcs()).toEqual([]);
   });
 
   it('lists saved NPCs with Edit and Delete', async () => {

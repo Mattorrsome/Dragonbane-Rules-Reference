@@ -99,8 +99,10 @@ export class NpcsPage {
     try {
       const count = this.store.importJson(await file.text());
       this.importStatus.set(`Imported ${count} NPC${count === 1 ? '' : 's'}.`);
-    } catch {
-      this.importStatus.set('That file is not an NPC list. Nothing was imported.');
+    } catch (error) {
+      // parseNpcFile names the first problem; a failed file read has no such message.
+      const problem = error instanceof Error ? error.message : 'That file could not be read.';
+      this.importStatus.set(`${problem} Nothing was imported.`);
     }
     // Choosing the same file again still fires change.
     input.value = '';

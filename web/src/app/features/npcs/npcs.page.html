@@ -33,11 +33,13 @@
               <td data-label="HP">{{ npc.hp }}</td>
               <td data-label="WP">{{ npc.wp ?? '-' }}</td>
               <td data-label="Typical gear"><ng-container *ngTemplateOutlet="names; context: { $implicit: gearCells(npc) }" /></td>
-              <td class="row-actions">
-                <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
-                  [attr.aria-label]="'Tweak ' + npc.name" (click)="tweak(npc)">Tweak</button>
-                <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
-                  [attr.aria-label]="'Export typical ' + npc.name" (click)="exportTypical(npc)">Export</button>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                    [attr.aria-label]="'Tweak ' + npc.name" (click)="tweak(npc)">Tweak</button>
+                  <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                    [attr.aria-label]="'Export typical ' + npc.name" (click)="exportTypical(npc)">Export</button>
+                </div>
               </td>
             </tr>
           }
@@ -72,19 +74,21 @@
             <tr>
               <td class="row-title">{{ npc.name }}</td>
               <td data-label="Based on">{{ npc.basedOn }}</td>
-              <td class="row-actions">
-                @if (confirmingDelete() === npc.id) {
-                  <span>Delete {{ npc.name }}?</span>
-                  <button type="button" class="btn btn-primary btn-small" (click)="remove(npc)">Yes, delete</button>
-                  <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
-                } @else {
-                  <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
-                    [attr.aria-label]="'Edit ' + npc.name" (click)="edit(npc)">Edit</button>
-                  <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
-                    [attr.aria-label]="'Export ' + npc.name" (click)="exporting.set(npc)">Export</button>
-                  <button type="button" class="btn btn-secondary btn-small"
-                    [attr.aria-label]="'Delete ' + npc.name" (click)="confirmingDelete.set(npc.id)">Delete</button>
-                }
+              <td>
+                <div class="row-actions">
+                  @if (confirmingDelete() === npc.id) {
+                    <span>Delete {{ npc.name }}?</span>
+                    <button type="button" class="btn btn-primary btn-small" (click)="remove(npc)">Yes, delete</button>
+                    <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
+                  } @else {
+                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                      [attr.aria-label]="'Edit ' + npc.name" (click)="edit(npc)">Edit</button>
+                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                      [attr.aria-label]="'Export ' + npc.name" (click)="exporting.set(npc)">Export</button>
+                    <button type="button" class="btn btn-secondary btn-small"
+                      [attr.aria-label]="'Delete ' + npc.name" (click)="confirmingDelete.set(npc.id)">Delete</button>
+                  }
+                </div>
               </td>
             </tr>
           }

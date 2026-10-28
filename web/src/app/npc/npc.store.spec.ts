@@ -128,11 +128,24 @@ describe('NpcStore', () => {
     expect(store().npcs().map(n => n.name)).toEqual(['A from file', 'B', 'C']);
   });
 
-  it('import skips unreadable entries and fills missing fields', () => {
-    const count = store().importJson(JSON.stringify([{ id: 'x', name: 'Bare' }, { name: 'No id' }]));
-
-    expect(count).toBe(1);
+  it('import fills fields an older export lacks', () => {
+    expect(store().importJson(JSON.stringify([{ id: 'x', name: 'Bare' }]))).toBe(1);
     expect(store().npcs()[0].skills).toEqual([]);
+  });
+
+  it('import stops at the first bad entry, says what is wrong and saves none of the file', () => {
+    const s = store();
+
+    expect(() => s.importJson(JSON.stringify([{ id: 'x', name: 'Fine' }, { id: 'y', name: 'Broken', skills: [null] }]))).toThrow(
+      'NPC 2 ("Broken"): skill 1 needs a name and a level of 0 or more.',
+    );
+    expect(store().npcs()).toEqual([]);
+  });
+
+  it('drops a stored entry with a broken list instead of breaking the page', () => {
+    localStorage.setItem(KEY, JSON.stringify([{ id: 'x', name: 'Bad', gear: [5] }, { ...guard(), id: 'g', name: 'Good' }]));
+
+    expect(store().npcs().map(n => n.name)).toEqual(['Good']);
   });
 
   it.each([

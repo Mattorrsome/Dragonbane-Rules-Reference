@@ -1,11 +1,12 @@
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { DamageBonus, DEFAULT_MOVEMENT, Npc, SavedNpc } from './npc';
+import { Npc, SavedNpc } from './npc';
+import { checkNpc, parseNpcFile } from './npc-file';
 
 const KEY = 'dragonbane.npcs.v1';
 
 /**
- * The GM's saved NPCs, kept in this browser's localStorage. Nothing reaches the server. Unreadable storage is ignored
- * (and left as it is until the next save), so a bad entry never breaks the page or silently wipes the rest.
+ * The GM's saved NPCs, kept in this browser's localStorage. Nothing reaches the server. Unreadable storage and bad
+ * entries are ignored (and left as they are until the next save), so they never break the page.
  */
 @Injectable({ providedIn: 'root' })
 export class NpcStore {
@@ -40,18 +41,16 @@ export class NpcStore {
   }
 
   /**
-   * Adds the NPCs in an exported file: one with a saved NPC's id replaces it, the rest are added. Unreadable entries
-   * are skipped. Throws, changing nothing, when the text is not a list holding at least one readable NPC.
+   * Adds the NPCs in an exported file: one with a saved NPC's id replaces it, the rest are added. A file with any
+   * problem changes nothing: the Error names the first problem (see parseNpcFile).
    */
   importJson(text: string): number {
-    const parsed: unknown = JSON.parse(text);
-    const found = Array.isArray(parsed) ? parsed.filter(isSaved).map(withDefaults) : [];
-    if (!found.length) throw new Error('No NPCs in that file.');
+    const found = parseNpcFile(text);
     // Keyed by id in list order: a file entry replaces the saved one in place, new ids go at the end.
     const byId = new Map(this.value().map(n => [n.id, n]));
     for (const npc of found) byId.set(npc.id, npc);
     this.write([...byId.values()]);
-    return new Set(found.map(n => n.id)).size;
+    return found.length;
   }
 
   private write(list: readonly SavedNpc[]): void {
@@ -64,39 +63,19 @@ export class NpcStore {
   }
 }
 
+/** The stored NPCs; an entry that fails checkNpc is left out, so one bad entry cannot break the page. */
 function read(): SavedNpc[] {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(KEY) ?? '[]');
-    return Array.isArray(parsed) ? parsed.filter(isSaved).map(withDefaults) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((entry, i) => {
+      try {
+        return [checkNpc(entry, i + 1)];
+      } catch {
+        return [];
+      }
+    });
   } catch {
     return [];
   }
-}
-
-/** Fills fields an older or hand-edited entry lacks, so the editor and card never meet a missing list. */
-function withDefaults(e: SavedNpc): SavedNpc {
-  const list = <T>(v: T[] | undefined) => (Array.isArray(v) ? v : []);
-  return {
-    id: e.id,
-    name: e.name,
-    description: typeof e.description === 'string' ? e.description : '',
-    basedOn: typeof e.basedOn === 'string' ? e.basedOn : '',
-    movement: typeof e.movement === 'number' ? e.movement : DEFAULT_MOVEMENT,
-    hp: typeof e.hp === 'number' ? e.hp : 0,
-    wp: typeof e.wp === 'number' ? e.wp : null,
-    damageBonuses: Array.isArray(e.damageBonuses) ? e.damageBonuses : legacy(e).damageBonus ? [legacy(e).damageBonus!] : [],
-    skills: list(e.skills),
-    abilities: list(e.abilities),
-    gear: list(e.gear),
-    spells: list(e.spells),
-  };
-}
-
-/** Entries saved before an NPC could have both a STR and an AGL bonus held one, or null. */
-const legacy = (e: SavedNpc) => e as SavedNpc & { damageBonus?: DamageBonus | null };
-
-/** The minimum a saved entry needs to be listed and edited; the rest is read as the editor wrote it. */
-function isSaved(entry: unknown): entry is SavedNpc {
-  const e = entry as Partial<SavedNpc> | null;
-  return typeof e?.id === 'string' && typeof e.name === 'string';
 }

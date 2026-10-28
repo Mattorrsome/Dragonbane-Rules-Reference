@@ -262,6 +262,23 @@ for (const viewport of viewports) {
       await expect(page.getByRole('button', { name: 'Edit Grok' })).toBeVisible();
     });
 
+    test('each action cell fills its table row, buttons at its right', async ({ page }) => {
+      const cells = await page.locator('table.npc-table tbody tr').evaluateAll(rows =>
+        rows.map(tr => {
+          const cell = tr.lastElementChild!.getBoundingClientRect();
+          const last = tr.querySelector('.row-actions')!.lastElementChild!.getBoundingClientRect();
+          return { row: tr.getBoundingClientRect().height, cell: cell.height, rightGap: cell.right - last.right, display: getComputedStyle(tr.lastElementChild!).display };
+        }),
+      );
+
+      expect(cells.length).toBeGreaterThan(0);
+      for (const c of cells) {
+        // Stacked phone rows show every cell as a block; on a laptop the cell must stay a table cell, as tall as the row.
+        if (viewport.width >= 768) expect([c.display, Math.round(c.cell)]).toEqual(['table-cell', Math.round(c.row)]);
+        expect(c.rightGap).toBeLessThanOrEqual(16);
+      }
+    });
+
     test('export dialog is accessible', async ({ page }) => {
       await page.getByRole('button', { name: 'Tweak Guard' }).click();
       const tweak = page.getByRole('dialog', { name: 'Tweak Guard' });
