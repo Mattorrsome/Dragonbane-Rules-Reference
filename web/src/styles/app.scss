@@ -1060,29 +1060,19 @@ input[type='checkbox'] {
   gap: var(--spacing-xs);
 }
 
-.export-opener {
-  anchor-name: --export-copy;
+/* Shrinks to the buttons' row; the options section below stretches to that same width. */
+.export-choice {
+  display: grid;
+  width: fit-content;
+  gap: var(--spacing-xs);
 }
 
-.export-opener-download {
-  anchor-name: --export-download;
-}
-
-/* A format list under its button where anchor positioning exists; otherwise the browser centres the popover. */
-.export-menu {
-  margin: 0;
+/* The chosen button's formats, in the page flow below the buttons, drawn as a menu list. */
+.export-options {
   padding: var(--spacing-xs) 0;
-  min-width: 10rem;
   border: 2px solid var(--accent);
   border-radius: 2px;
   background: var(--bone-white);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-
-  @supports (position-area: bottom) {
-    position-anchor: --export-copy;
-    position-area: bottom span-right;
-    margin-top: var(--spacing-xs);
-  }
 
   button {
     display: block;
@@ -1101,12 +1091,6 @@ input[type='checkbox'] {
       background: var(--accent);
       color: var(--bone-white);
     }
-  }
-}
-
-.export-menu-download {
-  @supports (position-area: bottom) {
-    position-anchor: --export-download;
   }
 }
 

@@ -305,9 +305,27 @@ for (const viewport of viewports) {
       await page.getByRole('button', { name: 'Export Sergeant Pell' }).click();
       const dialog = page.getByRole('dialog', { name: 'Export Sergeant Pell' });
       await expect(dialog).toBeVisible();
-      const results = await new AxeBuilder({ page }).include('dialog[open]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
-      expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+      const axe = async () => {
+        const results = await new AxeBuilder({ page }).include('dialog[open]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+        expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+      };
+      await axe();
+
+      // Copy shows its formats below the buttons; Download swaps them for its own.
+      await dialog.getByRole('button', { name: 'Copy', exact: true }).click();
+      await expect(dialog.getByRole('group', { name: 'Copy as' })).toBeVisible();
+      await axe();
+      // The section spans exactly the two buttons.
+      const span = await dialog.locator('.export-choice').evaluate(c => {
+        const [first, second] = [...c.querySelectorAll('.export-buttons button')].map(b => b.getBoundingClientRect());
+        const options = c.querySelector('#export-options')!.getBoundingClientRect();
+        return [Math.round(options.left - first.left), Math.round(options.right - second.right)];
+      });
+      expect(span).toEqual([0, 0]);
+      await dialog.getByRole('button', { name: 'Download', exact: true }).click();
+      await expect(dialog.getByRole('group', { name: 'Download as' })).toBeVisible();
+      await expect(dialog.getByRole('group', { name: 'Copy as' })).toHaveCount(0);
 
       await page.keyboard.press('Escape');
       await expect(dialog).toBeHidden();

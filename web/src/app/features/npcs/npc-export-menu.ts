@@ -37,7 +37,15 @@ export class NpcExportMenu {
   protected readonly withDescriptions = signal(readDescriptions());
   protected readonly card = computed(() => buildCard(this.npc(), this.ref(), this.withDescriptions()));
   protected readonly status = signal('');
+  protected readonly modes = ['copy', 'download'] as const;
+  /** Whose formats are showing: Copy's, Download's, or neither. */
+  protected readonly mode = signal<'copy' | 'download' | null>(null);
   private readonly cardHost = viewChild.required<ElementRef<HTMLElement>>('cardHost');
+
+  /** Shows that button's formats in place of the other's; the open one's button closes them. */
+  protected toggle(mode: 'copy' | 'download'): void {
+    this.mode.update(m => (m === mode ? null : mode));
+  }
 
   /** Remembered for the next export, when the browser allows it. */
   protected setDescriptions(on: boolean): void {

@@ -43,28 +43,59 @@ describe('NpcExportMenu', () => {
     fixture.componentRef.setInput('ref', ref);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
+    const find = (name: string) => [...host.querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent?.trim()) === name);
+    /** Clicks a button; "Copy text" and the like first open their section with the Copy or Download button. */
     const click = async (name: string) => {
-      [...host.querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent?.trim()) === name)!.click();
+      if (!find(name)) {
+        find(name.split(' ')[0])!.click();
+        await fixture.whenStable();
+      }
+      find(name)!.click();
       await fixture.whenStable();
     };
+    const options = () => {
+      const section = host.querySelector('.export-options');
+      return section && [section.getAttribute('aria-label'), [...section.querySelectorAll('button')].map(b => [b.textContent?.trim(), b.getAttribute('aria-label')])];
+    };
+    const expanded = () => ['Copy', 'Download'].map(n => find(n)!.getAttribute('aria-expanded'));
     const status = () => host.querySelector('[role="status"]')?.textContent?.trim() ?? '';
-    return { host, click, status };
+    return { host, find, click, options, expanded, status };
   }
 
-  it('offers the descriptions checkbox, and a Copy and a Download button that each open Image, Text and Markdown', async () => {
+  it('offers the descriptions checkbox and a Copy and a Download button, with no options showing yet', async () => {
     const m = await render();
 
     expect(m.host.querySelector('label[for="export-descriptions"]')?.textContent?.trim()).toBe('Include spell and heroic ability descriptions');
-    const menus = ['Copy', 'Download'].map(name => {
-      const opener = [...m.host.querySelectorAll('button')].find(b => b.textContent?.trim().startsWith(name) && b.hasAttribute('popovertarget'))!;
-      const menu = m.host.querySelector(`#${opener.getAttribute('popovertarget')}`)!;
-      return [menu.hasAttribute('popover'), [...menu.querySelectorAll('button')].map(b => [b.textContent?.trim(), b.getAttribute('aria-label')])];
-    });
-    expect(menus).toEqual([
-      [true, [['Image', 'Copy image'], ['Text', 'Copy text'], ['Markdown', 'Copy Markdown']]],
-      [true, [['Image', 'Download image'], ['Text', 'Download text'], ['Markdown', 'Download Markdown']]],
-    ]);
+    expect(m.expanded()).toEqual(['false', 'false']);
+    expect(m.options()).toBeNull();
+    expect(m.host.querySelector('[popover]')).toBeNull();
     expect(m.host.querySelector('app-npc-card .npc-card')).not.toBeNull();
+  });
+
+  it('Copy and Download each show their options below the buttons, one at a time; the open one closes them', async () => {
+    const m = await render();
+
+    await m.click('Copy');
+    expect(m.expanded()).toEqual(['true', 'false']);
+    expect(m.options()).toEqual(['Copy as', [['Image', 'Copy image'], ['Text', 'Copy text'], ['Markdown', 'Copy Markdown']]]);
+    expect(m.find('Copy')!.getAttribute('aria-controls')).toBe(m.host.querySelector('.export-options')!.id);
+
+    await m.click('Download');
+    expect(m.expanded()).toEqual(['false', 'true']);
+    expect(m.options()).toEqual(['Download as', [['Image', 'Download image'], ['Text', 'Download text'], ['Markdown', 'Download Markdown']]]);
+
+    await m.click('Download');
+    expect(m.expanded()).toEqual(['false', 'false']);
+    expect(m.options()).toBeNull();
+  });
+
+  it('the options stay open after one is used, so the status shows beside them', async () => {
+    const m = await render();
+
+    await m.click('Copy text');
+
+    expect(m.options()?.[0]).toBe('Copy as');
+    expect(m.status()).toBe('Copied text.');
   });
 
   it('remembers the descriptions choice for the next export', async () => {
