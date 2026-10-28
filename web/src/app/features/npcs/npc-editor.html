@@ -122,7 +122,7 @@
       <input #box [id]="kind + '-to-add'" [attr.list]="kind + '-options'" [attr.aria-label]="sentenceCase(noun) + ' to add'"
         [value]="toAdd()[kind]" (input)="typed(kind, $event)" (keydown.enter)="$event.preventDefault(); add(kind)" />
       @if (toAdd()[kind]) {
-        <button type="button" class="picker-clear" [attr.aria-label]="'Clear ' + noun" (click)="clear(kind, box)">✕</button>
+        <button type="button" class="picker-clear" [attr.aria-label]="'Clear ' + noun" (click)="clear(kind, box)"></button>
       }
     </div>
     <datalist [id]="kind + '-options'">

@@ -656,7 +656,13 @@ input[type='checkbox'] {
     }
   }
 
+  /*
+   * width 0 + min-width 100%: the description wraps to its column's current width and adds nothing to the table's
+   * column sizing, so opening one does not resize every column and shift the rows above.
+   */
   details[open] p {
+    width: 0;
+    min-width: 100%;
     margin: var(--spacing-xs) 0 var(--spacing-sm);
     font-size: 0.85em;
     line-height: 1.4;
@@ -769,23 +775,38 @@ input[type='checkbox'] {
       flex: 1;
     }
 
-    /* The arrow stays at the box's right edge; its left margin keeps the text clear of the clear button. */
+    /*
+     * Chrome's list arrow stays (it opens the list) but is invisible, over the green triangle drawn below. Its left
+     * margin keeps the text clear of the clear button.
+     */
     input::-webkit-calendar-picker-indicator {
-      opacity: 1;
-      width: 1.1rem;
-      height: 1.1rem;
+      opacity: 0;
+      width: 0.75rem;
+      height: 0.75rem;
       margin-left: 2.3rem;
-      background: var(--accent);
-      -webkit-mask: var(--chevron-down) center / contain no-repeat;
-      mask: var(--chevron-down) center / contain no-repeat;
       cursor: pointer;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: calc(0.5rem + 2px);
+      width: 0.75rem;
+      height: 0.75rem;
+      transform: translateY(-50%);
+      background: var(--accent);
+      -webkit-mask: var(--triangle-down) center / contain no-repeat;
+      mask: var(--triangle-down) center / contain no-repeat;
+      pointer-events: none;
     }
   }
 
+  /* A 28px target; the ✕ itself is a mask painted in the button's colour, so hover recolours it. */
   .picker-clear {
     position: absolute;
     top: 50%;
-    right: 2rem;
+    right: 1.7rem;
     transform: translateY(-50%);
     width: 1.75rem;
     height: 1.75rem;
@@ -793,12 +814,46 @@ input[type='checkbox'] {
     border: none;
     background: transparent;
     color: var(--accent);
-    font-size: 0.95rem;
-    line-height: 1;
     cursor: pointer;
+
+    &::before {
+      content: '';
+      display: block;
+      width: 0.8rem;
+      height: 0.8rem;
+      margin: auto;
+      background: currentColor;
+      -webkit-mask: var(--cross) center / contain no-repeat;
+      mask: var(--cross) center / contain no-repeat;
+    }
 
     &:hover {
       color: var(--accent-light);
+    }
+  }
+
+  /* Selects draw the same green triangle in place of the browser's arrow. */
+  select {
+    appearance: none;
+    padding-right: 1.8rem;
+    cursor: pointer;
+  }
+
+  .field:has(> select) {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0.6rem;
+      /* Centred on the select: its border, padding and half its line, less half the triangle. */
+      bottom: calc(2px + 0.3rem + 0.65em - 0.375rem);
+      width: 0.75rem;
+      height: 0.75rem;
+      background: var(--accent);
+      -webkit-mask: var(--triangle-down) center / contain no-repeat;
+      mask: var(--triangle-down) center / contain no-repeat;
+      pointer-events: none;
     }
   }
 
@@ -806,6 +861,10 @@ input[type='checkbox'] {
   @supports not selector(::-webkit-calendar-picker-indicator) {
     .picker-box input {
       padding-right: 2.2rem;
+    }
+
+    .picker-box::after {
+      content: none;
     }
 
     .picker-clear {

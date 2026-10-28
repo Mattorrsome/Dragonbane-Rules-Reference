@@ -279,6 +279,22 @@ for (const viewport of viewports) {
       }
     });
 
+    test('opening a description in the table moves nothing above it', async ({ page }) => {
+      test.skip(viewport.width < 768, 'phone rows are stacked cards; columns only exist from 768px');
+      const table = page.locator('table.npc-table');
+      const widths = () => table.locator('thead th').evaluateAll(ths => ths.map(th => Math.round(th.getBoundingClientRect().width)));
+      const knight = table.locator('tbody tr', { hasText: 'Knight champion' });
+      const defensive = knight.locator('summary', { hasText: 'Defensive' });
+      await defensive.scrollIntoViewIfNeeded();
+      const before = { widths: await widths(), box: await defensive.boundingBox() };
+
+      await defensive.click();
+      await expect(knight.locator('details[open] p')).toBeVisible();
+
+      expect(await widths()).toEqual(before.widths);
+      expect(await defensive.boundingBox()).toEqual(before.box);
+    });
+
     test('export dialog is accessible', async ({ page }) => {
       await page.getByRole('button', { name: 'Tweak Guard' }).click();
       const tweak = page.getByRole('dialog', { name: 'Tweak Guard' });
