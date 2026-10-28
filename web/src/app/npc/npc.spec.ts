@@ -1,4 +1,4 @@
-import { addGear, addSpell, fromTypical, Npc, removeGear, removeSpell, setAbilityCount, setDamageBonus, stackingLast } from './npc';
+import { addGear, addSpell, fromTypical, Npc, npcAttributes, removeGear, removeSpell, setAbilityCount, setDamageBonus, stackingLast } from './npc';
 import { ARCHMAGE, BANDIT_CHIEF, GUARD, NPC_REFERENCE as ref, VILLAGER } from './npc.fixture';
 
 const skills = (npc: Npc) => npc.skills.map(s => `${s.name} ${s.level}`);
@@ -150,5 +150,26 @@ describe('stackingLast', () => {
     const names = stackingLast([{ name: 'Focused' }, { name: 'Defensive' }, { name: 'Robust' }, { name: 'Double Slash' }]).map(a => a.name);
 
     expect(names).toEqual(['Defensive', 'Double Slash', 'Robust', 'Focused']);
+  });
+});
+
+describe('npcAttributes', () => {
+  it('STR and AGL from the damage bonus (D6 17, D4 14, none 10); CON is HP less 2 per Robust; WIL is WP less 2 per Focused', () => {
+    expect(npcAttributes(fromTypical(BANDIT_CHIEF, ref))).toEqual({ STR: 17, CON: 18, AGL: 10, INT: 10, WIL: 16, CHA: 10 });
+    expect(npcAttributes(fromTypical(ARCHMAGE, ref))).toEqual({ STR: 10, CON: 14, AGL: 10, INT: 10, WIL: 18, CHA: 10 });
+  });
+
+  it('WIL is 10 when no WP is listed; a D4 bonus gives 14', () => {
+    expect(npcAttributes(fromTypical(GUARD, ref))).toEqual({ STR: 14, CON: 12, AGL: 10, INT: 10, WIL: 10, CHA: 10 });
+  });
+
+  it('follows tweaks: both bonuses, and Robust added through setAbilityCount leaves CON where it was', () => {
+    const npc = setAbilityCount(setDamageBonus(fromTypical(GUARD, ref), 'AGL', 'D6'), 'Robust', 2);
+
+    expect(npcAttributes(npc)).toMatchObject({ STR: 14, AGL: 17, CON: 12 });
+  });
+
+  it('never goes below 0 when HP or WP was lowered by hand under the Robust or Focused levels', () => {
+    expect(npcAttributes({ ...fromTypical(ARCHMAGE, ref), hp: 3, wp: 5 })).toMatchObject({ CON: 0, WIL: 0 });
   });
 });

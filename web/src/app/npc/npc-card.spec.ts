@@ -22,7 +22,7 @@ describe('buildCard', () => {
       armour: 'Chainmail, open helmet (5)',
       hp: 30,
       wp: 16,
-      skills: 'Awareness 12, Brawling 15',
+      skills: 'Awareness 12, Brawling 15, Hammers 15',
       abilities: [
         { text: 'Berserker', detail: null },
         { text: 'Veteran', detail: null },
@@ -31,7 +31,15 @@ describe('buildCard', () => {
       weapons: 'Heavy warhammer (skill level 15, damage 2D10)',
       spells: [{ text: 'Dispel', detail: null }],
       gear: '',
+      attributes: null,
     });
+  });
+
+  it('with attributes: all six in book order', () => {
+    expect(buildCard(grok(), ref, false, true).attributes).toEqual([
+      { label: 'STR', value: 17 }, { label: 'CON', value: 18 }, { label: 'AGL', value: 10 },
+      { label: 'INT', value: 10 }, { label: 'WIL', value: 16 }, { label: 'CHA', value: 10 },
+    ]);
   });
 
   it('with descriptions: WP cost and effect, rank and casting details; never for Robust or Focused', () => {
@@ -59,7 +67,7 @@ describe('buildCard', () => {
 
     const card = buildCard(bandit, ref, false);
     expect(card.weapons).toBe('Short sword (skill level 12, damage D10), short bow (skill level –, damage D10)');
-    expect(card.skills).toBe('Evade 10');
+    expect(card.skills).toBe('Evade 10, Swords 12');
     expect(card.armour).toBeNull();
     expect(card.damageBonus).toBeNull();
   });
@@ -74,7 +82,7 @@ describe('buildCard', () => {
     const npc = { ...grok(), skills: [...grok().skills, { name: 'Juggling', level: 9 }], abilities: [{ name: 'Lost Art', count: 1 }] };
 
     const card = buildCard(npc, ref, true);
-    expect(card.skills).toBe('Awareness 12, Brawling 15, Juggling 9');
+    expect(card.skills).toBe('Awareness 12, Brawling 15, Hammers 15, Juggling 9');
     expect(card.abilities).toEqual([{ text: 'Lost Art', detail: null }]);
   });
 });
@@ -88,12 +96,20 @@ describe('cardToText', () => {
         '',
         'Movement: 10 · Damage Bonus: STR: +D6',
         'Armor: Chainmail, open helmet (5) · HP: 30 · WP: 16',
-        'Skills: Awareness 12, Brawling 15',
+        'Skills: Awareness 12, Brawling 15, Hammers 15',
         'Heroic Abilities: Berserker, Veteran, Robust ×6',
         'Weapons: Heavy warhammer (skill level 15, damage 2D10)',
         'Spells: Dispel',
       ].join('\n'),
     );
+  });
+
+  it('with attributes, they are the first line under the description', () => {
+    expect(cardToText(buildCard(grok(), ref, false, true)).split('\n').slice(2, 5)).toEqual([
+      '',
+      'STR: 17 · CON: 18 · AGL: 10 · INT: 10 · WIL: 16 · CHA: 10',
+      'Movement: 10 · Damage Bonus: STR: +D6',
+    ]);
   });
 
   it('with descriptions, list rows put each entry on its own line', () => {
@@ -112,7 +128,7 @@ describe('cardToText', () => {
       '',
       'Movement: 10',
       'HP: 12',
-      'Skills: Evade 10',
+      'Skills: Bows 12, Evade 10, Swords 12',
       'Weapons: Short sword (skill level 12, damage D10), short bow (skill level 12, damage D10)',
     ]);
   });
@@ -128,11 +144,17 @@ describe('cardToMarkdown', () => {
         '',
         '**Movement:** 10 · **Damage Bonus:** STR: +D6  ',
         '**Armor:** Chainmail, open helmet (5) · **HP:** 30 · **WP:** 16  ',
-        '**Skills:** Awareness 12, Brawling 15  ',
+        '**Skills:** Awareness 12, Brawling 15, Hammers 15  ',
         '**Heroic Abilities:** Berserker, Veteran, Robust ×6  ',
         '**Weapons:** Heavy warhammer (skill level 15, damage 2D10)  ',
         '**Spells:** Dispel  ',
       ].join('\n'),
+    );
+  });
+
+  it('with attributes, they are a bold-labelled line above Movement', () => {
+    expect(cardToMarkdown(buildCard(grok(), ref, false, true))).toContain(
+      '**STR:** 17 · **CON:** 18 · **AGL:** 10 · **INT:** 10 · **WIL:** 16 · **CHA:** 10  \n**Movement:** 10',
     );
   });
 

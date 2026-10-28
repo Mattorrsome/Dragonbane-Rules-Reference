@@ -112,6 +112,25 @@ describe('NpcExportMenu', () => {
     localStorage.clear();
   });
 
+  it('"Show attributes" is off at first, adds the attributes line to the card and the export, and is remembered', async () => {
+    localStorage.clear();
+    const m = await render();
+    const box = () => m.host.querySelector<HTMLInputElement>('#export-attributes')!;
+    expect(m.host.querySelector('label[for="export-attributes"]')?.textContent?.trim()).toBe('Show attributes');
+    expect(box().checked).toBe(false);
+    expect(m.host.querySelector('.npc-card')?.textContent).not.toContain('CON:');
+
+    box().click();
+    await m.click('Copy text');
+    expect(m.host.querySelector('.npc-card')?.textContent).toContain('WIL:');
+    expect(clipboard!.writeText).toHaveBeenCalledWith(cardToText(buildCard(grok(), ref, false, true)));
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [NpcExportMenu], providers: [{ provide: CARD_RENDERER, useValue: () => Promise.resolve(png) }] });
+    expect((await render()).host.querySelector<HTMLInputElement>('#export-attributes')!.checked).toBe(true);
+    localStorage.clear();
+  });
+
   it('Copy text puts the card text on the clipboard', async () => {
     const m = await render();
 

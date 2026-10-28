@@ -12,17 +12,19 @@ export const CARD_RENDERER = new InjectionToken<(node: HTMLElement) => Promise<B
 });
 
 const BLOCKED = 'Your browser blocked the clipboard. Use Download instead.';
-const DESCRIPTIONS_KEY = 'dragonbane.npcExport.descriptions';
+/** The export options remembered between exports, by localStorage key. */
+const OPTION_KEYS = { descriptions: 'dragonbane.npcExport.descriptions', attributes: 'dragonbane.npcExport.attributes' };
+type ExportOption = keyof typeof OPTION_KEYS;
 
-function readDescriptions(): boolean {
+function readOption(option: ExportOption): boolean {
   try {
-    return localStorage.getItem(DESCRIPTIONS_KEY) === 'true';
+    return localStorage.getItem(OPTION_KEYS[option]) === 'true';
   } catch {
     return false;
   }
 }
 
-/** Copy or download one NPC as a card image, plain text or Markdown, with or without descriptions. */
+/** Copy or download one NPC as a card image, plain text or Markdown, with or without descriptions and attributes. */
 @Component({
   selector: 'app-npc-export-menu',
   imports: [NpcCardView],
@@ -34,8 +36,8 @@ export class NpcExportMenu {
   readonly ref = input.required<NpcReference>();
 
   private readonly render = inject(CARD_RENDERER);
-  protected readonly withDescriptions = signal(readDescriptions());
-  protected readonly card = computed(() => buildCard(this.npc(), this.ref(), this.withDescriptions()));
+  protected readonly options = signal<Record<ExportOption, boolean>>({ descriptions: readOption('descriptions'), attributes: readOption('attributes') });
+  protected readonly card = computed(() => buildCard(this.npc(), this.ref(), this.options().descriptions, this.options().attributes));
   protected readonly status = signal('');
   protected readonly modes = ['copy', 'download'] as const;
   /** Whose formats are showing: Copy's, Download's, or neither. */
@@ -48,10 +50,10 @@ export class NpcExportMenu {
   }
 
   /** Remembered for the next export, when the browser allows it. */
-  protected setDescriptions(on: boolean): void {
-    this.withDescriptions.set(on);
+  protected setOption(option: ExportOption, on: boolean): void {
+    this.options.update(o => ({ ...o, [option]: on }));
     try {
-      localStorage.setItem(DESCRIPTIONS_KEY, String(on));
+      localStorage.setItem(OPTION_KEYS[option], String(on));
     } catch {
       // Storage blocked: keep the choice for this dialog only.
     }

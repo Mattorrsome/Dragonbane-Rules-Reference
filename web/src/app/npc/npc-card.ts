@@ -1,5 +1,5 @@
 import { sentenceCase } from '../shared/text';
-import { findItem, isStacking, Npc, NpcReference, stackingLast } from './npc';
+import { Attribute, ATTRIBUTES, findItem, isStacking, Npc, NpcReference, npcAttributes, stackingLast } from './npc';
 
 /** One entry in a list row; `detail` is the smaller description line, shown only when descriptions are on. */
 export interface CardEntry {
@@ -24,17 +24,18 @@ export interface NpcCard {
   weapons: string;
   spells: CardEntry[];
   gear: string;
+  /** The six attribute scores in book order, or null when they are not shown. */
+  attributes: { label: Attribute; value: number }[] | null;
 }
 
 const MISSING_LEVEL = '–';
 
-export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean): NpcCard {
+export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean, withAttributes = false): NpcCard {
+  const scores = npcAttributes(npc);
   const items = npc.gear.map(name => ({ name, item: findItem(ref, name) }));
   const weapons = items.filter(i => i.item?.weapon);
   const armour = items.filter(i => i.item?.armour);
   const level = (skill: string) => npc.skills.find(s => s.name.toLowerCase() === skill.toLowerCase())?.level;
-  // A skill shown in a weapon line is not repeated in Skills (as in the book's boxes).
-  const weaponSkills = new Set(weapons.map(w => w.item!.weapon!.skill.toLowerCase()));
 
   return {
     name: npc.name,
@@ -46,7 +47,8 @@ export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean
       : null,
     hp: npc.hp,
     wp: npc.wp,
-    skills: npc.skills.filter(s => !weaponSkills.has(s.name.toLowerCase())).map(s => `${s.name} ${s.level}`).join(', '),
+    // Every skill, weapon skills too, although the weapon line repeats their level (the book's boxes leave them out).
+    skills: npc.skills.map(s => `${s.name} ${s.level}`).join(', '),
     abilities: abilityEntries(npc, ref, withDescriptions),
     weapons: bookList(
       weapons.map(w => `${w.name} (skill level ${level(w.item!.weapon!.skill) ?? MISSING_LEVEL}, damage ${w.item!.weapon!.damage})`),
@@ -61,6 +63,7 @@ export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean
       return { text: `${name} (${details})`, detail: spell.description };
     }),
     gear: bookList(items.filter(i => !i.item?.weapon && !i.item?.armour).map(i => i.name)),
+    attributes: withAttributes ? ATTRIBUTES.map(label => ({ label, value: scores[label] })) : null,
   };
 }
 
@@ -90,6 +93,7 @@ interface Row {
 function rows(card: NpcCard): Row[][] {
   const line = (...parts: (Row | false)[]) => parts.filter((p): p is Row => !!p);
   return [
+    line(...(card.attributes ?? []).map(a => ({ label: a.label, text: `${a.value}` }))),
     line({ label: 'Movement', text: `${card.movement}` }, !!card.damageBonus && { label: 'Damage Bonus', text: card.damageBonus! }),
     line(!!card.armour && { label: 'Armor', text: card.armour! }, { label: 'HP', text: `${card.hp}` }, card.wp !== null && { label: 'WP', text: `${card.wp}` }),
     line(!!card.skills && { label: 'Skills', text: card.skills }),

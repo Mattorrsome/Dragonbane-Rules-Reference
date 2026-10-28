@@ -4,6 +4,11 @@
   @if (c.description) {
     <p class="npc-card-description">{{ c.description }}</p>
   }
+  @if (c.attributes) {
+    <p class="npc-card-row">
+      @for (a of c.attributes; track a.label) { <span><b>{{ a.label }}:</b> {{ a.value }}</span> }
+    </p>
+  }
   <p class="npc-card-row">
     <span><b>Movement:</b> {{ c.movement }}</span>
     @if (c.damageBonus) { <span><b>Damage Bonus:</b> {{ c.damageBonus }}</span> }

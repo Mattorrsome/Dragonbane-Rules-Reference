@@ -295,6 +295,25 @@ for (const viewport of viewports) {
       expect(await defensive.boundingBox()).toEqual(before.box);
     });
 
+    test('the page behind an open dialog does not scroll, and scrolls again once it closes', async ({ page }) => {
+      // Clicking scrolls the button into view first, so the page position is read once the dialog is open.
+      await page.getByRole('button', { name: 'Tweak Bandit chief' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Tweak Bandit chief' });
+      await expect(dialog).toBeVisible();
+      const before = await page.evaluate(() => scrollY);
+
+      // Wheel over the backdrop (top-left corner, outside the dialog box).
+      await page.mouse.move(2, 2);
+      await page.mouse.wheel(0, 600);
+      await page.waitForTimeout(300);
+      expect(await page.evaluate(() => scrollY)).toBe(before);
+
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await page.mouse.wheel(0, 300);
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(before);
+    });
+
     test('export dialog is accessible', async ({ page }) => {
       await page.getByRole('button', { name: 'Tweak Guard' }).click();
       const tweak = page.getByRole('dialog', { name: 'Tweak Guard' });

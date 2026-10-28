@@ -6,7 +6,7 @@ const grok: NpcCard = {
   name: 'Grok', description: 'Scarred chief.', movement: 10, damageBonus: 'STR: +D6', armour: 'Chainmail, open helmet (5)',
   hp: 30, wp: 16, skills: 'Awareness 12, Brawling 15',
   abilities: [{ text: 'Berserker (3 WP)', detail: 'Become Angry.' }, { text: 'Robust ×6', detail: null }],
-  weapons: 'Heavy warhammer (skill level 15, damage 2D10)', spells: [], gear: '',
+  weapons: 'Heavy warhammer (skill level 15, damage 2D10)', spells: [], gear: '', attributes: null,
 };
 
 function render(card: NpcCard): HTMLElement {

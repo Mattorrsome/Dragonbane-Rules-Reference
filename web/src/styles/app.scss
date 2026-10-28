@@ -410,6 +410,18 @@ input[type='checkbox'] {
 }
 
 /*
+ * While any modal dialog is open the page behind it does not scroll. The scrollbar's space is always kept, so the
+ * page does not shift sideways when the scrollbar goes.
+ */
+html {
+  scrollbar-gutter: stable;
+
+  &:has(dialog:modal) {
+    overflow: hidden;
+  }
+}
+
+/*
  * Shared modal dialog. The box itself never scrolls, so the round Close can hang over its top-right corner;
  * the body inside it scrolls instead (only when the window is too short for the box at all).
  */

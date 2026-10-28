@@ -1,8 +1,12 @@
 <div class="npc-export">
   <div class="npc-export-actions">
     <div class="field-check">
-      <input id="export-descriptions" type="checkbox" [checked]="withDescriptions()" (change)="setDescriptions($any($event.target).checked)" />
+      <input id="export-descriptions" type="checkbox" [checked]="options().descriptions" (change)="setOption('descriptions', $any($event.target).checked)" />
       <label for="export-descriptions">Include spell and heroic ability descriptions</label>
+    </div>
+    <div class="field-check">
+      <input id="export-attributes" type="checkbox" [checked]="options().attributes" (change)="setOption('attributes', $any($event.target).checked)" />
+      <label for="export-attributes">Show attributes</label>
     </div>
     <!--
       Copy and Download each show the formats in a section below them; one at a time, and the open one closes it.

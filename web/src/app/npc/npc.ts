@@ -143,7 +143,33 @@ export function stackingLast<T extends { name: string }>(abilities: readonly T[]
   return [...abilities].sort((a, b) => rank(a.name) - rank(b.name));
 }
 
-const sameSpell =(a: NpcSpellRef, b: NpcSpellRef) => a.name === b.name && a.school === b.school && a.kind === b.kind;
+/** The six attributes in book order. */
+export const ATTRIBUTES = ['STR', 'CON', 'AGL', 'INT', 'WIL', 'CHA'] as const;
+export type Attribute = (typeof ATTRIBUTES)[number];
+
+/** Attribute score by damage bonus dice: the core rules' guideline for NPC attribute rolls. */
+const SCORE_BY_BONUS: Record<string, number> = { D6: 17, D4: 14 };
+const BASE_ATTRIBUTE = 10;
+
+/**
+ * The scores an NPC rolls attributes against, by the core rules' guidelines: STR and AGL from their damage bonus
+ * (+D6 17, +D4 14, none 10); CON is max HP less 2 per Robust; WIL is max WP less 2 per Focused, or 10 with no WP;
+ * INT and CHA are 10. Never below 0, in case HP or WP was lowered by hand.
+ */
+export function npcAttributes(npc: Npc): Record<Attribute, number> {
+  const bonus = (attribute: string) => SCORE_BY_BONUS[npc.damageBonuses.find(b => b.attribute === attribute)?.dice ?? ''] ?? BASE_ATTRIBUTE;
+  const stacks = (name: string) => npc.abilities.find(a => same(a.name, name))?.count ?? 0;
+  return {
+    STR: bonus('STR'),
+    CON: Math.max(0, npc.hp - POINTS_PER_STACK * stacks('Robust')),
+    AGL: bonus('AGL'),
+    INT: BASE_ATTRIBUTE,
+    WIL: npc.wp === null ? BASE_ATTRIBUTE : Math.max(0, npc.wp - POINTS_PER_STACK * stacks('Focused')),
+    CHA: BASE_ATTRIBUTE,
+  };
+}
+
+const sameSpell = (a: NpcSpellRef, b: NpcSpellRef) => a.name === b.name && a.school === b.school && a.kind === b.kind;
 
 export function addSpell(npc: Npc, spell: NpcSpellRef): Npc {
   return npc.spells.some(s => sameSpell(s, spell)) ? npc : { ...npc, spells: [...npc.spells, { ...spell }] };
