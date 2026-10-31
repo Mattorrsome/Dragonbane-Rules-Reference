@@ -321,3 +321,9 @@ One entry per significant technical decision. Template:
 - Decision: Skills lists every skill in the NPC's order, and the Weapons line still gives each weapon's skill level.
 - Alternatives: Keep the book's layout; name the skill in the weapon line ("Hammers 15"); hide only skills a weapon fully covers.
 - Why: Nothing looks missing, and it is the smallest change. The cost is that a weapon skill's level appears twice.
+
+## Hosting on Render as one Docker image (2026-10-31)
+- Context: The design left hosting for later. Render has no native .NET runtime, so a .NET app runs there as a Docker web service.
+- Decision: A multi-stage `Dockerfile` builds the Angular app (Node 24) and publishes the API (.NET 10 SDK, OpenAPI generation off), then copies the publish output, `dragonbane.db` and the Angular `dist/web/browser` into `wwwroot` of an `aspnet:10.0` image running as the non-root app user. The API serves the static files, returns 404 for unknown `/api/*` paths, and sends every other extension-less path to `index.html` for client routing. `render.yaml` is a Blueprint for one free Docker web service; it sets `PORT=8080` to match the image's default port and health-checks `/api/currency-rates`. EF Core logs only warnings in production so Render's log is not full of SQL.
+- Alternatives: A Render static site for Angular plus a separate API service (two deploys, and CORS or a rewrite rule for `/api`); building the database in the image from `Source Material/` (the committed file is what was checked locally, per the import decision).
+- Why: One service, one origin, so the relative `/api` URLs and the no-CORS setup work unchanged. The data is read-only, so Render's ephemeral disk does not matter.

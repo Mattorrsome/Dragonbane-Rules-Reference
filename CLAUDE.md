@@ -14,6 +14,7 @@ All five sections built: API in `Dragonbane.slnx` (`src/Dragonbane.Api`, `tests/
 - Accessibility/responsive gate (from `web/`): `npm run e2e` (Playwright + axe on all sections at 1280×800 and 375×812; starts or reuses the API and dev server). Stop a running API before `dotnet test`, which otherwise cannot overwrite the locked exe.
 - Regenerate API types: `dotnet build src/Dragonbane.Api --no-incremental`, then in `web/` run `npm run gen:api`
 - If `ng test` dies at start with "Worker exited unexpectedly with signal SIGTERM", a long-running `npm start` dev server has gone stale after many file changes (e.g. a branch checkout). Restart the dev server; the tests themselves are fine.
+- Docker/Render: `docker build -t dragonbane .` then `docker run -p 8080:8080 dragonbane` (app and API on http://localhost:8080). `render.yaml` is the Render Blueprint.
 - Full check before a commit: `dotnet test`, then in `web/`: `npx ng test --watch=false && npx ng build && npm run e2e`
 
 - `docs/superpowers/specs/2026-10-22-dragonbane-reference-design.md`: the agreed design. **Read it before any build work.** It is the source of truth for goals, non-goals, anti-goals and the schema.

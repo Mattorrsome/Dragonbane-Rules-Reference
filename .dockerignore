@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/.angular/
+**/dist/
+**/test-results/
+**/playwright-report/
+.git/
+.claude/
+.codegraph/
+.superpowers/
+docs/
+tests/
+Source Material/

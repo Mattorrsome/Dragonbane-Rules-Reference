@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: dragonbane-reference
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/currency-rates
+    envVars:
+      # Render routes to $PORT; the aspnet image listens on 8080.
+      - key: PORT
+        value: "8080"

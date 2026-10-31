@@ -60,6 +60,12 @@ app.MapGet("/api/currency-rates", async (DragonbaneDbContext db, CancellationTok
     TypedResults.Ok(await db.CurrencyRates.OrderBy(r => r.CopperValue).Select(r => new CurrencyRateDto(r.Name, r.CopperValue)).ToArrayAsync(ct)))
     .WithTags("currency-rates");
 
+// Production serves the built Angular app from wwwroot (copied in by the Dockerfile). Unknown
+// /api paths stay 404; every other path without a file extension gets index.html for client routing.
+app.UseStaticFiles();
+app.MapFallback("/api/{**rest}", () => TypedResults.NotFound()).ExcludeFromDescription();
+app.MapFallbackToFile("index.html");
+
 // Fail fast on a missing database. Build-time OpenAPI generation (GetDocument.Insider) needs routes, not data.
 var databasePath = app.Services.GetRequiredService<IOptions<DragonbaneOptions>>().Value.Resolve(app.Environment).DatabasePath;
 if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider" && !File.Exists(databasePath))
