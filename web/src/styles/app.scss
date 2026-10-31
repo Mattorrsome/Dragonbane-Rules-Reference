@@ -425,8 +425,8 @@ input[type='checkbox'] {
 }
 
 /*
- * Shown over the whole page while an API call runs past LOADER_DELAY_MS: the dialogs' grey backdrop with the
- * spinner in a small white circle ringed in green. It blocks clicks but leaves focus where it was.
+ * Shown over the whole page while an API call runs past LOADER_DELAY_MS, for at least LOADER_MIN_MS: the dialogs'
+ * grey backdrop with the spinner in the middle. It blocks clicks but leaves focus where it was.
  */
 .loader-overlay {
   position: fixed;
@@ -435,22 +435,6 @@ input[type='checkbox'] {
   display: grid;
   place-items: center;
   background: var(--backdrop);
-}
-
-.loader-circle {
-  display: grid;
-  place-items: center;
-  width: 6rem;
-  height: 6rem;
-  border: 3px solid var(--demon-green);
-  border-radius: 50%;
-  background: var(--white);
-  box-shadow: 0 8px 30px var(--backdrop);
-
-  .spinner {
-    width: 4rem;
-    height: 4rem;
-  }
 }
 
 /*

@@ -19,7 +19,6 @@
   --parchment: var(--bone-white);
   --parchment-dark: #e3dac6;
   --parchment-darker: #d0c1a0;
-  --white: #fff;
   --backdrop: rgba(0, 0, 0, 0.6); /* behind dialogs and the loader */
 
   /* Ink */
