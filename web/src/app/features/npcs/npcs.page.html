@@ -6,7 +6,7 @@
     <p class="status" role="alert">The NPC table could not be loaded. Is the API running?</p>
   } @else {
     <p class="status" aria-live="polite">
-      @if (npcs.isLoading()) { Loading… } @else { {{ npcs.value()?.length ?? 0 }} typical NPCs }
+      @if (npcs.isLoading()) { <span class="loading"><span class="spinner" aria-hidden="true"></span>Loading…</span> } @else { {{ npcs.value()?.length ?? 0 }} typical NPCs }
     </p>
     <div class="table-wrap" tabindex="0" role="region" aria-label="Typical NPCs table">
       <table class="data-table stack npc-table">

@@ -410,6 +410,35 @@ input[type='checkbox'] {
 }
 
 /*
+ * The dragon spinner, for the treasure roll and page loads. Drawn as an image, not a mask: a mask keeps only the
+ * shape, which would merge the emblem's white detail lines into its fill. Its fill is already --demon-green-dark.
+ */
+.spinner {
+  width: 6rem;
+  height: 6rem;
+  background: url('/spinner-dragon.svg') center / contain no-repeat;
+  animation: spin 1.2s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A page's data loading: the spinner centred above the empty table, with the text under it. */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding-block: var(--spacing-lg);
+
+  .spinner {
+    width: 4rem;
+    height: 4rem;
+  }
+}
+
+/*
  * While any modal dialog is open the page behind it does not scroll. The scrollbar's space is always kept, so the
  * page does not shift sideways when the scrollbar goes.
  */
@@ -525,22 +554,6 @@ html {
     align-items: center;
     justify-content: center;
     gap: var(--spacing-sm);
-  }
-
-  /* The SVG is a mask, so the dragon takes the theme colour whatever the file's own fills are. */
-  /*
-   * Drawn as an image, not a mask: a mask keeps only the shape, which would merge the emblem's white detail lines
-   * into its fill. Its fill is already --demon-green-dark (#14443a).
-   */
-  .spinner {
-    width: 6rem;
-    height: 6rem;
-    background: url('/spinner-dragon.svg') center / contain no-repeat;
-    animation: spin 1.2s linear infinite;
-
-    @media (prefers-reduced-motion: reduce) {
-      animation: none;
-    }
   }
 
   /* Re-roll at the bottom centre: the auto margin takes up whatever height the result leaves. */
