@@ -47,7 +47,7 @@
     <p class="status" role="alert">The equipment could not be loaded. Is the API running?</p>
   } @else {
     <p class="status" aria-live="polite">
-      @if (items.isLoading()) { <span class="loading"><span class="spinner" aria-hidden="true"></span>Loading…</span> } @else { {{ items.value()?.length ?? 0 }} items }
+      @if (items.isLoading()) { Loading… } @else { {{ items.value()?.length ?? 0 }} items }
     </p>
 
     @for (section of sections(); track section.category.id) {

@@ -37,6 +37,11 @@
   </div>
 </div>
 
+<!-- Visual only: each page's status line already announces "Loading…" to screen readers. -->
+@if (loading()) {
+  <div class="loader-overlay" aria-hidden="true"><span class="loader-circle"><span class="spinner"></span></span></div>
+}
+
 <footer class="footer">
   <div class="footer-content">
     <p class="footer-disclaimer">

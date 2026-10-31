@@ -36,18 +36,6 @@ describe('SkillsPage', () => {
     return fixture;
   }
 
-  it('shows the dragon spinner until the skills arrive', async () => {
-    const fixture = render();
-    fixture.detectChanges();
-    const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('.status .loading .spinner')).not.toBeNull();
-
-    http.expectOne('/api/skill-types').flush(types);
-    http.expectOne(r => r.url === '/api/skills').flush(skills);
-    await fixture.whenStable();
-    expect(host.querySelector('.spinner')).toBeNull();
-  });
-
   it('renders the skills table with attribute notes', async () => {
     const fixture = render();
     http.expectOne('/api/skill-types').flush(types);

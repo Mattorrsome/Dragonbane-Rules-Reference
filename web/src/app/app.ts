@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter, map } from 'rxjs';
 import { CoinStandard } from './api/models';
 import { CoinStandardStore } from './core/coin-standard.store';
+import { LoadingTracker } from './core/loading';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { CoinStandardStore } from './core/coin-standard.store';
 })
 export class App {
   protected readonly coins = inject(CoinStandardStore);
+  protected readonly loading = inject(LoadingTracker).visible;
   private readonly router = inject(Router);
 
   private readonly url = toSignal(

@@ -47,7 +47,7 @@
     <p class="status" role="alert">The spells could not be loaded. Is the API running?</p>
   } @else {
     <p class="status" aria-live="polite">
-      @if (spells.isLoading()) { <span class="loading"><span class="spinner" aria-hidden="true"></span>Loading…</span> } @else { {{ spells.value()?.length ?? 0 }} spells }
+      @if (spells.isLoading()) { Loading… } @else { {{ spells.value()?.length ?? 0 }} spells }
     </p>
 
     @for (section of sections(); track section.name) {

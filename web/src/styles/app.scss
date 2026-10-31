@@ -424,13 +424,28 @@ input[type='checkbox'] {
   }
 }
 
-/* A page's data loading: the spinner centred above the empty table, with the text under it. */
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding-block: var(--spacing-lg);
+/*
+ * Shown over the whole page while an API call runs past LOADER_DELAY_MS: the dialogs' grey backdrop with the
+ * spinner in a small white circle ringed in green. It blocks clicks but leaves focus where it was.
+ */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--backdrop);
+}
+
+.loader-circle {
+  display: grid;
+  place-items: center;
+  width: 6rem;
+  height: 6rem;
+  border: 3px solid var(--demon-green);
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 8px 30px var(--backdrop);
 
   .spinner {
     width: 4rem;
@@ -469,7 +484,7 @@ html {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
 
   &::backdrop {
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--backdrop);
   }
 
   .dialog-body {
