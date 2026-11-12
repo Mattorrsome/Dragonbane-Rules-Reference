@@ -42,11 +42,7 @@ body {
   position: relative;
   width: 100%;
   max-width: 640px;
-  /* background-color: var(--parchment); */
-  background-image: url('/scroll.webp');
-  background-repeat: repeat-y;
-  background-size: 100% auto;
-  background-position: top center;
+  /* The scroll texture is drawn in app.scss from three pieces; the skill's single scroll.webp is not shipped. */
   /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); */
   border-radius: 4px;
   overflow: hidden;
