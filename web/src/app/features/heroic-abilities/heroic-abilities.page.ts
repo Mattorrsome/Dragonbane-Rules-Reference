@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { HeroicAbilityDto } from '../../api/models';
-import { definedOnly, held } from '../../shared/http';
+import { definedOnly } from '../../shared/http';
+import { fadeResource } from '../../shared/fade';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
 
@@ -19,7 +20,7 @@ export class HeroicAbilitiesPage {
     url: '/api/heroic-abilities',
     params: definedOnly({ search: this.search() }),
   }));
-  /** The rows on show: the last results stay up, faded, while a search loads. */
-  protected readonly rows = held(() => this.abilities);
+  /** The rows on show: the last results stay up, faded, until the new ones may swap in. */
+  protected readonly rows = fadeResource(() => this.abilities);
   protected readonly setFilter = injectQueryParamWriter();
 }

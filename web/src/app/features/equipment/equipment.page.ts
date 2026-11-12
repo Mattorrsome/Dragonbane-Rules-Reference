@@ -5,7 +5,8 @@ import { CoinStandardStore } from '../../core/coin-standard.store';
 import { CurrencyRatesService } from '../../core/currency-rates';
 import { mastercraftedItem } from '../../money/mastercraft';
 import { BASE_PRICE, formatPrice, isBasePrice, PriceOptions, quote } from '../../money/pricing';
-import { definedOnly, held } from '../../shared/http';
+import { definedOnly } from '../../shared/http';
+import { fadeResource, fadeSwap } from '../../shared/fade';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
 import { cellText, Column, columnsFor } from './columns';
@@ -44,13 +45,15 @@ export class EquipmentPage {
   protected readonly supplies = httpResource<SupplyDto[]>(() => '/api/supplies');
   protected readonly weaponTerms = httpResource<WeaponTermDto[]>(() => '/api/weapon-terms');
   protected readonly weaponFeatures = httpResource<WeaponFeatureDto[]>(() => '/api/weapon-features');
-  /** The last results stay up, faded, while a search or filter loads. */
-  private readonly shown = held(() => this.items);
+  /** The last results stay up, faded, until the new ones may swap in. */
+  protected readonly shown = fadeResource(() => this.items);
+  /** The price options the table shows: a change fades the prices out and back in, like a filter. */
+  protected readonly shownOptions = fadeSwap(() => this.options());
   protected readonly setFilter = injectQueryParamWriter();
 
   /** One section per category that has matching items, in category order. */
   protected readonly sections = computed<CategorySection[]>(() => {
-    const items = this.shown() ?? [];
+    const items = this.shown.value() ?? [];
     return (this.categories.value() ?? [])
       .map(category => {
         const own = items.filter(i => i.categoryId === category.id);
@@ -65,7 +68,7 @@ export class EquipmentPage {
     const mc = this.isMastercrafted(item);
     const shown = mc ? mastercraftedItem(item) : item;
     // A mastercrafted price is always calculated, so it is never shown "as written".
-    if (column.cost) return this.price(item, shown.costCopper, category, !mc && isBasePrice(this.options()));
+    if (column.cost) return this.price(item, shown.costCopper, category, !mc && isBasePrice(this.shownOptions.value()!));
     return cellText(column.value(shown));
   }
 
@@ -94,6 +97,6 @@ export class EquipmentPage {
   private price(item: EquipmentItemDto, copper: number | null, category: EquipmentCategoryDto, isBase: boolean): string {
     const rates = this.rates();
     if (!rates) return '…';
-    return formatPrice(quote(copper, category.canResell, this.options()), this.coins.standard(), rates, item, isBase);
+    return formatPrice(quote(copper, category.canResell, this.shownOptions.value()!), this.coins.standard(), rates, item, isBase);
   }
 }

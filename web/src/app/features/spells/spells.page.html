@@ -50,7 +50,7 @@
       @if (spells.isLoading()) { Loading… } @else { {{ spells.value()?.length ?? 0 }} spells }
     </p>
 
-    <div class="results" [class.fading]="spells.isLoading()">
+    <div class="results" [class.fading]="shown.fading()">
       @for (section of sections(); track section.name) {
         <h2 class="school-title">{{ section.name }}</h2>
         @if (section.school?.note; as note) {

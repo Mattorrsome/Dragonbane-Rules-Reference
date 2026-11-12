@@ -4,7 +4,7 @@ import { EquipmentCategoryDto, EquipmentItemDto, SpellDto, TreasureEntryDto } fr
 import { CoinStandardStore } from '../../core/coin-standard.store';
 import { CurrencyRatesService } from '../../core/currency-rates';
 import { DiceRoller } from '../../dice/dice-roller';
-import { held } from '../../shared/http';
+import { fadeResource } from '../../shared/fade';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
 import { suggestSpells } from '../../treasure/spell-suggestions';
@@ -35,8 +35,8 @@ export class TreasurePage {
     return search ? { url: '/api/treasure', params: { search } } : undefined;
   });
   protected readonly entries = computed(() => (this.search()?.trim() ? this.searched : this.all));
-  /** The rows on show: the last results stay up, faded, while a search loads. */
-  protected readonly rows = held(() => this.entries());
+  /** The rows on show: the last results stay up, faded, until the new ones may swap in. */
+  protected readonly rows = fadeResource(() => this.entries());
 
   private readonly equipment = httpResource<EquipmentItemDto[]>(() => '/api/equipment');
   protected readonly items = computed(() => new Map((this.equipment.value() ?? []).map(i => [i.id, i])));

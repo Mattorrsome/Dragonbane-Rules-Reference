@@ -50,7 +50,7 @@
       @if (items.isLoading()) { Loading… } @else { {{ items.value()?.length ?? 0 }} items }
     </p>
 
-    <div class="results" [class.fading]="items.isLoading()">
+    <div class="results" [class.fading]="shown.fading() || shownOptions.fading()">
       @for (section of sections(); track section.category.id) {
         <div class="section-head">
           <h2>{{ section.category.name }}</h2>

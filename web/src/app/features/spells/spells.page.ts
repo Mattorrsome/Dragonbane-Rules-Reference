@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { MagicSchoolDto, SpellDto, SpellKind } from '../../api/models';
-import { definedOnly, held } from '../../shared/http';
+import { definedOnly } from '../../shared/http';
+import { fadeResource } from '../../shared/fade';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
 import { sentenceCase } from '../../shared/text';
@@ -43,15 +44,15 @@ export class SpellsPage {
     url: '/api/spells',
     params: definedOnly({ search: this.search(), schoolId: this.schoolId(), rank: this.rank(), kind: this.kind() }),
   }));
-  /** The last results stay up, faded, while a search or filter loads. */
-  private readonly shown = held(() => this.spells);
+  /** The last results stay up, faded, until the new ones may swap in. */
+  protected readonly shown = fadeResource(() => this.spells);
   protected readonly setFilter = injectQueryParamWriter();
 
   /** Spells grouped as the source lays them out: by school (API order), then tricks, spells, recipes. */
   protected readonly sections = computed<SchoolSection[]>(() => {
     const schools = this.schools.value() ?? [];
     const bySchool = new Map<number, SpellDto[]>();
-    for (const spell of this.shown() ?? []) bySchool.set(spell.schoolId, [...(bySchool.get(spell.schoolId) ?? []), spell]);
+    for (const spell of this.shown.value() ?? []) bySchool.set(spell.schoolId, [...(bySchool.get(spell.schoolId) ?? []), spell]);
     return [...bySchool].map(([schoolId, spells]) => {
       const school = schools.find(s => s.id === schoolId);
       const name = school?.name ?? spells[0].school;
