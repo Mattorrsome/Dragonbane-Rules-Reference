@@ -1,129 +1,72 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { httpResource, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter, Router } from '@angular/router';
-import { LOADER_DELAY_MS, LOADER_MIN_MS, loadingInterceptor, LoadingTracker } from './loading';
+import { NavigationStart, provideRouter, Router, RouterOutlet } from '@angular/router';
+import { LOADER_MIN_MS, LoadingTracker } from './loading';
+
+@Component({ template: '{{ data.value()?.length }}', changeDetection: ChangeDetectionStrategy.OnPush })
+class DataPage {
+  readonly data = httpResource<unknown[]>(() => '/api/data');
+}
+
+@Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
+class EmptyPage {}
+
+@Component({ imports: [RouterOutlet], template: '<router-outlet />', changeDetection: ChangeDetectionStrategy.OnPush })
+class Shell {}
 
 describe('LoadingTracker', () => {
-  let http: HttpClient;
+  let router: Router;
   let backend: HttpTestingController;
   let tracker: LoadingTracker;
 
-  beforeEach(() => {
-    vi.useFakeTimers();
+  const setup = (minMs: number) => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([loadingInterceptor])),
+        provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([{ path: '**', children: [] }]),
-        { provide: LOADER_DELAY_MS, useValue: 300 },
-        { provide: LOADER_MIN_MS, useValue: 500 },
+        provideRouter([
+          { path: 'data', component: DataPage },
+          { path: 'empty', component: EmptyPage },
+        ]),
+        { provide: LOADER_MIN_MS, useValue: minMs },
       ],
     });
-    http = TestBed.inject(HttpClient);
-    backend = TestBed.inject(HttpTestingController);
     tracker = TestBed.inject(LoadingTracker);
-  });
+    router = TestBed.inject(Router);
+    backend = TestBed.inject(HttpTestingController);
+    TestBed.createComponent(Shell).autoDetectChanges();
+  };
 
-  afterEach(() => vi.useRealTimers());
+  it('shows as soon as navigation to a new page starts, and hides only once its data is in', async () => {
+    setup(0);
+    const atStart: boolean[] = [];
+    router.events.subscribe(e => e instanceof NavigationStart && atStart.push(tracker.visible()));
 
-  it('shows only once a request outlasts the delay, and stays until the last one ends', () => {
-    http.get('/api/a').subscribe();
-    http.get('/api/b').subscribe();
-    vi.advanceTimersByTime(299);
-    expect(tracker.visible()).toBe(false);
-
-    vi.advanceTimersByTime(1);
-    expect(tracker.visible()).toBe(true);
-
-    vi.advanceTimersByTime(1000);
-    backend.expectOne('/api/a').flush([]);
-    expect(tracker.visible()).toBe(true);
-    backend.expectOne('/api/b').flush([]);
-    expect(tracker.visible()).toBe(false);
-  });
-
-  it('stays up for the minimum time when the request ends soon after it shows', () => {
-    http.get('/api/a').subscribe();
-    vi.advanceTimersByTime(400);
-    backend.expectOne('/api/a').flush([]);
-    expect(tracker.visible()).toBe(true);
-
-    vi.advanceTimersByTime(399);
-    expect(tracker.visible()).toBe(true);
-    vi.advanceTimersByTime(1);
-    expect(tracker.visible()).toBe(false);
-  });
-
-  it('a request starting while it waits to hide keeps it up', () => {
-    http.get('/api/a').subscribe();
-    vi.advanceTimersByTime(400);
-    backend.expectOne('/api/a').flush([]);
-    http.get('/api/b').subscribe();
-    vi.advanceTimersByTime(1000);
-    expect(tracker.visible()).toBe(true);
-
-    backend.expectOne('/api/b').flush([]);
-    expect(tracker.visible()).toBe(false);
-  });
-
-  it('never shows for a request that ends before the delay', () => {
-    http.get('/api/a').subscribe();
-    backend.expectOne('/api/a').flush([]);
-    vi.advanceTimersByTime(1000);
-    expect(tracker.visible()).toBe(false);
-  });
-
-  it('counts a cancelled request as ended', () => {
-    const sub = http.get('/api/a').subscribe();
-    vi.advanceTimersByTime(300);
-    sub.unsubscribe();
-    vi.advanceTimersByTime(500);
-    expect(tracker.visible()).toBe(false);
-  });
-
-  describe('first load only', () => {
-    /** Runs one slow request through the loader until it hides, ending the first load. */
-    const slowLoad = (url: string) => {
-      http.get(url).subscribe();
-      vi.advanceTimersByTime(400);
-      backend.expectOne(url).flush([]);
-      vi.advanceTimersByTime(500);
-    };
-
-    it('does not show for later requests on the same page, such as a search', () => {
-      slowLoad('/api/a');
-      http.get('/api/a?search=x').subscribe();
-      vi.advanceTimersByTime(1000);
-      expect(tracker.visible()).toBe(false);
-      backend.expectOne('/api/a?search=x').flush([]);
-    });
-
-    it('ends the first load when its requests finish before the delay too', () => {
-      http.get('/api/a').subscribe();
-      backend.expectOne('/api/a').flush([]);
-      http.get('/api/b').subscribe();
-      vi.advanceTimersByTime(1000);
-      expect(tracker.visible()).toBe(false);
-      backend.expectOne('/api/b').flush([]);
-    });
-
-    it('shows again after navigating to another path, but not after a query-only change', async () => {
-      const router = TestBed.inject(Router);
-      await router.navigateByUrl('/skills');
-      slowLoad('/api/a');
-
-      await router.navigateByUrl('/skills?search=x');
-      http.get('/api/b').subscribe();
-      vi.advanceTimersByTime(400);
-      expect(tracker.visible()).toBe(false);
-      backend.expectOne('/api/b').flush([]);
-
-      await router.navigateByUrl('/spells');
-      http.get('/api/c').subscribe();
-      vi.advanceTimersByTime(400);
+    await router.navigateByUrl('/data');
+    expect(atStart).toEqual([true]);
+    await vi.waitFor(() => backend.expectOne('/api/data'), { timeout: 1000 }).then(req => {
       expect(tracker.visible()).toBe(true);
-      backend.expectOne('/api/c').flush([]);
+      req.flush([1, 2]);
     });
+    await vi.waitFor(() => expect(tracker.visible()).toBe(false), { timeout: 1000 });
+  });
+
+  it('stays up for the minimum time when the page loads at once', async () => {
+    setup(200);
+    const start = Date.now();
+    await router.navigateByUrl('/empty');
+    await vi.waitFor(() => expect(tracker.visible()).toBe(false), { timeout: 1000 });
+    expect(Date.now() - start).toBeGreaterThanOrEqual(190);
+  });
+
+  it('does not show for a query-only change, such as a search', async () => {
+    setup(0);
+    await router.navigateByUrl('/empty');
+    await vi.waitFor(() => expect(tracker.visible()).toBe(false), { timeout: 1000 });
+
+    await router.navigateByUrl('/empty?search=x');
+    expect(tracker.visible()).toBe(false);
   });
 });
