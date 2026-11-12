@@ -50,64 +50,66 @@
       @if (spells.isLoading()) { Loading… } @else { {{ spells.value()?.length ?? 0 }} spells }
     </p>
 
-    @for (section of sections(); track section.name) {
-      <h2 class="school-title">{{ section.name }}</h2>
-      @if (section.school?.note; as note) {
-        <p class="dragonbox multiline">{{ note }}</p>
-      }
+    <div class="results" [class.fading]="spells.isLoading()">
+      @for (section of sections(); track section.name) {
+        <h2 class="school-title">{{ section.name }}</h2>
+        @if (section.school?.note; as note) {
+          <p class="dragonbox multiline">{{ note }}</p>
+        }
 
-      @for (group of section.groups; track group.kind) {
-        <h3>{{ group.title }}</h3>
-        <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="group.title + ' table'">
-          <table class="data-table stack" [class.stack-lg]="group.kind !== 'Trick'">
-            <caption>{{ group.title }}</caption>
-            <thead>
-              @if (group.kind === 'Trick') {
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Casting Time</th>
-                  <th scope="col">Requirement</th>
-                  <th scope="col">Description</th>
-                </tr>
-              } @else {
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Rank</th>
-                  <th scope="col">Prerequisite</th>
-                  <th scope="col">Requirement</th>
-                  <th scope="col">Casting Time</th>
-                  <th scope="col">Range</th>
-                  <th scope="col">Duration</th>
-                  <th scope="col">Description</th>
-                </tr>
-              }
-            </thead>
-            <tbody>
-              @for (spell of group.spells; track spell.id) {
+        @for (group of section.groups; track group.kind) {
+          <h3>{{ group.title }}</h3>
+          <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="group.title + ' table'">
+            <table class="data-table stack" [class.stack-lg]="group.kind !== 'Trick'">
+              <caption>{{ group.title }}</caption>
+              <thead>
                 @if (group.kind === 'Trick') {
                   <tr>
-                    <td class="row-title">{{ sentenceCase(spell.name) }}</td>
-                    <td data-label="Casting Time">{{ spell.castingTime }}</td>
-                    <td data-label="Requirement">{{ spell.requirementText }}</td>
-                    <td data-label="Description" class="multiline">{{ spell.description }}</td>
+                    <th scope="col">Name</th>
+                    <th scope="col">Casting Time</th>
+                    <th scope="col">Requirement</th>
+                    <th scope="col">Description</th>
                   </tr>
                 } @else {
                   <tr>
-                    <td class="row-title">{{ sentenceCase(spell.name) }}</td>
-                    <td data-label="Rank">{{ spell.rank }}</td>
-                    <td data-label="Prerequisite">{{ spell.ranked?.prerequisite }}</td>
-                    <td data-label="Requirement">{{ spell.requirementText }}</td>
-                    <td data-label="Casting Time">{{ spell.castingTime }}</td>
-                    <td data-label="Range">{{ spell.ranked?.range }}</td>
-                    <td data-label="Duration">{{ spell.ranked?.duration }}</td>
-                    <td data-label="Description" class="multiline">{{ spell.description }}</td>
+                    <th scope="col">Name</th>
+                    <th scope="col">Rank</th>
+                    <th scope="col">Prerequisite</th>
+                    <th scope="col">Requirement</th>
+                    <th scope="col">Casting Time</th>
+                    <th scope="col">Range</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Description</th>
                   </tr>
                 }
-              }
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                @for (spell of group.spells; track spell.id) {
+                  @if (group.kind === 'Trick') {
+                    <tr>
+                      <td class="row-title">{{ sentenceCase(spell.name) }}</td>
+                      <td data-label="Casting Time">{{ spell.castingTime }}</td>
+                      <td data-label="Requirement">{{ spell.requirementText }}</td>
+                      <td data-label="Description" class="multiline">{{ spell.description }}</td>
+                    </tr>
+                  } @else {
+                    <tr>
+                      <td class="row-title">{{ sentenceCase(spell.name) }}</td>
+                      <td data-label="Rank">{{ spell.rank }}</td>
+                      <td data-label="Prerequisite">{{ spell.ranked?.prerequisite }}</td>
+                      <td data-label="Requirement">{{ spell.requirementText }}</td>
+                      <td data-label="Casting Time">{{ spell.castingTime }}</td>
+                      <td data-label="Range">{{ spell.ranked?.range }}</td>
+                      <td data-label="Duration">{{ spell.ranked?.duration }}</td>
+                      <td data-label="Description" class="multiline">{{ spell.description }}</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       }
-    }
+    </div>
   }
 </section>

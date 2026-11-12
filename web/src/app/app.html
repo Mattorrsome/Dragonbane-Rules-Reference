@@ -1,5 +1,5 @@
-<a class="skip-link" href="#main">Skip to content</a>
-<header class="navbar">
+<a class="skip-link" href="#main" [inert]="loading()">Skip to content</a>
+<header class="navbar" [inert]="loading()">
   <div class="nav-content">
     <div class="nav-start">
       <!-- Native popover: Escape and a click outside close it, and focus returns to the button. -->
@@ -29,7 +29,7 @@
   </div>
 </header>
 
-<div class="page-shell">
+<div class="page-shell" [inert]="loading()">
   <div class="page-scroll">
     <main id="main" class="main-content" tabindex="-1">
       <router-outlet />
@@ -37,9 +37,9 @@
   </div>
 </div>
 
-<!-- Visual only: each page's status line already announces "Loading…" to screen readers. -->
+<!-- The page behind is inert while this shows (its status line too), so this announces the load instead. -->
 @if (loading()) {
-  <div class="loader-overlay" aria-hidden="true"><span class="spinner"></span></div>
+  <div class="loader-overlay" role="status"><span class="spinner" aria-hidden="true"></span><span class="visually-hidden">Loading…</span></div>
 }
 
 <footer class="footer">

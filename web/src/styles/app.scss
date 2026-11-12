@@ -410,31 +410,50 @@ input[type='checkbox'] {
 }
 
 /*
- * The dragon spinner, for the treasure roll and page loads. Drawn as an image, not a mask: a mask keeps only the
- * shape, which would merge the emblem's white detail lines into its fill. Its fill is already --demon-green-dark.
+ * The ouroboros spinner (a dragon biting its own tail), for the treasure roll and page loads. The SVG is a mask, so
+ * the dragon takes the text colour: green on the parchment dialog, white on the green loader.
  */
 .spinner {
   width: 6rem;
   height: 6rem;
-  background: url('/spinner-dragon.svg') center / contain no-repeat;
-  animation: spin 1.2s linear infinite;
+  background-color: currentColor;
+  mask: url('/spinner-dragon.svg') center / contain no-repeat;
+  animation: spin 2s linear infinite;
 
   @media (prefers-reduced-motion: reduce) {
-    animation: none;
+    animation-duration: 6s;
   }
 }
 
 /*
- * Shown over the whole page while an API call runs past LOADER_DELAY_MS, for at least LOADER_MIN_MS: the dialogs'
- * grey backdrop with the spinner in the middle. It blocks clicks but leaves focus where it was.
+ * Shown while a page's first data loads from the API (LoadingTracker): green over the content, under the sticky
+ * header, which stays visible but inert. Searches and filters never show it; their results fade instead.
  */
 .loader-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 99;
   display: grid;
   place-items: center;
-  background: var(--backdrop);
+  background: var(--demon-green);
+  color: var(--bone-white);
+}
+
+.navbar[inert] {
+  opacity: 0.75;
+}
+
+/* Search and filter results: the old rows fade out while new ones load, then the new ones fade in. */
+.results {
+  transition: opacity 0.2s ease;
+
+  &.fading {
+    opacity: 0.25;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 /*
@@ -553,6 +572,10 @@ html {
     align-items: center;
     justify-content: center;
     gap: var(--spacing-sm);
+
+    .spinner {
+      color: var(--demon-green-dark);
+    }
   }
 
   /* Re-roll at the bottom centre: the auto margin takes up whatever height the result leaves. */

@@ -50,46 +50,48 @@
       @if (items.isLoading()) { Loading… } @else { {{ items.value()?.length ?? 0 }} items }
     </p>
 
-    @for (section of sections(); track section.category.id) {
-      <div class="section-head">
-        <h2>{{ section.category.name }}</h2>
-        @if (section.items.some(canMastercraft)) {
-          <button type="button" id="all-mastercrafted" class="toggle-button" [attr.aria-pressed]="allMastercrafted()"
-            (click)="allMastercrafted.set(!allMastercrafted())">Mastercraft all</button>
-        }
-      </div>
-      <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="section.category.name + ' table'">
-        <table class="data-table stack" [class.stack-lg]="section.isWeapon">
-          <caption>{{ section.category.name }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{{ section.category.nameHeader }}</th>
-              @for (column of section.columns; track column.header) {
-                <th scope="col">{{ column.header }}</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of section.items; track item.id) {
-              <tr [class.mastercrafted]="isMastercrafted(item)">
-                <td class="row-title">
-                  {{ item.name }}
-                  @if (canMastercraft(item)) {
-                    <button type="button" class="link-button" [attr.aria-pressed]="isMastercrafted(item)"
-                      [disabled]="allMastercrafted()" (click)="toggle(item.id)">Mastercrafted</button>
-                  }
-                </td>
+    <div class="results" [class.fading]="items.isLoading()">
+      @for (section of sections(); track section.category.id) {
+        <div class="section-head">
+          <h2>{{ section.category.name }}</h2>
+          @if (section.items.some(canMastercraft)) {
+            <button type="button" id="all-mastercrafted" class="toggle-button" [attr.aria-pressed]="allMastercrafted()"
+              (click)="allMastercrafted.set(!allMastercrafted())">Mastercraft all</button>
+          }
+        </div>
+        <div class="table-wrap" tabindex="0" role="region" [attr.aria-label]="section.category.name + ' table'">
+          <table class="data-table stack" [class.stack-lg]="section.isWeapon">
+            <caption>{{ section.category.name }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ section.category.nameHeader }}</th>
                 @for (column of section.columns; track column.header) {
-                  <td [attr.data-label]="column.header" [class.multiline]="!column.cost">{{ cell(column, item, section.category) }}</td>
+                  <th scope="col">{{ column.header }}</th>
                 }
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      @if (section.category.note; as note) {
-        <p class="dragonbox multiline">{{ note }}</p>
+            </thead>
+            <tbody>
+              @for (item of section.items; track item.id) {
+                <tr [class.mastercrafted]="isMastercrafted(item)">
+                  <td class="row-title">
+                    {{ item.name }}
+                    @if (canMastercraft(item)) {
+                      <button type="button" class="link-button" [attr.aria-pressed]="isMastercrafted(item)"
+                        [disabled]="allMastercrafted()" (click)="toggle(item.id)">Mastercrafted</button>
+                    }
+                  </td>
+                  @for (column of section.columns; track column.header) {
+                    <td [attr.data-label]="column.header" [class.multiline]="!column.cost">{{ cell(column, item, section.category) }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (section.category.note; as note) {
+          <p class="dragonbox multiline">{{ note }}</p>
+        }
       }
-    }
+    </div>
   }
 </section>

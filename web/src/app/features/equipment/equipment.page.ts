@@ -5,7 +5,7 @@ import { CoinStandardStore } from '../../core/coin-standard.store';
 import { CurrencyRatesService } from '../../core/currency-rates';
 import { mastercraftedItem } from '../../money/mastercraft';
 import { BASE_PRICE, formatPrice, isBasePrice, PriceOptions, quote } from '../../money/pricing';
-import { definedOnly } from '../../shared/http';
+import { definedOnly, held } from '../../shared/http';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
 import { cellText, Column, columnsFor } from './columns';
@@ -44,11 +44,13 @@ export class EquipmentPage {
   protected readonly supplies = httpResource<SupplyDto[]>(() => '/api/supplies');
   protected readonly weaponTerms = httpResource<WeaponTermDto[]>(() => '/api/weapon-terms');
   protected readonly weaponFeatures = httpResource<WeaponFeatureDto[]>(() => '/api/weapon-features');
+  /** The last results stay up, faded, while a search or filter loads. */
+  private readonly shown = held(() => this.items);
   protected readonly setFilter = injectQueryParamWriter();
 
   /** One section per category that has matching items, in category order. */
   protected readonly sections = computed<CategorySection[]>(() => {
-    const items = this.items.value() ?? [];
+    const items = this.shown() ?? [];
     return (this.categories.value() ?? [])
       .map(category => {
         const own = items.filter(i => i.categoryId === category.id);

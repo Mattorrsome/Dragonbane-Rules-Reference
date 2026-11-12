@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { SkillDto, SkillTypeDto } from '../../api/models';
-import { definedOnly } from '../../shared/http';
+import { definedOnly, held } from '../../shared/http';
 import { injectQueryParamWriter } from '../../shared/query-params';
 import { SearchBox } from '../../shared/search-box';
 
@@ -21,5 +21,7 @@ export class SkillsPage {
     url: '/api/skills',
     params: definedOnly({ search: this.search(), typeId: this.typeId() }),
   }));
+  /** The rows on show: the last results stay up, faded, while a search loads. */
+  protected readonly rows = held(() => this.skills);
   protected readonly setFilter = injectQueryParamWriter();
 }
