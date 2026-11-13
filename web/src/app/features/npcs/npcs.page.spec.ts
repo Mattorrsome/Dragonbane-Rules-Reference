@@ -54,7 +54,7 @@ describe('NpcsPage', () => {
     ]);
     const chief = typical.querySelectorAll('tbody tr')[2];
     expect(chief.querySelector('[data-label="Heroic abilities"]')?.textContent).toContain('Robust ×6');
-    expect(chief.querySelector('[data-label="Bonus"]')?.textContent?.trim()).toBe('STR +D6');
+    expect(chief.querySelector('[data-label="Bonus"]')?.textContent?.trim()).toBe('STR: D6');
     expect(chief.querySelector('[data-label="WP"]')?.textContent?.trim()).toBe('16');
     expect(typical.querySelectorAll('tbody tr')[0].querySelector('[data-label="WP"]')?.textContent?.trim()).toBe('-');
     expect(page.button('Tweak Bandit chief')).toBeTruthy();

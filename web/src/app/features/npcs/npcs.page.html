@@ -29,7 +29,7 @@
               <td class="row-title">{{ npc.name }}</td>
               <td data-label="Skills"><ng-container *ngTemplateOutlet="names; context: { $implicit: skillCells(npc) }" /></td>
               <td data-label="Heroic abilities"><ng-container *ngTemplateOutlet="names; context: { $implicit: abilityCells(npc) }" /></td>
-              <td data-label="Bonus">{{ npc.damageBonusAttribute ? npc.damageBonusAttribute + ' +' + npc.damageBonusDice : '-' }}</td>
+              <td data-label="Bonus">{{ npc.damageBonusAttribute ? npc.damageBonusAttribute + ': ' + npc.damageBonusDice : '-' }}</td>
               <td data-label="HP">{{ npc.hp }}</td>
               <td data-label="WP">{{ npc.wp ?? '-' }}</td>
               <td data-label="Typical gear"><ng-container *ngTemplateOutlet="names; context: { $implicit: gearCells(npc) }" /></td>

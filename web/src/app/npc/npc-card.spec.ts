@@ -18,7 +18,7 @@ describe('buildCard', () => {
       name: 'Grok',
       description: 'Scarred chief of the Red Ford bandits.',
       movement: 10,
-      damageBonus: 'STR: +D6',
+      damageBonus: 'STR: D6',
       armour: 'Chainmail, open helmet (5)',
       hp: 30,
       wp: 16,
@@ -53,7 +53,7 @@ describe('buildCard', () => {
   });
 
   it('shows both damage bonuses, STR first', () => {
-    expect(buildCard(setDamageBonus(grok(), 'AGL', 'D4'), ref, false).damageBonus).toBe('STR: +D6, AGL: +D4');
+    expect(buildCard(setDamageBonus(grok(), 'AGL', 'D4'), ref, false).damageBonus).toBe('STR: D6, AGL: D4');
   });
 
   it('tricks read "(trick)"', () => {
@@ -94,7 +94,7 @@ describe('cardToText', () => {
         'Grok',
         'Scarred chief of the Red Ford bandits.',
         '',
-        'Movement: 10 · Damage Bonus: STR: +D6',
+        'Movement: 10 · Damage Bonus: STR: D6',
         'Armor: Chainmail, open helmet (5) · HP: 30 · WP: 16',
         'Skills: Awareness 12, Brawling 15, Hammers 15',
         'Heroic Abilities: Berserker, Veteran, Robust ×6',
@@ -108,7 +108,7 @@ describe('cardToText', () => {
     expect(cardToText(buildCard(grok(), ref, false, true)).split('\n').slice(2, 5)).toEqual([
       '',
       'STR: 17 · CON: 18 · AGL: 10 · INT: 10 · WIL: 16 · CHA: 10',
-      'Movement: 10 · Damage Bonus: STR: +D6',
+      'Movement: 10 · Damage Bonus: STR: D6',
     ]);
   });
 
@@ -142,7 +142,7 @@ describe('cardToMarkdown', () => {
         '',
         'Scarred chief of the Red Ford bandits.',
         '',
-        '**Movement:** 10 · **Damage Bonus:** STR: +D6  ',
+        '**Movement:** 10 · **Damage Bonus:** STR: D6  ',
         '**Armor:** Chainmail, open helmet (5) · **HP:** 30 · **WP:** 16  ',
         '**Skills:** Awareness 12, Brawling 15, Hammers 15  ',
         '**Heroic Abilities:** Berserker, Veteran, Robust ×6  ',

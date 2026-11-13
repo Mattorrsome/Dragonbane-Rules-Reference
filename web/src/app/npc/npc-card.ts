@@ -41,7 +41,7 @@ export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean
     name: npc.name,
     description: npc.description.trim(),
     movement: npc.movement,
-    damageBonus: npc.damageBonuses.map(b => `${b.attribute}: +${b.dice}`).join(', ') || null,
+    damageBonus: npc.damageBonuses.map(b => `${b.attribute}: ${b.dice}`).join(', ') || null,
     armour: armour.length
       ? `${bookList(armour.map(a => a.name))} (${armour.reduce((sum, a) => sum + a.item!.armour!.rating, 0)})`
       : null,

@@ -3,7 +3,7 @@ import { NpcCard } from '../../npc/npc-card';
 import { NpcCardView } from './npc-card-view';
 
 const grok: NpcCard = {
-  name: 'Grok', description: 'Scarred chief.', movement: 10, damageBonus: 'STR: +D6', armour: 'Chainmail, open helmet (5)',
+  name: 'Grok', description: 'Scarred chief.', movement: 10, damageBonus: 'STR: D6', armour: 'Chainmail, open helmet (5)',
   hp: 30, wp: 16, skills: 'Awareness 12, Brawling 15',
   abilities: [{ text: 'Berserker (3 WP)', detail: 'Become Angry.' }, { text: 'Robust ×6', detail: null }],
   weapons: 'Heavy warhammer (skill level 15, damage 2D10)', spells: [], gear: '', attributes: null,
@@ -24,7 +24,7 @@ describe('NpcCardView', () => {
     expect(host.querySelector('.npc-card')).not.toBeNull();
     expect(host.querySelector('.npc-card-name')?.textContent?.trim()).toBe('Grok');
     expect(labels(host)).toEqual(['Movement:', 'Damage Bonus:', 'Armor:', 'HP:', 'WP:', 'Skills:', 'Heroic Abilities:', 'Weapons:']);
-    expect(host.textContent).toContain('STR: +D6');
+    expect(host.textContent).toContain('STR: D6');
   });
 
   it('hides empty rows and parts', () => {
