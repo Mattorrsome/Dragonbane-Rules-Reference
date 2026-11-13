@@ -11,7 +11,8 @@ const pathOf = (url: string) => url.split(/[?#]/)[0];
  * `visible` turns on the moment navigation to a new page starts, so neither the old page nor the new one's empty
  * shell shows while it loads. It turns off once the app is stable (Angular counts route chunks, HTTP requests and
  * resources as pending tasks, so the page's data is in and drawn), and not before LOADER_MIN_MS. A query-only change
- * (a search or filter) is not a new page and never shows it.
+ * (a search or filter) is not a new page and never shows it, nor is a return to a URL already loaded: apiCacheInterceptor
+ * keeps its data, so it draws at once.
  */
 @Injectable({ providedIn: 'root' })
 export class LoadingTracker {
@@ -25,10 +26,15 @@ export class LoadingTracker {
       firstValueFrom(router.events.pipe(filter(e => e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError)));
     let path: string | undefined;
     let run = 0;
+    const loaded = new Set<string>();
 
     router.events.subscribe(async e => {
-      if (e instanceof NavigationEnd) path = pathOf(e.urlAfterRedirects);
-      if (!(e instanceof NavigationStart) || pathOf(e.url) === path) return;
+      if (e instanceof NavigationEnd) {
+        path = pathOf(e.urlAfterRedirects);
+        // Searches count too: Back to one already run is answered from the cache.
+        appRef.whenStable().then(() => loaded.add(e.urlAfterRedirects));
+      }
+      if (!(e instanceof NavigationStart) || pathOf(e.url) === path || loaded.has(e.url)) return;
       const id = ++run;
       const shownAt = Date.now();
       this.visible.set(true);

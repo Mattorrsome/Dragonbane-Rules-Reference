@@ -69,4 +69,20 @@ describe('LoadingTracker', () => {
     await router.navigateByUrl('/empty?search=x');
     expect(tracker.visible()).toBe(false);
   });
+
+  it('does not show when going back to a page already loaded, whose data is kept', async () => {
+    setup(0);
+    await router.navigateByUrl('/data');
+    await vi.waitFor(() => backend.expectOne('/api/data'), { timeout: 1000 }).then(req => req.flush([1]));
+    await vi.waitFor(() => expect(tracker.visible()).toBe(false), { timeout: 1000 });
+    await router.navigateByUrl('/empty');
+    await vi.waitFor(() => expect(tracker.visible()).toBe(false), { timeout: 1000 });
+
+    const atStart: boolean[] = [];
+    router.events.subscribe(e => e instanceof NavigationStart && atStart.push(tracker.visible()));
+    const back = router.navigateByUrl('/data');
+    await vi.waitFor(() => backend.expectOne('/api/data'), { timeout: 1000 }).then(req => req.flush([1]));
+    await back;
+    expect(atStart).toEqual([false]);
+  });
 });
