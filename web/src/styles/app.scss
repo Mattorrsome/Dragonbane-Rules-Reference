@@ -787,6 +787,17 @@ html {
   gap: var(--spacing-xs);
 }
 
+/*
+ * Typical NPCs from tablet up: Tweak and Export stack in one column, both as wide as the wider one (buttons
+ * centre their text). Phone cards already show them full width.
+ */
+@media (min-width: 768px) {
+  .npc-table .row-actions {
+    display: grid;
+    justify-content: end;
+  }
+}
+
 /* ================ NPC DIALOG ================ */
 /* Wide enough for the form and the card side by side; leaves room for the corner Close at 375px. */
 .npc-dialog {
