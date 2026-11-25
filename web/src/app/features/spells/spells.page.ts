@@ -40,9 +40,12 @@ export class SpellsPage {
   protected readonly ranks = [0, 1, 2, 3, 4, 5, 6];
   protected readonly kinds = KIND_ORDER;
   protected readonly schools = httpResource<MagicSchoolDto[]>(() => '/api/magic-schools');
+  /** Tricks are all rank 0, so with Trick picked the rank filter is off unless it is 0 (any other rank matches nothing). */
+  protected readonly tricksOnly = computed(() => this.kind() === 'Trick');
+  protected readonly effectiveRank = computed(() => (this.tricksOnly() && this.rank() !== '0' ? undefined : this.rank()));
   protected readonly spells = httpResource<SpellDto[]>(() => ({
     url: '/api/spells',
-    params: definedOnly({ search: this.search(), schoolId: this.schoolId(), rank: this.rank(), kind: this.kind() }),
+    params: definedOnly({ search: this.search(), schoolId: this.schoolId(), rank: this.effectiveRank(), kind: this.kind() }),
   }));
   /** The last results stay up, faded, until the new ones may swap in. */
   protected readonly shown = fadeResource(() => this.spells);

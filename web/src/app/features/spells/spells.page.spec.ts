@@ -75,6 +75,23 @@ describe('SpellsPage', () => {
     request.flush([]);
   });
 
+  it('with Trick picked, disables rank and drops any rank above 0', async () => {
+    const fixture = TestBed.createComponent(SpellsPage);
+    fixture.componentRef.setInput('kind', 'Trick');
+    fixture.componentRef.setInput('rank', '3');
+    TestBed.tick();
+
+    http.expectOne('/api/magic-schools').flush(schools);
+    const request = http.expectOne(r => r.url === '/api/spells');
+    expect(request.request.params.has('rank')).toBe(false);
+    request.flush([trick]);
+    await fixture.whenStable();
+
+    const select = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('#spell-rank')!;
+    expect(select.disabled).toBe(true);
+    expect(select.value).toBe('');
+  });
+
   it('groups by school then kind', async () => {
     const host = await renderWith([trick, dispel, heal]);
 

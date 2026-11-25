@@ -16,10 +16,10 @@
 
     <div class="select-filter">
       <label for="spell-rank">Rank</label>
-      <select id="spell-rank" (change)="onSelect('rank', $event)">
-        <option value="" [selected]="!rank()">Any rank</option>
+      <select id="spell-rank" [disabled]="tricksOnly()" (change)="onSelect('rank', $event)">
+        <option value="" [selected]="!effectiveRank()">Any rank</option>
         @for (r of ranks; track r) {
-          <option [value]="r" [selected]="rank() === '' + r">{{ r === 0 ? '0 (tricks)' : r }}</option>
+          <option [value]="r" [selected]="effectiveRank() === '' + r">{{ r === 0 ? '0 (tricks)' : r }}</option>
         }
       </select>
     </div>
