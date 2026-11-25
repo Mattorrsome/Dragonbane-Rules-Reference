@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -42,6 +42,15 @@ export class App {
     { value: 'silver', label: 'Silver' },
     { value: 'gold', label: 'Gold' },
   ];
+
+  constructor() {
+    // Sticky table headers sit under the sticky navbar, whose height changes as it wraps. jsdom has no ResizeObserver.
+    afterNextRender(() => {
+      const navbar = document.querySelector<HTMLElement>('.navbar');
+      if (!navbar || typeof ResizeObserver === 'undefined') return;
+      new ResizeObserver(() => document.documentElement.style.setProperty('--navbar-height', `${navbar.offsetHeight}px`)).observe(navbar);
+    });
+  }
 
   protected onStandardChange(event: Event): void {
     this.coins.set((event.target as HTMLSelectElement).value as CoinStandard);

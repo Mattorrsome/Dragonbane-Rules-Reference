@@ -45,8 +45,8 @@
         <tbody>
           @for (entry of rows.value() ?? []; track entry.id) {
             <tr>
-              <td class="row-title">{{ entry.roll }}</td>
-              <td data-label="Treasure">{{ entry.name }}</td>
+              <td class="row-title roll">{{ entry.roll }}</td>
+              <td data-label="Treasure"><span class="capitalise">{{ entry.name }}</span></td>
               <td data-label="Value or Effect" class="multiline">{{ entry.effectText }}</td>
               <td>
                 <button type="button" class="btn btn-secondary btn-small" [disabled]="!ready()"

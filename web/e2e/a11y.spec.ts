@@ -5,7 +5,7 @@ const routes = ['/reference/skills', '/reference/heroic-abilities', '/reference/
 
 /**
  * Content that does not fit. The page itself never scrolls sideways because `.page-scroll` clips with
- * overflow:hidden, so also count table boxes that scroll and elements reaching past the scroll's right edge.
+ * overflow (hidden, or clip on desktop), so also count table boxes that scroll and elements reaching past the scroll's right edge.
  */
 function overflow(): { page: boolean; scrollingTables: number; clipped: string[] } {
   const edge = document.querySelector('.page-scroll')!.getBoundingClientRect().right;
@@ -64,6 +64,25 @@ test.describe('filter rows line up', () => {
       expect(row.controlHeights).toHaveLength(1);
     });
   }
+});
+
+test.describe('table headers stick under the navbar', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('a long table keeps its header row in view while scrolled', async ({ page }) => {
+    await page.goto('/reference/skills');
+    await page.locator('tbody tr').nth(20).waitFor();
+
+    const tops = await page.evaluate(() => {
+      const table = document.querySelector('.data-table')!;
+      scrollTo({ top: scrollY + table.getBoundingClientRect().top + 400, behavior: 'instant' });
+      return {
+        navbar: Math.round(document.querySelector('.navbar')!.getBoundingClientRect().bottom),
+        header: Math.round(table.querySelector('th')!.getBoundingClientRect().top),
+      };
+    });
+    expect(tops.header).toBe(tops.navbar);
+  });
 });
 
 test('equipment controls by keyboard', async ({ page }) => {

@@ -46,6 +46,56 @@
   .page-scroll {
     max-width: var(--max-width);
   }
+
+  .page-shell {
+    padding-inline: 4.5rem;
+  }
+}
+
+/*
+ * Desktop: table headers stick under the navbar while their table scrolls past. Sticky needs every ancestor
+ * up to the page to leave scrolling alone, so the scroll clips instead of hiding and the table boxes stop
+ * scrolling sideways (the e2e gate checks no table overflows at desktop width). Below 1024px the boxes keep
+ * their sideways scroll as a safety net and most tables stack into cards with no header anyway.
+ */
+@media (min-width: 1024px) {
+  .page-scroll {
+    overflow: clip;
+  }
+
+  .table-wrap {
+    overflow-x: visible;
+  }
+
+  .data-table th {
+    position: sticky;
+    top: var(--navbar-height, 0);
+    z-index: 1;
+  }
+}
+
+/*
+ * First letter of each row's title is a capital (some source names are lower case). ::first-letter needs a
+ * block box and skips a cell's data-label ::before only if the text sits in its own box, hence the span.
+ */
+.data-table td.row-title::first-letter,
+.capitalise::first-letter {
+  text-transform: uppercase;
+}
+
+.capitalise {
+  display: inline-block;
+}
+
+/* Row titles are bold too; the treasure table titles its rows by name, not by roll number. */
+.data-table td.row-title:not(.roll),
+.data-table .capitalise {
+  font-weight: 700;
+}
+
+/* The Mastercrafted toggle inside an equipment title stays regular weight. */
+.data-table td.row-title .link-button {
+  font-weight: normal;
 }
 
 /* Filter rows line up on their labels' tops; an unlabelled button (Roll treasure) sits level with the inputs' bottom. */
