@@ -1,0 +1,33 @@
+<div class="export-menu">
+  <div class="export-actions">
+    <ng-content select="[exportOptions]" />
+    <!--
+      Copy and Download each show the formats in a section below them; one at a time, and the open one closes it.
+      The wrapper is as wide as the two buttons, so the section matches them.
+    -->
+    <div class="export-choice">
+      <div class="export-buttons">
+        @for (choice of modes; track choice) {
+          <button type="button" class="btn btn-small" [class.btn-primary]="mode() === choice" [class.btn-secondary]="mode() !== choice"
+            aria-controls="export-options" [attr.aria-expanded]="mode() === choice" (click)="toggle(choice)">{{ choice === 'copy' ? 'Copy' : 'Download' }}</button>
+        }
+      </div>
+      @if (mode(); as m) {
+        @let verb = m === 'copy' ? 'Copy' : 'Download';
+        <div id="export-options" class="export-options" role="group" [attr.aria-label]="verb + ' as'">
+          <button type="button" [attr.aria-label]="verb + ' image'" (click)="m === 'copy' ? copyImage() : downloadImage()">Image</button>
+          <button type="button" [attr.aria-label]="verb + ' text'" (click)="m === 'copy' ? copyText(false) : downloadText(false)">Text</button>
+          <button type="button" [attr.aria-label]="verb + ' Markdown'" (click)="m === 'copy' ? copyText(true) : downloadText(true)">Markdown</button>
+          @if (m === 'download' && pdf()) {
+            <button type="button" aria-label="Download PDF" (click)="downloadPdf()">PDF</button>
+          }
+        </div>
+      }
+    </div>
+    <p class="export-status" role="status">{{ status() }}</p>
+  </div>
+  <!-- What is shown is what the image is drawn from. -->
+  <div #cardHost>
+    <ng-content />
+  </div>
+</div>

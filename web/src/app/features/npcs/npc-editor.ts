@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { SpellDto } from '../../api/models';
 import { addSpell, DAMAGE_BONUS_ATTRIBUTES, describeItem, findItem, isStacking, removeSpell } from '../../hero/hero';
 import { addGear, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, setAbilityCount, setDamageBonus } from '../../npc/npc';
 import { buildCard } from '../../npc/npc-card';
+import { ChipPicker } from '../../shared/chip-picker';
 import { sentenceCase } from '../../shared/text';
 import { NpcCardView } from './npc-card-view';
 
@@ -24,7 +24,7 @@ function typedInteger(event: Event): number | null {
 /** Edits a copy of an NPC with a live card preview; emits the edited NPC on Save. */
 @Component({
   selector: 'app-npc-editor',
-  imports: [NgTemplateOutlet, NpcCardView],
+  imports: [ChipPicker, NpcCardView],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './npc-editor.html',
 })
@@ -39,8 +39,6 @@ export class NpcEditor {
   protected readonly card = computed(() => buildCard(this.draft(), this.ref(), this.withDescriptions()));
   protected readonly errors = signal<string[]>([]);
 
-  protected readonly toAdd = signal<Record<Picker, string>>({ skill: '', ability: '', gear: '', spell: '' });
-  protected readonly pickError = signal<Picker | null>(null);
   protected readonly spellOptions = computed(() =>
     this.ref().spells.map((s: SpellDto) => ({ label: spellLabel(s), spell: { name: s.name, school: s.school, kind: s.kind } })),
   );
@@ -51,9 +49,12 @@ export class NpcEditor {
     gear: this.ref().equipment.map(i => i.name),
     spell: this.spellOptions().map(o => o.label),
   }));
-  protected readonly sentenceCase = sentenceCase;
-  /** Types the picker template's context value (ng-template contexts are untyped). */
-  protected readonly asPicker = (kind: unknown) => kind as Picker;
+  protected readonly accepts: Record<Picker, (text: string) => boolean> = {
+    skill: text => this.add('skill', text),
+    ability: text => this.add('ability', text),
+    gear: text => this.add('gear', text),
+    spell: text => this.add('spell', text),
+  };
 
   protected readonly isStacking = isStacking;
   protected readonly bonusAttributes = DAMAGE_BONUS_ATTRIBUTES;
@@ -108,13 +109,6 @@ export class NpcEditor {
     this.draft.update(d => removeSpell(d, spell));
   }
 
-  /** Empties a picker box and keeps focus in it, since the clear button goes away. */
-  protected clear(picker: Picker, box: HTMLInputElement): void {
-    this.toAdd.update(t => ({ ...t, [picker]: '' }));
-    this.pickError.set(null);
-    box.focus();
-  }
-
   /** A chip's tooltip: its Reference description, or none when the name is not in the Reference. */
   protected tip(picker: Picker, name: string): string | null {
     const ref = this.ref();
@@ -129,14 +123,8 @@ export class NpcEditor {
     return this.ref().spells.find(s => s.name === spell.name && s.school === spell.school && s.kind === spell.kind)?.description ?? null;
   }
 
-  protected typed(picker: Picker, event: Event): void {
-    this.toAdd.update(t => ({ ...t, [picker]: (event.target as HTMLInputElement).value }));
-  }
-
-  /** Adds what the picker holds; skills, abilities and spells must be Reference names, gear may be anything. */
-  protected add(picker: Picker): void {
-    const text = this.toAdd()[picker].trim();
-    if (!text) return;
+  /** Adds a typed name; skills, abilities and spells must be Reference names, gear may be anything. False when not found. */
+  private add(picker: Picker, text: string): boolean {
     const same = (a: string) => a.toLowerCase() === text.toLowerCase();
     const ref = this.ref();
     let next: Npc | null = null;
@@ -154,10 +142,8 @@ export class NpcEditor {
       const option = this.spellOptions().find(o => same(o.label));
       if (option) next = addSpell(d, option.spell);
     }
-    this.pickError.set(next ? null : picker);
-    if (!next) return;
-    this.draft.set(next);
-    this.toAdd.update(t => ({ ...t, [picker]: '' }));
+    if (next) this.draft.set(next);
+    return !!next;
   }
 
   protected save(): void {

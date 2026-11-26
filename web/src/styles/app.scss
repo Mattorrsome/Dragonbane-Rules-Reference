@@ -1149,7 +1149,7 @@ html {
 }
 
 /* Actions left, the card (which is what the image is drawn from) right; stacked on narrow screens. */
-.npc-export {
+.export-menu {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
   gap: var(--spacing-md);
@@ -1160,7 +1160,7 @@ html {
   }
 }
 
-.npc-export-actions {
+.export-actions {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);

@@ -3,7 +3,8 @@ import { addSpell } from '../../hero/hero';
 import { fromTypical, Npc } from '../../npc/npc';
 import { buildCard, cardToMarkdown, cardToText } from '../../npc/npc-card';
 import { BANDIT_CHIEF, NPC_REFERENCE as ref } from '../../npc/npc.fixture';
-import { CARD_RENDERER, NpcExportMenu } from './npc-export-menu';
+import { CARD_RENDERER } from '../../shared/export-menu';
+import { NpcExportMenu } from './npc-export-menu';
 
 const grok = (): Npc =>
   addSpell({ ...fromTypical(BANDIT_CHIEF, ref), name: 'Grok' }, { name: 'DISPEL', school: 'General Magic', kind: 'Spell' });

@@ -37,7 +37,7 @@
 
     <fieldset class="chip-group">
       <legend>Skills</legend>
-      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'skill', noun: 'skill' }" />
+      <app-chip-picker pickerId="skill" noun="skill" [options]="options()['skill']" [accept]="accepts['skill']" />
       <ul class="chips" aria-label="Skills">
         @for (skill of d.skills; track skill.name) {
           <li [attr.title]="tip('skill', skill.name)">
@@ -51,7 +51,7 @@
 
     <fieldset class="chip-group">
       <legend>Heroic abilities</legend>
-      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'ability', noun: 'heroic ability' }" />
+      <app-chip-picker pickerId="ability" noun="heroic ability" [options]="options()['ability']" [accept]="accepts['ability']" />
       <ul class="chips" aria-label="Heroic abilities">
         @for (ability of d.abilities; track ability.name) {
           <li [attr.title]="tip('ability', ability.name)">
@@ -67,7 +67,7 @@
 
     <fieldset class="chip-group">
       <legend>Gear</legend>
-      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'gear', noun: 'gear' }" />
+      <app-chip-picker pickerId="gear" noun="gear" [options]="options()['gear']" [accept]="accepts['gear']" />
       <ul class="chips" aria-label="Gear">
         @for (item of d.gear; track $index) {
           <li [attr.title]="tip('gear', item)">
@@ -80,7 +80,7 @@
 
     <fieldset class="chip-group">
       <legend>Spells</legend>
-      <ng-container *ngTemplateOutlet="picker; context: { $implicit: 'spell', noun: 'spell' }" />
+      <app-chip-picker pickerId="spell" noun="spell" [options]="options()['spell']" [accept]="accepts['spell']" />
       <ul class="chips" aria-label="Spells">
         @for (spell of d.spells; track spellLabel(spell)) {
           <li [attr.title]="spellTip(spell)">
@@ -110,25 +110,3 @@
     <app-npc-card [card]="card()" />
   </div>
 </div>
-
-<!--
-  A picker: type or choose a name from the list, then Add. The box has no visible label (the fieldset's legend names
-  it); its aria-label does. The clear button sits inside the box, beside the list arrow, while there is text.
--->
-<ng-template #picker let-anyKind let-noun="noun">
-  @let kind = asPicker(anyKind);
-  <div class="picker">
-    <div class="picker-box">
-      <input #box [id]="kind + '-to-add'" [attr.list]="kind + '-options'" [attr.aria-label]="sentenceCase(noun) + ' to add'"
-        [value]="toAdd()[kind]" (input)="typed(kind, $event)" (keydown.enter)="$event.preventDefault(); add(kind)" />
-      @if (toAdd()[kind]) {
-        <button type="button" class="picker-clear" [attr.aria-label]="'Clear ' + noun" (click)="clear(kind, box)"></button>
-      }
-    </div>
-    <datalist [id]="kind + '-options'">
-      @for (option of options()[kind]; track option) { <option [value]="option"></option> }
-    </datalist>
-    <button type="button" class="btn btn-secondary btn-small" [attr.aria-label]="'Add ' + noun" (click)="add(kind)">Add</button>
-  </div>
-  @if (pickError() === kind) { <p class="field-error" role="alert">Pick a {{ noun }} from the list.</p> }
-</ng-template>

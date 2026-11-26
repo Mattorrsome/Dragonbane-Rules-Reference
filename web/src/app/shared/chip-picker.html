@@ -1,0 +1,18 @@
+<!--
+  A picker: type or choose a name from the list, then Add. The box has no visible label (the fieldset's legend names
+  it); its aria-label does. The clear button sits inside the box, beside the list arrow, while there is text.
+-->
+<div class="picker">
+  <div class="picker-box">
+    <input #box [id]="pickerId() + '-to-add'" [attr.list]="pickerId() + '-options'" [attr.aria-label]="sentenceCase(noun()) + ' to add'"
+      [value]="text()" (input)="type($event)" (keydown.enter)="$event.preventDefault(); add()" />
+    @if (text()) {
+      <button type="button" class="picker-clear" [attr.aria-label]="'Clear ' + noun()" (click)="clear(box)"></button>
+    }
+  </div>
+  <datalist [id]="pickerId() + '-options'">
+    @for (option of options(); track option) { <option [value]="option"></option> }
+  </datalist>
+  <button type="button" class="btn btn-secondary btn-small" [attr.aria-label]="'Add ' + noun()" (click)="add()">Add</button>
+</div>
+@if (failed()) { <p class="field-error" role="alert">Pick a {{ noun() }} from the list.</p> }
