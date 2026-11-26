@@ -37,6 +37,7 @@ describe('checkCharacter', () => {
   it('rejects a non-object and a nameless entry', () => {
     expect(() => checkCharacter(3, 2)).toThrow('Character 2 is not a character.');
     expect(() => checkCharacter({ ...valid(), name: undefined }, 2)).toThrow('Character 2 has no name.');
+    expect(() => checkCharacter({ ...valid(), name: '' }, 2)).toThrow('Character 2 has no name.');
   });
 });
 

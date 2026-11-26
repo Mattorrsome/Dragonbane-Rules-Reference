@@ -276,8 +276,7 @@
         </div>
 
         <div class="creation-save">
-          <p class="export-status" role="status">{{ saveStatus() }}</p>
-          <p class="export-status" role="status">{{ saveStatus() }}</p>
+          <p class="save-status" role="status">{{ saveStatus() }}</p>
           <button type="button" class="btn btn-primary" [disabled]="problems().length" (click)="save()" [attr.aria-describedby]="problems().length ? 'cc-problems' : null">Save</button>
           @if (problems().length) {
             <ul id="cc-problems" class="creation-problems" aria-label="Still to do">

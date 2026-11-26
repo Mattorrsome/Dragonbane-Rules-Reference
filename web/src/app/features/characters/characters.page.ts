@@ -192,6 +192,7 @@ export class CharactersPage {
   }
 
   private apply(step: Step): void {
+    this.saveStatus.set('');
     this.creation.set(step.creation);
     this.cleared.set(step.cleared);
   }

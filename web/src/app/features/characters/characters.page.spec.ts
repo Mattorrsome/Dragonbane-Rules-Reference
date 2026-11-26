@@ -170,6 +170,11 @@ describe('CharactersPage', () => {
       expect(TestBed.inject(CharacterStore).characters().map(c => c.name)).toEqual([name]);
       expect(page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim()).toBe('Unnamed hero');
       expect(page.button('Save').disabled).toBe(true);
+      const statuses = [...page.host.querySelectorAll('.save-status')];
+      expect(statuses.length).toBe(1);
+      expect(statuses[0].textContent).toContain(`Saved ${name}.`);
+      await page.click('Random character');
+      expect(page.host.querySelector('.save-status')!.textContent!.trim()).toBe('');
       expect(page.host.querySelector('.characters-table tbody')!.textContent).toContain(name);
     });
 

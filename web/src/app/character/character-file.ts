@@ -21,7 +21,7 @@ export function checkCharacter(entry: unknown, n: number): SavedCharacter {
   if (!isObject(entry)) throw new Error(`Character ${n} is not a character.`);
   const named = typeof entry['name'] === 'string' ? ` ("${entry['name']}")` : '';
   if (typeof entry['id'] !== 'string' || !entry['id'].trim()) throw new Error(`Character ${n}${named} has no id.`);
-  if (!named) throw new Error(`Character ${n} has no name.`);
+  if (!named || !(entry['name'] as string).trim()) throw new Error(`Character ${n} has no name.`);
   const fail = (problem: string): never => {
     throw new Error(`Character ${n}${named}: ${problem}`);
   };
