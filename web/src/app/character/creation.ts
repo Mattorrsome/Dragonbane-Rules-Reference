@@ -12,7 +12,12 @@ export interface Creation {
   /** The scores as rolled or entered, before the age adjustment. */
   rolledAttributes: Record<Attribute, number> | null;
   swapUsed: boolean;
-  /** Entry index to chosen option index: the gear package's entries, then the school extras' entries. */
+  /** The chosen gear package's rollFrom, or null. */
+  gearPackage: number | null;
+  /**
+   * Entry index to chosen option index: the gear package's entries, then the school extras' entries. They belong to
+   * `gearPackage`: choosing another package starts from none, and clearing the gear clears both.
+   */
   packageChoices: Record<number, number>;
 }
 
@@ -58,7 +63,7 @@ export function newCreation(): Creation {
       attributes: { STR: 10, CON: 10, AGL: 10, INT: 10, WIL: 10, CHA: 10 },
       skills: [], abilities: [], kinAbilities: [], spells: [], gear: [], copper: 0, weakness: '', memento: '', appearance: '',
     },
-    professionSkills: [], freeSkills: [], rolledAttributes: null, swapUsed: false, packageChoices: {},
+    professionSkills: [], freeSkills: [], rolledAttributes: null, swapUsed: false, gearPackage: null, packageChoices: {},
   };
 }
 
@@ -201,12 +206,19 @@ export function resolveGearPackage(pkg: GearPackageDto, choices: Record<number, 
 const isDose = (g: GearItem) => g.name.endsWith(DOSE);
 const isAlchemist = (c: Creation) => same(c.character.school ?? '', ALCHEMY);
 
-/** The package plus the school extras and simple clothes, replacing earlier gear and money; an alchemist keeps their doses. */
-export function chooseGearPackage(c: Creation, pkg: GearPackageDto, ref: CreationReference, roller: DiceRoller): Creation {
+/**
+ * The package plus the school extras and simple clothes, replacing earlier gear and money; an alchemist keeps their doses.
+ * `choices` default to those kept for this same package, so another package never inherits them.
+ */
+export function chooseGearPackage(
+  c: Creation, pkg: GearPackageDto, ref: CreationReference, roller: DiceRoller,
+  choices: Record<number, number> = pkg.rollFrom === c.gearPackage ? c.packageChoices : {},
+): Creation {
   const extras = schoolOf(c, ref)?.extras.flatMap(x => x.entries) ?? [];
-  const { gear, copper } = resolveGearPackage({ ...pkg, entries: [...pkg.entries, ...extras] }, c.packageChoices, roller);
+  const { gear, copper } = resolveGearPackage({ ...pkg, entries: [...pkg.entries, ...extras] }, choices, roller);
   const doses = isAlchemist(c) ? c.character.gear.filter(isDose) : [];
-  return withCharacter(c, { gear: [...gear, { ...SIMPLE_CLOTHES }, ...doses], copper });
+  const next = withCharacter(c, { gear: [...gear, { ...SIMPLE_CLOTHES }, ...doses], copper });
+  return { ...next, gearPackage: pkg.rollFrom, packageChoices: choices };
 }
 
 /** An alchemist's three finished doses, from known recipes (repeats allowed); anything else changes nothing. */
@@ -259,9 +271,9 @@ function revalidate(c: Creation, ref: CreationReference, clearGear = false): Ste
   for (const s of next.character.spells.filter(s => !offered(s))) cleared.push(`Removed ${s.name}: not a spell option for ${article(label)}.`);
   next = withCharacter(next, { spells: next.character.spells.filter(offered) });
 
-  if (clearGear && (next.character.gear.length || next.character.copper)) {
-    cleared.push('Removed the gear package and its money; choose it again.');
-    next = { ...withCharacter(next, { gear: [], copper: 0 }), packageChoices: {} };
+  if (clearGear) {
+    if (next.character.gear.length || next.character.copper) cleared.push('Removed the gear package and its money; choose it again.');
+    next = { ...withCharacter(next, { gear: [], copper: 0 }), gearPackage: null, packageChoices: {} };
   }
   return { creation: next, cleared };
 }

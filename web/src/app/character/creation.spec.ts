@@ -245,8 +245,7 @@ describe('gear', () => {
   it('adds Simple clothes and the school extras, whose choices follow the package entries', () => {
     let c = setSchool(start('Mage', scores({ STR: 13 })), school('Enchanting'), ref).creation;
     const pkg = profession('Mage').gearPackages[0];
-    c = { ...c, packageChoices: { [pkg.entries.length]: 2 } };
-    c = chooseGearPackage(c, pkg, ref, seeded());
+    c = chooseGearPackage(c, pkg, ref, seeded(), { [pkg.entries.length]: 2 });
     const names = c.character.gear.map(g => g.name);
     expect(names).toContain('Tanning tools');
     expect(names).toContain('Simple clothes');
@@ -255,6 +254,24 @@ describe('gear', () => {
     const marked = setItemNote(c, 0, 'Enchanted: KEEN EDGE + PERMANENCE');
     expect(marked.character.gear[0]).toEqual({ name: 'Staff', quantity: 1, note: 'Enchanted: KEEN EDGE + PERMANENCE' });
     expect(setItemNote(c, 99, 'x')).toBe(c);
+  });
+
+  it('choices belong to their package: another package starts from none, the same package keeps them', () => {
+    const [first, second] = profession('Fighter').gearPackages;
+    const morningstar = chooseGearPackage(start('Fighter'), first, ref, seeded(), { 1: 1 });
+    expect([morningstar.gearPackage, morningstar.packageChoices]).toEqual([1, { 1: 1 }]);
+    const names = (c: Creation) => c.character.gear.map(g => g.name);
+
+    const other = chooseGearPackage(morningstar, second, ref, seeded());
+    expect(names(other)).toContain('Handaxe');
+    expect(other.packageChoices).toEqual({});
+    expect(names(chooseGearPackage(morningstar, first, ref, seeded(7)))).toContain('Morningstar');
+  });
+
+  it('clearing the gear clears the package and its choices, even before any gear was resolved', () => {
+    const c = { ...start('Fighter'), gearPackage: 1, packageChoices: { 1: 1 } };
+    const { creation } = setProfession(c, profession('Mage'), ref);
+    expect([creation.gearPackage, creation.packageChoices]).toEqual([null, {}]);
   });
 
   it('an alchemist chooses 3 finished doses from known recipes', () => {

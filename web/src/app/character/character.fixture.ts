@@ -71,7 +71,24 @@ const SCHOOLS: MagicSchoolDto[] = [
 ];
 
 const profession = (id: number, name: string, keyAttribute: string, skills: string[], heroicAbilities: string[], gearPackages: GearPackageDto[]): ProfessionDto =>
-  ({ id, name, roll: id, keyAttribute, skills, heroicAbilities, nicknames: [], gearPackages });
+  ({ id, name, roll: id, keyAttribute, skills, heroicAbilities, nicknames: NICKNAMES[name], gearPackages });
+
+const NICKNAMES: Record<string, string[]> = {
+  Artisan: ['Stonehammer', 'Woodcleaver', 'Strongfist', 'Barrelmaker', 'Bridgebuilder', 'Ironmaster'],
+  Bard: ['Odemaker', 'Talespinner', 'Silvervoice', 'Gildenclef', 'Honeytongue', 'Rhymesmith'],
+  Fighter: ['Gravemaker', 'Grimjaw', 'Windthaw', 'Coldsteel', 'The Fearless', 'The Butcher'],
+  Hunter: ['Forest Fox', 'Wolfbane', 'Pathfinder', 'The Weathered', 'Bloodhunger', 'Shadowbolt'],
+  Knight: ['Dragonheart', 'Goldlance', 'Griffinclaw', 'The Noble', 'Gleamhelm', 'Mourningcloak'],
+  Mage: ['Rootheart', 'Crookback', 'Graycape', 'Stormhand', 'Stafflimper', 'Shadowbringer'],
+  Mariner: ['Whitewater', 'Waverider', 'Foamborn', 'Saltsplash', 'Seadog', 'Stormfarer'],
+  Merchant: ['Silvergrin', 'Goldtooth', 'Silktongue', 'The Lisping and Truthful', 'Lardbelly', 'Skinflint'],
+  Scholar: ['Clearmind', 'Dustlung', 'Farsight', 'The Lettered', 'The All-Knowing', 'The Plump and Learned'],
+  Thief: ['Halffinger', 'Blackrat', 'Redeye', 'Quickfoot', 'Doubletongue', 'Nightstabber'],
+};
+
+/** Packages 1-2, 3-4 and 5-6, each trimmed to its first items (and any choice), its rations and its silver. */
+const packages = (rations: number, silverSides: number, ...firsts: GearEntryDto[][]): GearPackageDto[] =>
+  firsts.map((items, i) => pkg(2 * i + 1, 2 * i + 2, ...items, dice('Field ration', rations), silver(silverSides)));
 
 const PROFESSIONS: ProfessionDto[] = [
   profession(1, 'Artisan', 'STR', ['Axes', 'Brawling', 'Crafting', 'Hammers', 'Knives', 'Sleight of Hand', 'Spot Hidden', 'Swords'],
@@ -97,6 +114,49 @@ const PROFESSIONS: ProfessionDto[] = [
     pkg(3, 4, item('Knife'), item('Wand'), item('Grimoire'), torch, flint, dice('Field ration', 6), silver(8)),
     pkg(5, 6, item('Amulet'), item('Grimoire'), item('Sleeping fur'), torch, flint, dice('Field ration', 6), silver(8)),
   ]),
+  profession(4, 'Hunter', 'AGL', ['Acrobatics', 'Awareness', 'Bows', 'Bushcraft', 'Hunting and Fishing', 'Knives', 'Slings', 'Sneaking'], ['Companion'],
+    packages(8, 6, [item('Dagger'), item('Short bow')], [item('Knife'), item('Longbow')], [item('Dagger'), item('Sling')])),
+  profession(5, 'Knight', 'STR', ['Beast Lore', 'Hammers', 'Myths and Legends', 'Performance', 'Persuasion', 'Riding', 'Spears', 'Swords'], ['Guardian'],
+    packages(6, 12, [item('Broadsword', 'Morningstar'), item('Plate armour')], [item('Flail', 'Light warhammer'), item('Chainmail')],
+      [item('Short sword'), item('Lance')])),
+  profession(7, 'Mariner', 'AGL', ['Acrobatics', 'Awareness', 'Hunting and Fishing', 'Knives', 'Languages', 'Seamanship', 'Swimming', 'Swords'], ['Sea Legs'],
+    packages(8, 10, [item('Dagger'), item('Short bow')], [item('Scimitar')], [item('Trident'), item('Spyglass')])),
+  profession(8, 'Merchant', 'CHA', ['Awareness', 'Bartering', 'Bluffing', 'Evade', 'Knives', 'Persuasion', 'Sleight of Hand', 'Spot Hidden'],
+    ['Treasure Hunter'], packages(6, 12, [item('Dagger'), item('Donkey')], [item('Knife'), item('Cart')], [item('Dagger'), item('Large tent')])),
+  profession(9, 'Scholar', 'INT', ['Awareness', 'Beast Lore', 'Bushcraft', 'Evade', 'Healing', 'Languages', 'Myths and Legends', 'Spot Hidden'], ['Intuition'],
+    packages(6, 10, [item('Staff'), item('Notebook')], [item('Knife'), item('Book on any subject')], [item('Short sword'), item('Bandages')])),
+  profession(10, 'Thief', 'AGL', ['Acrobatics', 'Awareness', 'Bluffing', 'Evade', 'Knives', 'Sleight of Hand', 'Sneaking', 'Spot Hidden'], ['Backstabbing'],
+    packages(6, 10, [item('Dagger'), item('Sling')], [item('Knife'), item('Simple lockpicks')], [item('Marbles')])),
+];
+
+const MEMENTOS = [
+  'Your trusty old shoes', 'A simple silver medallion', 'A letter from an old friend or relative', 'A ragged old journal',
+  'A bracelet passed down in your family', 'A wooden figurine you got as a child', 'A strangely shaped stone',
+  'A copper coin from a treasure sought by your mother or father', 'An old pewter tankard', 'A horn taken as a trophy from a monster',
+  'A fang taken as a trophy from a beast', 'A couple of simple dice made of bone', 'A locket containing a lock of hair', 'An ornate key',
+  'A hand-drawn map you inherited', 'A ring with an inscription', 'A bone whistle', "Your mother's or father's ragged old hat",
+  'A griffin feather', 'A beautifully carved pipe',
+];
+
+const WEAKNESSES = [
+  ['Gullible', 'I believe everything that others tell me.'], ['Greedy', 'I want a bigger share of all treasure.'],
+  ['Thin-skinned', 'I never tolerate a provocation.'], ['Foolhardy', 'I always go first into danger.'],
+  ['Fainthearted', 'I always stay at the back of the group.'], ['Monster Slayer', 'All monsters are evil and must be slain.'],
+  ['Intolerant', 'Nightkin such as orcs and goblins are evil and need to be fought.'], ['Slothful', 'I take every chance to rest.'],
+  ['Gluttonous', 'I take every chance I get to eat something tasty.'], ['Kleptomaniac', "I can't stop myself from stealing valuables."],
+  ['Vain', "I'll help anyone who gives me praise or compliments."], ['Reckless', 'I always take big risks without thought of the consequences.'],
+  ['Fearful of Magic', 'Magic is an evil force and mages cannot be trusted.'],
+  ['Craving Knowledge', 'The hunt for knowledge is more important than my friends.'], ['Child of the Wild', 'I never sleep indoors.'],
+  ['Boastful', 'I always exaggerate my accomplishments.'], ['Violent', 'I resort to violence to overcome every obstacle.'],
+  ['Overbearing', 'I always tell others what to do.'], ['Pessimist', 'I always think things will turn out for the worst.'],
+  ['Haughty', 'I look down on everyone I meet.'],
+];
+
+const APPEARANCES = [
+  'Ugly scar across your cheek', 'Strange headgear', 'Abnormally pale and pasty', 'A constant smile on your lips', 'Icy, penetrating gaze',
+  'A bit of extra weight around the middle', 'Thin and wiry', 'Abnormal amounts of body hair (depending on kin)',
+  'Balding (depending on kin)', 'Prominent tattoo', 'Foul body odour', 'Glorious hairstyle', 'Limp', 'Filthy', 'Honest blue eyes',
+  'Silver tooth', 'Heavily perfumed', 'Different-coloured eyes', 'Hissing voice', 'Weathered face',
 ];
 
 const ability = (name: string, prerequisite: string) => ({ id: 0, name, prerequisite, wp: '', effect: '' });
@@ -134,9 +194,9 @@ export const creationRef: CreationReference = {
     ability('Musician', 'Performance 12'), ability('Veteran', 'Any weapon skill 12'),
   ],
   equipment: [],
-  mementos: [],
-  weaknesses: [],
-  appearances: [],
+  mementos: MEMENTOS.map((text, i) => ({ id: i + 1, roll: i + 1, text })),
+  weaknesses: WEAKNESSES.map(([name, text], i) => ({ id: i + 1, roll: i + 1, name, text })),
+  appearances: APPEARANCES.map((text, i) => ({ id: i + 1, roll: i + 1, text })),
 };
 
 /** The fixture row with this name; throws so a typo fails the test loudly. */
