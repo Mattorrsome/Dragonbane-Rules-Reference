@@ -17,7 +17,7 @@ public sealed class CharacterCreationImporterTests : IDisposable
         _connection.Open();
         _db = new DragonbaneDbContext(new DbContextOptionsBuilder<DragonbaneDbContext>().UseSqlite(_connection).Options);
         _db.Database.EnsureCreated();
-        // Age adjustments link to attributes, which the skills import creates.
+        // Age adjustments link to attributes, which the skills import creates (all six).
         SkillsImporter.Import(MarkdownDocument.Parse(Read("Dragonbane_Skills_Table.md")), _db);
     }
 

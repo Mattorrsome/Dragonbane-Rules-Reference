@@ -27,6 +27,13 @@ public sealed class SkillsImporterTests : IDisposable
         MarkdownDocument.Parse(File.ReadAllText(Path.Combine(TestPaths.SourceMaterial, file)));
 
     [Fact]
+    public void Creates_all_six_attributes_in_book_order()
+    {
+        SkillsImporter.Import(Read("Dragonbane_Skills_Table.md"), _db);
+        Assert.Equal(["STR", "CON", "AGL", "INT", "WIL", "CHA"], _db.Attributes.OrderBy(a => a.Id).Select(a => a.Code));
+    }
+
+    [Fact]
     public void Imports_skills()
     {
         SkillsImporter.Import(Read("Dragonbane_Skills_Table.md"), _db);

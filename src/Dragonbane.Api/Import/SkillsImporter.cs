@@ -9,7 +9,9 @@ public static class SkillsImporter
     public static void Import(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
     {
         var types = new Dictionary<string, SkillType>();
-        var attributes = new Dictionary<string, Attribute>();
+        // All six, in book order: not every attribute has a skill (CON has none), but the creator needs them all.
+        var attributes = new[] { "STR", "CON", "AGL", "INT", "WIL", "CHA" }.ToDictionary(c => c, c => new Attribute { Code = c });
+        db.Attributes.AddRange(attributes.Values);
 
         foreach (var row in doc.Single(s => s.Columns.Contains("Attribute")).Rows)
         {
@@ -23,7 +25,7 @@ public static class SkillsImporter
             {
                 Name = row["Name"],
                 SkillType = types.TryGetValue(row["Type"], out var type) ? type : types[row["Type"]] = new SkillType { Name = row["Type"] },
-                Attribute = attributes.TryGetValue(code, out var attribute) ? attribute : attributes[code] = new Attribute { Code = code },
+                Attribute = attributes.TryGetValue(code, out var attribute) ? attribute : throw new InvalidDataException($"Skill '{row["Name"]}' has unknown attribute '{code}'."),
                 AttributeNote = note,
                 Description = row["Description"],
             });

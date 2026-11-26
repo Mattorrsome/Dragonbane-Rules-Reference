@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using Dragonbane.Api.Data;
 using Dragonbane.Api.Data.Entities;
-using Attribute = Dragonbane.Api.Data.Entities.Attribute;
 
 namespace Dragonbane.Api.Import;
 
@@ -14,8 +13,6 @@ public static partial class CharacterCreationImporter
         ImportAges(doc, db);
         ImportRollTables(doc, db);
     }
-
-    static readonly string[] Codes = ["STR", "CON", "AGL", "INT", "WIL", "CHA"];
 
     static void ImportKin(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
     {
@@ -59,12 +56,8 @@ public static partial class CharacterCreationImporter
                 foreach (var part in cell.Split(',', StringSplitOptions.TrimEntries))
                 {
                     var m = AdjustmentPattern().Match(part);
-                    if (!m.Success || !Codes.Contains(m.Groups[1].Value))
+                    if (!m.Success || !attributes.TryGetValue(m.Groups[1].Value, out var attribute))
                         throw new InvalidDataException($"Cannot parse age adjustment '{part}'.");
-                    // CON has no skills, so the skills import never created it.
-                    var code = m.Groups[1].Value;
-                    if (!attributes.TryGetValue(code, out var attribute))
-                        attributes[code] = attribute = new Attribute { Code = code };
                     age.Adjustments.Add(new AgeAdjustment { Attribute = attribute, Delta = int.Parse(m.Groups[2].Value) });
                 }
             db.Ages.Add(age);
