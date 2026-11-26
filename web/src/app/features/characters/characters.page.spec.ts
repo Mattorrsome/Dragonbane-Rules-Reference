@@ -90,6 +90,19 @@ describe('CharactersPage', () => {
     expect(status.textContent).toContain(`Removed Crossbows: not on the ${profession} skill list.`);
   });
 
+  it('a choice inside the gear package swaps that item and keeps the money', async () => {
+    const page = await render();
+    await page.choose('cc-profession', 'Fighter');
+    await page.choose('cc-gear', '1');
+    const money = /Money: ([^\n]*?)(?=Weakness|$)/.exec(page.summary())![1];
+
+    await page.choose('cc-option-1', '1');
+
+    expect(page.summary()).toContain('Morningstar');
+    expect(page.summary()).not.toContain('Battleaxe');
+    expect(/Money: ([^\n]*?)(?=Weakness|$)/.exec(page.summary())![1]).toBe(money);
+  });
+
   it('Save is disabled on a fresh page and lists what is missing', async () => {
     const page = await render();
 

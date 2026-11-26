@@ -4,7 +4,7 @@ import { seededRandom } from '../dice/seeded-random';
 import { Attribute } from '../hero/hero';
 import { creationRef as ref, fixture } from './character.fixture';
 import {
-  Creation, chooseGearPackage, creationProblems, finishCreation, newCreation, professionSkillList, resolveGearPackage,
+  Creation, chooseGearPackage, creationProblems, stepDone, finishCreation, newCreation, professionSkillList, resolveGearPackage,
   schoolsAvailable, setAge, setAlchemistDoses, setAttributes, setHeroicAbility, setItemNote, setKin, setProfession,
   setSchool, spellOptions, swapAttributes, toggleSkill, toggleSpell,
 } from './creation';
@@ -36,7 +36,7 @@ const learn = (c: Creation, ...names: string[]) =>
 describe('setProfession', () => {
   it('Fighter to Mage removes each profession skill, the ability and the gear, saying so', () => {
     let c = pick(start('Fighter'), 'Axes', 'Bows', 'Brawling', 'Crossbows', 'Evade', 'Hammers');
-    c = chooseGearPackage(c, profession('Fighter').gearPackages[0], ref, seeded());
+    c = chooseGearPackage(c, profession('Fighter').gearPackages[0], ref, seeded()).creation;
     expect(c.professionSkills.length).toBe(6);
 
     const { creation, cleared } = setProfession(c, profession('Mage'), ref);
@@ -245,7 +245,7 @@ describe('gear', () => {
   it('adds Simple clothes and the school extras, whose choices follow the package entries', () => {
     let c = setSchool(start('Mage', scores({ STR: 13 })), school('Enchanting'), ref).creation;
     const pkg = profession('Mage').gearPackages[0];
-    c = chooseGearPackage(c, pkg, ref, seeded(), { [pkg.entries.length]: 2 });
+    c = chooseGearPackage(c, pkg, ref, seeded(), { [pkg.entries.length]: 2 }).creation;
     const names = c.character.gear.map(g => g.name);
     expect(names).toContain('Tanning tools');
     expect(names).toContain('Simple clothes');
@@ -258,14 +258,33 @@ describe('gear', () => {
 
   it('choices belong to their package: another package starts from none, the same package keeps them', () => {
     const [first, second] = profession('Fighter').gearPackages;
-    const morningstar = chooseGearPackage(start('Fighter'), first, ref, seeded(), { 1: 1 });
+    const morningstar = chooseGearPackage(start('Fighter'), first, ref, seeded(), { 1: 1 }).creation;
     expect([morningstar.gearPackage, morningstar.packageChoices]).toEqual([1, { 1: 1 }]);
     const names = (c: Creation) => c.character.gear.map(g => g.name);
 
-    const other = chooseGearPackage(morningstar, second, ref, seeded());
+    const other = chooseGearPackage(morningstar, second, ref, seeded()).creation;
     expect(names(other)).toContain('Handaxe');
     expect(other.packageChoices).toEqual({});
-    expect(names(chooseGearPackage(morningstar, first, ref, seeded(7)))).toContain('Morningstar');
+    expect(names(chooseGearPackage(morningstar, first, ref, seeded(7)).creation)).toContain('Morningstar');
+  });
+
+  it('another choice in the same package swaps only that item: rolled quantities, money and surviving notes stay', () => {
+    const [first] = profession('Fighter').gearPackages;
+    const c = chooseGearPackage(start('Fighter'), first, ref, seeded()).creation;
+    // A fresh resolve with this seed would roll other rations or silver.
+    expect(resolveGearPackage(first, { 1: 1 }, seeded(7))).not.toEqual(resolveGearPackage(first, {}, seeded()));
+    const noted = setItemNote(setItemNote(c, 0, 'Enchanted: KEEN EDGE + PERMANENCE'), 1, 'Notched');
+
+    const { creation, cleared } = chooseGearPackage(noted, first, ref, seeded(7), { 1: 1 });
+
+    expect(creation.character.copper).toBe(c.character.copper);
+    expect(creation.character.gear.map(g => g.quantity)).toEqual(c.character.gear.map(g => g.quantity));
+    expect(creation.character.gear.slice(0, 2)).toEqual([
+      { name: 'Broadsword', quantity: 1, note: 'Enchanted: KEEN EDGE + PERMANENCE' },
+      { name: 'Morningstar', quantity: 1, note: '' },
+    ]);
+    expect(creation.packageChoices).toEqual({ 1: 1 });
+    expect(cleared).toEqual(['Removed the note "Notched" from Battleaxe: it was swapped for Morningstar.']);
   });
 
   it('clearing the gear clears the package and its choices, even before any gear was resolved', () => {
@@ -277,7 +296,7 @@ describe('gear', () => {
   it('an alchemist chooses 3 finished doses from known recipes', () => {
     let c = setSchool(start('Mage'), school('Alchemy'), ref).creation;
     c = learn(c, 'FOCUS TONIC', 'LIQUID COURAGE', 'HERBAL CONCOCTION');
-    c = chooseGearPackage(c, profession('Mage').gearPackages[0], ref, seeded());
+    c = chooseGearPackage(c, profession('Mage').gearPackages[0], ref, seeded()).creation;
     expect(c.character.gear.map(g => g.name)).toEqual(expect.arrayContaining(['Small field laboratory', 'General herbs']));
     const problem = 'Choose 3 finished doses from known recipes.';
     expect(creationProblems(c, ref)).toContain(problem);
@@ -288,8 +307,40 @@ describe('gear', () => {
     expect(dosed.character.gear.filter(g => g.name.endsWith(', dose')).map(g => g.name))
       .toEqual(['FOCUS TONIC, dose', 'FOCUS TONIC, dose', 'LIQUID COURAGE, dose']);
     expect(creationProblems(dosed, ref)).not.toContain(problem);
-    const rerolled = chooseGearPackage(dosed, profession('Mage').gearPackages[1], ref, seeded(7));
+    const rerolled = chooseGearPackage(dosed, profession('Mage').gearPackages[1], ref, seeded(7)).creation;
     expect(rerolled.character.gear.filter(g => g.name.endsWith(', dose')).length).toBe(3);
+  });
+});
+
+describe('stepDone', () => {
+  const required = ['kin', 'profession', 'age', 'name', 'attributes', 'skills', 'magic', 'gear'] as const;
+
+  it('is false for every step of a new creation, and magic waits for a profession', () => {
+    expect(Object.values(stepDone(newCreation(), ref)).every(done => !done)).toBe(true);
+  });
+
+  it('is true for every required step of a complete fighter; the optional steps once filled', () => {
+    let fighter = named(start('Fighter'), 'Tym');
+    fighter = pick(fighter, 'Axes', 'Bows', 'Brawling', 'Crossbows', 'Evade', 'Hammers', 'Awareness', 'Bartering', 'Healing', 'Swimming');
+    fighter = chooseGearPackage(fighter, profession('Fighter').gearPackages[2], ref, seeded()).creation;
+    const done = stepDone(fighter, ref);
+    expect(required.filter(s => !done[s])).toEqual([]);
+    expect([done.weakness, done.memento, done.appearance]).toEqual([false, false, false]);
+    expect(stepDone({ ...fighter, character: { ...fighter.character, memento: 'A bone whistle' } }, ref).memento).toBe(true);
+  });
+
+  it('skills are not done while the school skill is untrained, even with every count met', () => {
+    let mage = toggleSkill(setSchool(start('Mage'), school('Animism'), ref).creation, 'Animism', ref);
+    mage = pick(mage, 'Beast Lore', 'Bushcraft', 'Evade', 'Healing', 'Hunting and Fishing', 'Sneaking', 'Awareness', 'Bartering', 'Bluffing', 'Riding');
+    expect([mage.professionSkills.length, mage.freeSkills.length]).toEqual([6, 4]);
+    expect(stepDone(mage, ref).skills).toBe(false);
+  });
+
+  it('gear waits for an alchemist\'s three doses', () => {
+    let c = learn(setSchool(start('Mage'), school('Alchemy'), ref).creation, 'FOCUS TONIC');
+    c = chooseGearPackage(c, profession('Mage').gearPackages[0], ref, seeded()).creation;
+    expect(stepDone(c, ref).gear).toBe(false);
+    expect(stepDone(setAlchemistDoses(c, ['FOCUS TONIC', 'FOCUS TONIC', 'FOCUS TONIC']), ref).gear).toBe(true);
   });
 });
 
@@ -304,14 +355,14 @@ describe('creationProblems', () => {
   it('is empty for a complete fighter and a complete mage', () => {
     let fighter = named(start('Fighter'), 'Tym');
     fighter = pick(fighter, 'Axes', 'Bows', 'Brawling', 'Crossbows', 'Evade', 'Hammers', 'Awareness', 'Bartering', 'Healing', 'Swimming');
-    fighter = chooseGearPackage(fighter, profession('Fighter').gearPackages[2], ref, seeded());
+    fighter = chooseGearPackage(fighter, profession('Fighter').gearPackages[2], ref, seeded()).creation;
     expect(creationProblems(fighter, ref)).toEqual([]);
 
     let mage = setSchool(named(start('Mage'), 'Lothar'), school('Elementalism'), ref).creation;
     expect(creationProblems(mage, ref)).toContain('Pick 3 more rank 1 spells.');
     mage = pick(mage, 'Awareness', 'Evade', 'Healing', 'Languages', 'Staves', 'Bartering', 'Bluffing', 'Riding', 'Seamanship');
     mage = learn(mage, 'FIREBALL', 'FROST', 'ALARM', 'Ignite', 'Fetch', 'Flick');
-    mage = chooseGearPackage(mage, profession('Mage').gearPackages[1], ref, seeded());
+    mage = chooseGearPackage(mage, profession('Mage').gearPackages[1], ref, seeded()).creation;
     expect(creationProblems(mage, ref)).toEqual([]);
   });
 });

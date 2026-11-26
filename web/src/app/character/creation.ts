@@ -1,4 +1,4 @@
-import { AgeDto, GearPackageDto, KinDto, MagicSchoolDto, ProfessionDto, SkillDto, SpellDto } from '../api/models';
+import { AgeDto, GearEntryDto, GearPackageDto, KinDto, MagicSchoolDto, ProfessionDto, SkillDto, SpellDto } from '../api/models';
 import { DiceRoller, rollDice } from '../dice/dice-roller';
 import { ATTRIBUTES, Attribute, SpellRef, addSpell, removeSpell, same, sameSpell } from '../hero/hero';
 import { Character, CreationReference, GearItem } from './character';
@@ -20,6 +20,12 @@ export interface Creation {
    */
   packageChoices: Record<number, number>;
 }
+
+/** The creation steps in book order. */
+export const CREATION_STEPS = [
+  'kin', 'profession', 'age', 'name', 'attributes', 'skills', 'magic', 'weakness', 'memento', 'gear', 'appearance',
+] as const;
+export type CreationStep = (typeof CREATION_STEPS)[number];
 
 /** A change and the human messages for what it removed to keep the character valid. */
 export type Step = { creation: Creation; cleared: string[] };
@@ -209,17 +215,35 @@ const isAlchemist = (c: Creation) => same(c.character.school ?? '', ALCHEMY);
 
 /**
  * The package plus the school extras and simple clothes, replacing earlier gear and money; an alchemist keeps their doses.
- * `choices` default to those kept for this same package, so another package never inherits them.
+ * The package already held only swaps its chosen items: rolled quantities, money and notes stay, and a note on an item
+ * swapped out goes, saying so. `choices` default to those kept for this same package, so another package never inherits them.
  */
 export function chooseGearPackage(
   c: Creation, pkg: GearPackageDto, ref: CreationReference, roller: DiceRoller,
   choices: Record<number, number> = pkg.rollFrom === c.gearPackage ? c.packageChoices : {},
-): Creation {
-  const extras = schoolOf(c, ref)?.extras.flatMap(x => x.entries) ?? [];
-  const { gear, copper } = resolveGearPackage({ ...pkg, entries: [...pkg.entries, ...extras] }, choices, roller);
+): Step {
+  const entries = [...pkg.entries, ...(schoolOf(c, ref)?.extras.flatMap(x => x.entries) ?? [])];
+  if (pkg.rollFrom === c.gearPackage) return rechoose(c, entries, choices);
+  const { gear, copper } = resolveGearPackage({ ...pkg, entries }, choices, roller);
   const doses = isAlchemist(c) ? c.character.gear.filter(isDose) : [];
   const next = withCharacter(c, { gear: [...gear, { ...SIMPLE_CLOTHES }, ...doses], copper });
-  return { ...next, gearPackage: pkg.rollFrom, packageChoices: choices };
+  return unchanged({ ...next, gearPackage: pkg.rollFrom, packageChoices: choices });
+}
+
+/** The held package's items lead the gear, one per non-silver entry in order (as resolveGearPackage made them). */
+function rechoose(c: Creation, entries: GearEntryDto[], choices: Record<number, number>): Step {
+  const cleared: string[] = [];
+  const gear = [...c.character.gear];
+  let i = -1;
+  entries.forEach((entry, e) => {
+    if (entry.kind === 'Silver') return;
+    const item = gear[++i];
+    const name = entry.options[choices[e]] ?? entry.options[0];
+    if (!item || same(item.name, name)) return;
+    if (item.note) cleared.push(`Removed the note "${item.note}" from ${item.name}: it was swapped for ${name}.`);
+    gear[i] = { ...item, name, note: '' };
+  });
+  return { creation: { ...withCharacter(c, { gear }), packageChoices: choices }, cleared };
 }
 
 /** An alchemist's three finished doses, from known recipes (repeats allowed); anything else changes nothing. */
@@ -279,54 +303,71 @@ function revalidate(c: Creation, ref: CreationReference, clearGear = false): Ste
   return { creation: next, cleared };
 }
 
-/** Empty when the character is complete and valid; else what is missing, in book order. */
-export function creationProblems(c: Creation, ref: CreationReference): string[] {
-  const problems: string[] = [];
+/** What is missing, in book order, each with the step that fixes it. */
+export function stepProblems(c: Creation, ref: CreationReference): { step: CreationStep; text: string }[] {
+  const problems: { step: CreationStep; text: string }[] = [];
+  const add = (step: CreationStep, text: string) => problems.push({ step, text });
   const ch = c.character;
   const profession = professionOf(c, ref);
   const school = schoolOf(c, ref);
-  if (!ch.kin) problems.push('Choose a kin.');
-  if (!profession) problems.push('Choose a profession.');
-  if (!ch.age) problems.push('Choose an age.');
-  if (!ch.name.trim()) problems.push('Choose or type a name.');
-  if (!c.rolledAttributes) problems.push('Roll or enter the attributes.');
+  if (!ch.kin) add('kin', 'Choose a kin.');
+  if (!profession) add('profession', 'Choose a profession.');
+  if (!ch.age) add('age', 'Choose an age.');
+  if (!ch.name.trim()) add('name', 'Choose or type a name.');
+  if (!c.rolledAttributes) add('attributes', 'Roll or enter the attributes.');
   // The mage: a profession without a skill list of its own takes one from its school.
-  if (profession && !profession.skills.length && !school) problems.push('Choose a magic school.');
+  if (profession && !profession.skills.length && !school) add('magic', 'Choose a magic school.');
 
   const limits = skillLimits(c, ref);
-  if (c.professionSkills.length < limits.profession) problems.push(`Pick ${plural(limits.profession - c.professionSkills.length, 'profession skill')}.`);
-  if (c.freeSkills.length < limits.free) problems.push(`Pick ${plural(limits.free - c.freeSkills.length, 'free skill')}.`);
+  if (c.professionSkills.length < limits.profession) add('skills', `Pick ${plural(limits.profession - c.professionSkills.length, 'profession skill')}.`);
+  if (c.freeSkills.length < limits.free) add('skills', `Pick ${plural(limits.free - c.freeSkills.length, 'free skill')}.`);
   if (school?.startingSkills.length && school.skill && !has(c.professionSkills, school.skill)) {
-    problems.push(`Train ${school.skill}: a mage's school skill is one of the six profession skills.`);
+    add('skills', `Train ${school.skill}: a mage's school skill is one of the six profession skills.`);
   }
   const required = school?.startingSkills.length ? school.requiredSkill : null;
   if (required && !has([...c.professionSkills, ...c.freeSkills], required)) {
-    problems.push(`Train ${required}: ${school!.name} needs ${required} ${school!.requiredSkillLevel}.`);
+    add('skills', `Train ${required}: ${school!.name} needs ${required} ${school!.requiredSkillLevel}.`);
   }
 
   if (profession) {
     const allowed = school ? [] : profession.heroicAbilities;
-    if (allowed.length && !ch.abilities.length) problems.push('Choose a heroic ability.');
+    if (allowed.length && !ch.abilities.length) add('magic', 'Choose a heroic ability.');
     for (const a of ch.abilities.filter(a => !has(allowed, a.name))) {
-      problems.push(school ? `Remove ${a.name}: the ${school.name} school replaces it.` : `${a.name} is not ${article(profession.name)} heroic ability.`);
+      add('magic', school ? `Remove ${a.name}: the ${school.name} school replaces it.` : `${a.name} is not ${article(profession.name)} heroic ability.`);
     }
   }
   if (school) {
     const spells = ch.spells.filter(s => !isTrick(s)).length;
     const tricks = ch.spells.filter(isTrick).length;
-    if (spells < MAX_SPELLS) problems.push(`Pick ${plural(MAX_SPELLS - spells, isAlchemist(c) ? 'rank 1 recipe' : 'rank 1 spell')}.`);
-    if (tricks < MAX_TRICKS) problems.push(`Pick ${plural(MAX_TRICKS - tricks, 'magic trick')}.`);
+    if (spells < MAX_SPELLS) add('magic', `Pick ${plural(MAX_SPELLS - spells, isAlchemist(c) ? 'rank 1 recipe' : 'rank 1 spell')}.`);
+    if (tricks < MAX_TRICKS) add('magic', `Pick ${plural(MAX_TRICKS - tricks, 'magic trick')}.`);
   }
 
-  if (!ch.gear.some(g => same(g.name, SIMPLE_CLOTHES.name))) problems.push('Choose a gear package.');
+  if (!ch.gear.some(g => same(g.name, SIMPLE_CLOTHES.name))) add('gear', 'Choose a gear package.');
   if (isAlchemist(c)) {
     const known = ch.spells.filter(s => s.kind === 'Recipe').map(s => s.name);
     const doses = ch.gear.filter(isDose);
     if (doses.length !== DOSES || !doses.every(d => has(known, d.name.slice(0, -DOSE.length)))) {
-      problems.push('Choose 3 finished doses from known recipes.');
+      add('gear', 'Choose 3 finished doses from known recipes.');
     }
   }
   return problems;
+}
+
+/** Empty when the character is complete and valid; else what is missing, in book order. */
+export function creationProblems(c: Creation, ref: CreationReference): string[] {
+  return stepProblems(c, ref).map(p => p.text);
+}
+
+/** A step is done when nothing it fixes is missing (magic also needs a profession); an optional step once filled. */
+export function stepDone(c: Creation, ref: CreationReference): Record<CreationStep, boolean> {
+  const open = new Set(stepProblems(c, ref).map(p => p.step));
+  const { weakness, memento, appearance } = c.character;
+  const optional: Partial<Record<CreationStep, string>> = { weakness, memento, appearance };
+  return Object.fromEntries(CREATION_STEPS.map(step => [
+    step,
+    step in optional ? !!optional[step]!.trim() : !open.has(step) && (step !== 'magic' || !!professionOf(c, ref)),
+  ])) as Record<CreationStep, boolean>;
 }
 
 /** The character with every picked skill trained at twice its base chance. */

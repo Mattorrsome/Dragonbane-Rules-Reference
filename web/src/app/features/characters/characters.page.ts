@@ -6,11 +6,11 @@ import {
 } from '../../api/models';
 import { Character, CreationReference } from '../../character/character';
 import {
-  Creation, DOSES, MAX_SPELLS, MAX_TRICKS, Step, chooseGearPackage, creationProblems, finishCreation, newCreation,
+  Creation, CreationStep, DOSES, MAX_SPELLS, MAX_TRICKS, Step, chooseGearPackage, creationProblems, finishCreation, newCreation,
   professionSkillList, schoolsAvailable, setAge, setAlchemistDoses, setAttributes, setHeroicAbility, setItemNote, setKin,
-  setProfession, setSchool, skillLimits, spellOptions, swapAttributes, toggleSkill, toggleSpell, unchanged,
+  setProfession, setSchool, skillLimits, spellOptions, stepDone, swapAttributes, toggleSkill, toggleSpell, unchanged,
 } from '../../character/creation';
-import { CreationStep, randomCharacter, rollStep } from '../../character/random';
+import { randomCharacter, rollStep } from '../../character/random';
 import { DiceRoller } from '../../dice/dice-roller';
 import { ATTRIBUTES, Attribute, SpellRef, same, sameSpell } from '../../hero/hero';
 import { ChipPicker } from '../../shared/chip-picker';
@@ -168,29 +168,8 @@ export class CharactersPage {
   });
   protected readonly swapPair = signal<[Attribute, Attribute]>(['STR', 'CON']);
 
-  protected readonly done = computed<Record<CreationStep, boolean>>(() => {
-    const c = this.creation();
-    const ch = c.character;
-    const profession = this.profession();
-    const school = this.school();
-    const { spells, tricks } = this.counts();
-    const limits = this.ref() ? this.limits() : { profession: 0, free: 0 };
-    return {
-      kin: !!ch.kin,
-      profession: !!profession,
-      age: !!ch.age,
-      name: !!ch.name.trim(),
-      attributes: !!c.rolledAttributes,
-      skills: !!profession && !!ch.age && c.professionSkills.length === limits.profession && c.freeSkills.length === limits.free,
-      magic: !!profession && (school
-        ? spells === MAX_SPELLS && tricks === MAX_TRICKS
-        : !!profession.skills.length && (!profession.heroicAbilities.length || !!ch.abilities.length)),
-      weakness: !!ch.weakness.trim(),
-      memento: !!ch.memento.trim(),
-      gear: c.gearPackage !== null && (!same(ch.school ?? '', 'Alchemy') || ch.gear.filter(g => g.name.endsWith(', dose')).length === DOSES),
-      appearance: !!ch.appearance.trim(),
-    };
-  });
+  /** The ticks: from the same tagged problems Save lists. */
+  protected readonly done = computed(() => stepDone(this.creation(), this.ref()!));
 
   /** "4 free skills. STR -2, AGL -2." */
   protected ageNote(age: AgeDto): string {
@@ -289,14 +268,14 @@ export class CharactersPage {
 
   protected choosePackage(event: Event): void {
     const pkg = this.profession()?.gearPackages.find(p => String(p.rollFrom) === valueOf(event));
-    if (pkg) this.update(chooseGearPackage(this.creation(), pkg, this.ref()!, this.roller));
+    if (pkg) this.apply(chooseGearPackage(this.creation(), pkg, this.ref()!, this.roller));
   }
 
-  /** A choice inside the package; the package is resolved again with it. */
+  /** A choice inside the held package: only that item changes. */
   protected chooseOption(entry: number, event: Event): void {
     const c = this.creation();
     const pkg = this.profession()?.gearPackages.find(p => p.rollFrom === c.gearPackage);
-    if (pkg) this.update(chooseGearPackage(c, pkg, this.ref()!, this.roller, { ...c.packageChoices, [entry]: Number(valueOf(event)) }));
+    if (pkg) this.apply(chooseGearPackage(c, pkg, this.ref()!, this.roller, { ...c.packageChoices, [entry]: Number(valueOf(event)) }));
   }
 
   protected chooseDose(index: number, event: Event): void {

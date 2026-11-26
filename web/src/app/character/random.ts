@@ -2,14 +2,11 @@ import { DiceRoller } from '../dice/dice-roller';
 import { ATTRIBUTES, Attribute, same } from '../hero/hero';
 import { Character, CreationReference } from './character';
 import {
-  Creation, DOSES, Step, chooseGearPackage, newCreation, professionSkillList, schoolsAvailable, setAge, setAlchemistDoses,
+  Creation, CreationStep, DOSES, Step, chooseGearPackage, newCreation, professionSkillList, schoolsAvailable, setAge, setAlchemistDoses,
   setAttributes, setHeroicAbility, setKin, setProfession, setSchool, skillLimits, spellOptions, toggleSkill, toggleSpell,
   unchanged,
 } from './creation';
 import { rollAttribute, rollOnTable } from './rules';
-
-export type CreationStep =
-  'kin' | 'profession' | 'age' | 'name' | 'attributes' | 'skills' | 'magic' | 'weakness' | 'memento' | 'gear' | 'appearance';
 
 /** Book order, except magic before skills: a mage's skill list comes from the school. */
 const RANDOM_ORDER: CreationStep[] =
@@ -96,7 +93,8 @@ export function rollStep(c: Creation, step: CreationStep, ref: CreationReference
       const pkg = rollOnTable(roller, 6, profession.gearPackages);
       const entries = [...pkg.entries, ...(school?.extras.flatMap(x => x.entries) ?? [])];
       const choices = Object.fromEntries(entries.flatMap((e, i) => (e.options.length > 1 ? [[i, roller.roll(1, e.options.length)[0] - 1]] : [])));
-      return unchanged(rollDoses(chooseGearPackage(c, pkg, ref, roller, choices), roller));
+      // A roll resolves the package afresh (dice quantities too), even when it lands on the one held.
+      return unchanged(rollDoses(chooseGearPackage({ ...c, gearPackage: null }, pkg, ref, roller, choices).creation, roller));
     }
   }
 }
