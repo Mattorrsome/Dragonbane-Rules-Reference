@@ -72,7 +72,7 @@ public class Appearance : IEntity
     public string Text { get; set; } = "";
 }
 
-/// <summary>A profession from the D10 table. GearPackages arrive with the gear import.</summary>
+/// <summary>A profession from the D10 table.</summary>
 public class Profession : INamedEntity
 {
     public int Id { get; set; }
@@ -83,6 +83,7 @@ public class Profession : INamedEntity
     public List<ProfessionSkill> Skills { get; set; } = [];
     public List<ProfessionHeroicAbility> HeroicAbilities { get; set; } = [];
     public List<ProfessionNickname> Nicknames { get; set; } = [];
+    public List<GearPackage> GearPackages { get; set; } = [];
 }
 
 public class ProfessionSkill : IEntity
@@ -108,4 +109,45 @@ public class ProfessionNickname : INamedEntity
     public int ProfessionId { get; set; }
     public int Roll { get; set; }
     public string Name { get; set; } = "";
+}
+
+public enum GearEntryKind { Item, Silver }
+
+/// <summary>
+/// A starting gear package. Exactly one parent is set: a profession (D6 roll range) or a magic school
+/// (starting extras, RollFrom = RollTo = 0).
+/// </summary>
+public class GearPackage : IEntity
+{
+    public int Id { get; set; }
+    public int? ProfessionId { get; set; }
+    public int? MagicSchoolId { get; set; }
+    public int RollFrom { get; set; }
+    public int RollTo { get; set; }
+    public List<GearPackageEntry> Entries { get; set; } = [];
+}
+
+/// <summary>
+/// One line of a package. An Item with several options is a choice. The amount is Quantity, or
+/// DiceCount D DiceSides when set. Silver has no options; its dice give the silver.
+/// </summary>
+public class GearPackageEntry : IEntity
+{
+    public int Id { get; set; }
+    public int GearPackageId { get; set; }
+    public GearEntryKind Kind { get; set; }
+    public int Quantity { get; set; } = 1;
+    public int? DiceCount { get; set; }
+    public int? DiceSides { get; set; }
+    public List<GearPackageOption> Options { get; set; } = [];
+}
+
+/// <summary>An equipment row, or a name for an item the Equipment tables lack. Exactly one is set.</summary>
+public class GearPackageOption : IEntity
+{
+    public int Id { get; set; }
+    public int GearPackageEntryId { get; set; }
+    public int? EquipmentItemId { get; set; }
+    public EquipmentItem? EquipmentItem { get; set; }
+    public string? UnlinkedName { get; set; }
 }

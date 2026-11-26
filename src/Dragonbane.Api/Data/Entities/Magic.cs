@@ -16,6 +16,8 @@ public class MagicSchool : INamedEntity
     public Skill? RequiredSkill { get; set; }
     public int? RequiredSkillLevel { get; set; }
     public bool ChoosableAtCreation { get; set; }
+    /// <summary>Starting extras on top of the profession package (alchemist, enchanter, harmonist).</summary>
+    public List<GearPackage> ExtraGearPackages { get; set; } = [];
 }
 
 public class MagicSchoolStartingSkill : IEntity

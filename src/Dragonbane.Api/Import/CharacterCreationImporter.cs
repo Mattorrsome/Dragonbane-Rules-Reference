@@ -7,7 +7,7 @@ namespace Dragonbane.Api.Import;
 /// <summary>Imports Dragonbane_Character_Creation.md, one method per table group.</summary>
 public static partial class CharacterCreationImporter
 {
-    public static void Import(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
+    public static void Import(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db, IReadOnlyDictionary<string, SeedPackage[]>? gear = null)
     {
         ImportKin(doc, db);
         ImportAges(doc, db);
@@ -15,6 +15,7 @@ public static partial class CharacterCreationImporter
         ImportProfessions(doc, db);
         ImportNicknames(doc, db);
         ImportMagicSchools(doc, db);
+        ImportGearPackages(db, gear ?? GearPackageSeed.Packages);
     }
 
     static void ImportKin(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
@@ -154,6 +155,37 @@ public static partial class CharacterCreationImporter
                 if (!m.Success) throw new InvalidDataException($"Cannot parse requirement '{row["Requires"]}' for school '{name}'.");
                 school.RequiredSkill = skills.GetValueOrDefault(m.Groups[1].Value) ?? throw new InvalidDataException($"Unknown skill '{m.Groups[1].Value}' for school '{name}'.");
                 school.RequiredSkillLevel = int.Parse(m.Groups[2].Value);
+            }
+        }
+        db.SaveChanges();
+    }
+
+    static void ImportGearPackages(DragonbaneDbContext db, IReadOnlyDictionary<string, SeedPackage[]> packagesByOwner)
+    {
+        var equipment = db.EquipmentItems.ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
+        var professions = db.Professions.ToDictionary(p => p.Name);
+        var schools = db.MagicSchools.ToDictionary(s => s.Name);
+        foreach (var (owner, seeds) in packagesByOwner)
+        {
+            var packages = professions.GetValueOrDefault(owner)?.GearPackages
+                ?? schools.GetValueOrDefault(owner)?.ExtraGearPackages
+                ?? throw new InvalidDataException($"Gear seed key '{owner}' is neither a profession nor a magic school.");
+            foreach (var seed in seeds)
+            {
+                var package = new GearPackage { RollFrom = seed.From, RollTo = seed.To };
+                foreach (var gear in seed.Entries)
+                {
+                    var entry = new GearPackageEntry { Kind = gear.Kind, Quantity = gear.Quantity, DiceCount = gear.DiceCount, DiceSides = gear.DiceSides };
+                    foreach (var name in gear.Items)
+                    {
+                        var lookup = GearPackageSeed.Aliases.GetValueOrDefault(name.ToLowerInvariant(), name);
+                        entry.Options.Add(equipment.TryGetValue(lookup, out var item) ? new GearPackageOption { EquipmentItem = item }
+                            : GearPackageSeed.Unlinked.Contains(name) ? new GearPackageOption { UnlinkedName = name }
+                            : throw new InvalidDataException($"Gear seed item '{name}' ({owner}) is not in Equipment, an alias or the unlinked list."));
+                    }
+                    package.Entries.Add(entry);
+                }
+                packages.Add(package);
             }
         }
         db.SaveChanges();

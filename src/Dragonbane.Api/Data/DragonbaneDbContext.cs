@@ -43,11 +43,15 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
     public DbSet<ProfessionSkill> ProfessionSkills => Set<ProfessionSkill>();
     public DbSet<ProfessionHeroicAbility> ProfessionHeroicAbilities => Set<ProfessionHeroicAbility>();
     public DbSet<ProfessionNickname> ProfessionNicknames => Set<ProfessionNickname>();
+    public DbSet<GearPackage> GearPackages => Set<GearPackage>();
+    public DbSet<GearPackageEntry> GearPackageEntries => Set<GearPackageEntry>();
+    public DbSet<GearPackageOption> GearPackageOptions => Set<GearPackageOption>();
     public DbSet<MagicSchoolStartingSkill> MagicSchoolStartingSkills => Set<MagicSchoolStartingSkill>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<SpellKind>().HaveConversion<string>();
+        configurationBuilder.Properties<GearEntryKind>().HaveConversion<string>();
         configurationBuilder.Properties<RollPurpose>().HaveConversion<string>();
     }
 
@@ -98,6 +102,16 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
         model.Entity<MagicSchool>().HasOne(s => s.RequiredProfession).WithMany().HasForeignKey(s => s.RequiredProfessionId);
         model.Entity<MagicSchool>().HasOne(s => s.RequiredSkill).WithMany().HasForeignKey(s => s.RequiredSkillId);
         model.Entity<MagicSchoolStartingSkill>().HasIndex(e => new { e.MagicSchoolId, e.SkillId }).IsUnique();
+
+        model.Entity<Profession>().HasMany(p => p.GearPackages).WithOne().HasForeignKey(g => g.ProfessionId);
+        model.Entity<MagicSchool>().HasMany(s => s.ExtraGearPackages).WithOne().HasForeignKey(g => g.MagicSchoolId);
+        model.Entity<GearPackage>().HasMany(g => g.Entries).WithOne().HasForeignKey(e => e.GearPackageId);
+        model.Entity<GearPackageEntry>().HasMany(e => e.Options).WithOne().HasForeignKey(o => o.GearPackageEntryId);
+        model.Entity<GearPackageOption>().HasOne(o => o.EquipmentItem).WithMany().HasForeignKey(o => o.EquipmentItemId);
+        model.Entity<GearPackage>().ToTable(t => t.HasCheckConstraint(
+            "CK_GearPackage_OneParent", "(\"ProfessionId\" IS NULL) <> (\"MagicSchoolId\" IS NULL)"));
+        model.Entity<GearPackageOption>().ToTable(t => t.HasCheckConstraint(
+            "CK_GearPackageOption_OneTarget", "(\"EquipmentItemId\" IS NULL) <> (\"UnlinkedName\" IS NULL)"));
 
         model.Entity<CurrencyRate>().HasIndex(e => e.Name).IsUnique();
         model.Entity<EquipmentCategory>().HasIndex(e => e.Name).IsUnique();

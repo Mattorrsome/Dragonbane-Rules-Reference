@@ -194,4 +194,84 @@ public sealed class CharacterCreationImporterTests : IDisposable
         var bad = Read(File_).Replace("| 20 | Weathered face |", "| x | Weathered face |");
         Assert.Throws<InvalidDataException>(() => Import(bad));
     }
+
+    [Fact]
+    public void Every_profession_has_three_gear_packages_covering_one_to_six()
+    {
+        Import();
+        var professions = _db.Professions.Include(p => p.GearPackages).ToList();
+        Assert.Equal(10, professions.Count);
+        foreach (var p in professions)
+            Assert.Equal([(1, 2), (3, 4), (5, 6)], p.GearPackages.OrderBy(g => g.RollFrom).Select(g => (g.RollFrom, g.RollTo)));
+    }
+
+    GearPackage Package(string profession, int from) => _db.GearPackages
+        .Include(g => g.Entries).ThenInclude(e => e.Options).ThenInclude(o => o.EquipmentItem)
+        .Single(g => g.ProfessionId == _db.Professions.Single(p => p.Name == profession).Id && g.RollFrom == from);
+
+    [Fact]
+    public void Fighter_one_to_two_has_a_battleaxe_or_morningstar_choice()
+    {
+        Import();
+        var choice = Package("Fighter", 1).Entries.Single(e => e.Options.Count > 1);
+        Assert.Equal(["Battleaxe", "Morningstar"], choice.Options.Select(o => o.EquipmentItem!.Name));
+    }
+
+    [Fact]
+    public void Mariner_silver_is_a_d10_and_rations_are_dice()
+    {
+        Import();
+        var entries = Package("Mariner", 1).Entries;
+        var silver = entries.Single(e => e.Kind == GearEntryKind.Silver);
+        Assert.Equal((1, 10), (silver.DiceCount, silver.DiceSides));
+        Assert.Empty(silver.Options);
+        var rations = entries.Single(e => e.Options.Any(o => o.EquipmentItem!.Name == "Field ration"));
+        Assert.Equal((1, 8), (rations.DiceCount, rations.DiceSides));
+    }
+
+    [Fact]
+    public void Knight_five_to_six_has_a_combat_trained_horse()
+    {
+        Import();
+        Assert.Contains(Package("Knight", 5).Entries, e => e.Options.Any(o => o.EquipmentItem!.Name == "Combat-trained horse"));
+    }
+
+    [Fact]
+    public void Thief_five_to_six_has_two_daggers()
+    {
+        Import();
+        var daggers = Package("Thief", 5).Entries.Single(e => e.Options.Any(o => o.EquipmentItem!.Name == "Dagger"));
+        Assert.Equal(2, daggers.Quantity);
+    }
+
+    [Fact]
+    public void Alchemy_extras_are_unlinked_laboratory_and_d6_herbs()
+    {
+        Import();
+        var extras = _db.GearPackages.Include(g => g.Entries).ThenInclude(e => e.Options)
+            .Single(g => g.MagicSchoolId == _db.MagicSchools.Single(s => s.Name == "Alchemy").Id);
+        Assert.Equal((0, 0), (extras.RollFrom, extras.RollTo));
+        Assert.Equal(["Small field laboratory", "General herbs"], extras.Entries.Select(e => e.Options.Single().UnlinkedName));
+        Assert.Equal(6, extras.Entries[1].DiceSides);
+    }
+
+    [Fact]
+    public void Enchanting_extras_are_a_choice_of_three_tool_sets()
+    {
+        Import();
+        var extras = _db.GearPackages.Include(g => g.Entries).ThenInclude(e => e.Options).ThenInclude(o => o.EquipmentItem)
+            .Single(g => g.MagicSchoolId == _db.MagicSchools.Single(s => s.Name == "Enchanting").Id);
+        Assert.Equal(["Blacksmithing tools", "Carpentry tools", "Tanning tools"], extras.Entries.Single().Options.Select(o => o.EquipmentItem!.Name));
+    }
+
+    [Fact]
+    public void Unknown_gear_seed_name_throws()
+    {
+        var bad = new Dictionary<string, SeedPackage[]>
+        {
+            ["Thief"] = [new(1, 2, [new SeedGear(GearEntryKind.Item, ["vorpal blade"])])],
+        };
+        var ex = Assert.Throws<InvalidDataException>(() => CharacterCreationImporter.Import(MarkdownDocument.Parse(Read(File_)), _db, bad));
+        Assert.Contains("vorpal blade", ex.Message);
+    }
 }
