@@ -279,8 +279,8 @@
                     @let otherOpen = !!editing() && editing()!.id !== saved.id;
                     <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref() || otherOpen"
                       [attr.aria-describedby]="otherOpen ? 'edit-open' : null" [attr.aria-label]="'Edit ' + saved.name" (click)="edit(saved, $event)">Edit</button>
-                    <button type="button" class="btn btn-secondary btn-small"
-                      [attr.aria-label]="'Export ' + saved.name" (click)="exportOne(saved)">Export</button>
+                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                      [attr.aria-label]="'Export ' + saved.name" (click)="exporting.set(saved)">Export</button>
                     <button type="button" class="btn btn-secondary btn-small"
                       [attr.aria-label]="'Delete ' + saved.name" (click)="confirmingDelete.set(saved.id)">Delete</button>
                   }
@@ -293,3 +293,14 @@
     </div>
   }
 </section>
+
+<!-- Export: copy or download a saved character as an image, text or Markdown. -->
+<dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (mousedown)="pressStart($event)" (click)="closeOnBackdrop($event)">
+  <button type="button" class="dialog-close" aria-label="Close" (click)="exporting.set(null)"></button>
+  <div class="dialog-body">
+    @if (exporting(); as saved) {
+      <h2 id="export-dialog-title" class="npc-heading">Export {{ saved.name }}</h2>
+      <app-character-export-menu [character]="saved" [ref]="ref()!" />
+    }
+  </div>
+</dialog>

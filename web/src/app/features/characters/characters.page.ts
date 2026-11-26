@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, linkedSignal, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import {
   AgeDto, AppearanceDto, EquipmentItemDto, HeroicAbilityDto, KinDto, MagicSchoolDto, MementoDto, ProfessionDto, SkillDto,
@@ -16,10 +16,11 @@ import { DiceRoller } from '../../dice/dice-roller';
 import { ATTRIBUTES, Attribute, SpellRef, same, sameSpell } from '../../hero/hero';
 import { spellLabel } from '../../hero/hero-card';
 import { ChipPicker } from '../../shared/chip-picker';
-import { download, fileName } from '../../shared/file';
+import { download } from '../../shared/file';
 import { slug } from '../../shared/text';
 import { CharacterEditor } from './character-editor';
 import { CharacterSummary } from './character-summary';
+import { CharacterExportMenu } from './character-export-menu';
 import { CreationGear } from './creation-gear';
 
 /** The creation steps in book order (Random rolls magic before skills; see random.ts). */
@@ -44,7 +45,7 @@ const valueOf = (event: Event) => (event.target as HTMLInputElement | HTMLSelect
 /** Guided and random character creation (layout B): the steps on the left, the live summary beside or below them. */
 @Component({
   selector: 'app-characters-page',
-  imports: [ChipPicker, CharacterEditor, CharacterSummary, CreationGear],
+  imports: [ChipPicker, CharacterEditor, CharacterSummary, CreationGear, CharacterExportMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './characters.page.html',
 })
@@ -60,6 +61,18 @@ export class CharactersPage {
   /** The saved character open in the editor (advancement), in place of the creator. */
   protected readonly editing = signal<SavedCharacter | null>(null);
   private editTrigger?: HTMLElement;
+  /** The saved character open in the export menu. */
+  protected readonly exporting = signal<SavedCharacter | null>(null);
+  private readonly exportDialog = viewChild.required<ElementRef<HTMLDialogElement>>('exportDialog');
+  // The dialog follows its signal: open while it holds a character, closed otherwise.
+  private readonly syncExportDialog = effect(() => {
+    const dialog = this.exportDialog().nativeElement;
+    const open = !!this.exporting();
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  });
+  /** Whether the last press began on the dialog's backdrop (not inside its box). */
+  private pressedOnBackdrop = false;
 
   private readonly resources = {
     skills: httpResource<SkillDto[]>(() => '/api/skills'),
@@ -283,9 +296,14 @@ export class CharactersPage {
     this.myHeading()?.nativeElement.focus();
   }
 
-  /** One character, as a one-item list so Import JSON takes it back. */
-  protected exportOne(c: SavedCharacter): void {
-    download(new Blob([JSON.stringify([c], null, 2)], { type: 'application/json' }), fileName(c.name, 'json', 'character'));
+  protected pressStart(event: MouseEvent): void {
+    this.pressedOnBackdrop = onBackdrop(event);
+  }
+
+  /** A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. */
+  protected closeOnBackdrop(event: MouseEvent): void {
+    if (this.pressedOnBackdrop && onBackdrop(event)) (event.currentTarget as HTMLDialogElement).close();
+    this.pressedOnBackdrop = false;
   }
 
   protected exportAll(): void {
@@ -307,4 +325,12 @@ export class CharactersPage {
     // Choosing the same file again still fires change.
     input.value = '';
   }
+}
+
+/** The event hit the dialog element itself at a point outside its box: the backdrop. */
+function onBackdrop(event: MouseEvent): boolean {
+  const dialog = event.currentTarget as HTMLDialogElement;
+  if (event.target !== dialog) return false;
+  const box = dialog.getBoundingClientRect();
+  return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
 }

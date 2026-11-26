@@ -1,0 +1,22 @@
+@let c = card();
+<article class="npc-card export-card">
+  <p class="npc-card-name">{{ c.name }}</p>
+  @if (c.nickname) {
+    <p class="npc-card-description">“{{ c.nickname }}”</p>
+  }
+  <p class="npc-card-description">{{ c.identity }}</p>
+  @for (row of c.rows; track row.label) {
+    @if (listed(row)) {
+      <div class="npc-card-row">
+        <b>{{ row.label }}:</b>
+        <ul class="npc-card-entries">
+          @for (entry of row.entries; track $index) {
+            <li>{{ entry.text }}@if (entry.detail) {<span class="entry-detail">{{ entry.detail }}</span>}</li>
+          }
+        </ul>
+      </div>
+    } @else {
+      <p class="npc-card-row"><span><b>{{ row.label }}:</b> {{ row.text }}</span></p>
+    }
+  }
+</article>

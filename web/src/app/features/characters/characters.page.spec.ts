@@ -239,6 +239,20 @@ describe('CharactersPage', () => {
       return { ...page, editor, box, type };
     }
 
+    it('Export opens the export menu for that character in a dialog, and Close empties it', async () => {
+      HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
+      HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; this.dispatchEvent(new Event('close')); };
+      const page = await render();
+      await page.click('Export Aodhan');
+
+      const dialog = page.host.querySelector('dialog.export-dialog')!;
+      expect(dialog.querySelector('h2')?.textContent).toContain('Export Aodhan');
+      expect(dialog.querySelector('app-character-card .npc-card-name')?.textContent).toBe('Aodhan');
+
+      await page.click('Close');
+      expect(dialog.querySelector('app-character-export-menu')).toBeNull();
+    });
+
     it('shows kin, profession, age and school as text, with no rolls and no Random', async () => {
       const page = await edit();
 

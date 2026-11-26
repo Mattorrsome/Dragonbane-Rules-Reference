@@ -79,6 +79,18 @@ for (const viewport of viewports) {
       await expect(page.locator('.characters-table tbody tr')).toHaveCount(2);
       await check();
 
+      // The export dialog: the card preview and the option checkbox, axe-clean and inside the viewport.
+      await page.locator('.characters-table').getByRole('button', { name: /^Export / }).first().click();
+      const exportDialog = page.getByRole('dialog', { name: /^Export / });
+      await expect(exportDialog.locator('.export-card')).toBeVisible();
+      const dialogResults = await new AxeBuilder({ page }).include('dialog[open]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(dialogResults.violations.map(v => v.id)).toEqual([]);
+      const box = (await exportDialog.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+      await exportDialog.getByRole('button', { name: 'Close' }).click();
+      await expect(exportDialog).toBeHidden();
+
       await page.locator('.characters-table').getByRole('button', { name: /^Edit / }).first().click();
       // The other row's Edit is disabled, with the hint saying why.
       await expect(page.locator('#edit-open')).toBeVisible();
