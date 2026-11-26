@@ -11,14 +11,14 @@
     <span><b>Age:</b> {{ c.age || '-' }}</span>
   </p>
   <p class="npc-card-row">
-    @for (a of attributes; track a) { <span><b>{{ a }}:</b> {{ c.attributes[a] }}</span> }
+    @for (a of attributes; track a) { <span><b>{{ a }}:</b> {{ rolled() ? c.attributes[a] : '–' }}</span> }
   </p>
   <p class="npc-card-row">
-    <span><b>HP:</b> {{ d.hpMax }}</span>
-    <span><b>WP:</b> {{ d.wpMax }}</span>
-    <span><b>Movement:</b> {{ d.movement }}</span>
-    @if (damageBonus()) { <span><b>Damage Bonus:</b> {{ damageBonus() }}</span> }
-    <span><b>Carrying capacity:</b> {{ d.capacity }}</span>
+    <span><b>HP:</b> {{ rolled() ? d.hpMax : '–' }}</span>
+    <span><b>WP:</b> {{ rolled() ? d.wpMax : '–' }}</span>
+    <span><b>Movement:</b> {{ rolled() ? d.movement : '–' }}</span>
+    @if (rolled() && damageBonus()) { <span><b>Damage Bonus:</b> {{ damageBonus() }}</span> }
+    <span><b>Carrying capacity:</b> {{ rolled() ? d.capacity : '–' }}</span>
   </p>
   @if (skills()) {
     <p class="npc-card-row"><span><b>Trained skills:</b> {{ skills() }}</span></p>

@@ -1,9 +1,11 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { creationRef as ref } from '../../character/character.fixture';
 import { RANDOM } from '../../dice/dice-roller';
 import { seededRandom } from '../../dice/seeded-random';
+import { CharacterStore } from '../../character/character.store';
 import { CharactersPage } from './characters.page';
 
 describe('CharactersPage', () => {
@@ -79,7 +81,7 @@ describe('CharactersPage', () => {
     await page.choose('cc-kin', 'Human');
     await page.choose('cc-age', 'Adult');
     await page.choose('cc-profession', 'Fighter');
-    page.host.querySelector<HTMLInputElement>('#cc-skill-Crossbows')!.click();
+    page.host.querySelector<HTMLInputElement>('#cc-skill-crossbows')!.click();
     await page.click('Roll Profession');
 
     const profession = page.select('cc-profession').value;
@@ -127,5 +129,81 @@ describe('CharactersPage', () => {
     expect(page.summary()).toMatch(/STR: 3(?!\d)/);
     expect(page.summary()).toMatch(/CHA: 18(?!\d)/);
     expect(page.button('Swap').disabled).toBe(true);
+  });
+
+  it('the summary shows dashes, not placeholder scores, until the attributes are set', async () => {
+    const page = await render();
+
+    expect(page.summary()).toMatch(/STR: –\s*CON: –/);
+    expect(page.summary()).toContain('HP: –');
+    expect(page.summary()).not.toContain('HP: 10');
+    await page.click('Random character');
+    expect(page.summary()).not.toContain('–');
+  });
+
+  it('skill checkbox ids have no spaces', async () => {
+    const page = await render();
+    await page.choose('cc-profession', 'Fighter');
+
+    const ids = [...page.host.querySelectorAll<HTMLInputElement>('.skill-checks input')].map(i => i.id);
+
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids.every(id => !/\s/.test(id))).toBe(true);
+  });
+
+  describe('My characters', () => {
+    beforeEach(() => localStorage.clear());
+
+    it('says so when nothing is saved', async () => {
+      const page = await render();
+
+      expect(page.host.textContent).toContain('No saved characters yet.');
+    });
+
+    it('Save stores the finished character, resets the creator and lists it', async () => {
+      const page = await render();
+      await page.click('Random character');
+      const name = page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim();
+
+      await page.click('Save');
+
+      expect(TestBed.inject(CharacterStore).characters().map(c => c.name)).toEqual([name]);
+      expect(page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim()).toBe('Unnamed hero');
+      expect(page.button('Save').disabled).toBe(true);
+      expect(page.host.querySelector('.characters-table tbody')!.textContent).toContain(name);
+    });
+
+    it('Delete asks in the page and removes only that character', async () => {
+      const page = await render();
+      const store = TestBed.inject(CharacterStore);
+      for (let i = 0; i < 2; i++) {
+        await page.click('Random character');
+        await page.click('Save');
+      }
+      const [first, second] = store.characters();
+
+      await page.click(`Delete ${first.name}`);
+      expect(page.host.textContent).toContain(`Delete ${first.name}?`);
+      await page.click('Keep');
+      expect(store.characters().length).toBe(2);
+
+      await page.click(`Delete ${first.name}`);
+      await page.click('Yes, delete');
+
+      expect(store.characters().map(c => c.id)).toEqual([second.id]);
+    });
+
+    it('Import JSON reports a bad file and imports nothing', async () => {
+      const page = await render();
+      const input = page.host.querySelector<HTMLInputElement>('input[type="file"]')!;
+      const file = new File(['[{"id":"a","name":"Bryn","skills":[{"name":"Axes","level":19}]}]'], 'c.json');
+      Object.defineProperty(input, 'files', { value: [file] });
+      input.dispatchEvent(new Event('change'));
+      await new Promise(resolve => setTimeout(resolve));
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(page.host.querySelector('.import-status')!.textContent).toContain('Nothing was imported.');
+      expect(TestBed.inject(CharacterStore).characters()).toEqual([]);
+    });
   });
 });

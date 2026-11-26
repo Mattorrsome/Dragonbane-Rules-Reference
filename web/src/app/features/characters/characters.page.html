@@ -108,9 +108,9 @@
                         <ul class="skill-checks">
                           @for (skill of professionList(); track skill) {
                             <li class="field-check">
-                              <input type="checkbox" [id]="'cc-skill-' + skill" [checked]="isPicked(skill)"
+                              <input type="checkbox" [id]="'cc-skill-' + slug(skill)" [checked]="isPicked(skill)"
                                 [disabled]="!canToggle(skill)" (change)="toggleSkill(skill)" />
-                              <label [for]="'cc-skill-' + skill">{{ skill }}</label>
+                              <label [for]="'cc-skill-' + slug(skill)">{{ skill }}</label>
                             </li>
                           }
                         </ul>
@@ -276,8 +276,9 @@
         </div>
 
         <div class="creation-save">
-          <!-- Task 14 stores the finished character. -->
-          <button type="button" class="btn btn-primary" [disabled]="problems().length" [attr.aria-describedby]="problems().length ? 'cc-problems' : null">Save</button>
+          <p class="export-status" role="status">{{ saveStatus() }}</p>
+          <p class="export-status" role="status">{{ saveStatus() }}</p>
+          <button type="button" class="btn btn-primary" [disabled]="problems().length" (click)="save()" [attr.aria-describedby]="problems().length ? 'cc-problems' : null">Save</button>
           @if (problems().length) {
             <ul id="cc-problems" class="creation-problems" aria-label="Still to do">
               @for (problem of problems(); track problem) { <li>{{ problem }}</li> }
@@ -287,10 +288,59 @@
       </div>
 
       <div class="npc-preview creation-summary">
-        <app-character-summary [character]="character()" [ref]="r" />
+        <app-character-summary [character]="character()" [ref]="r" [rolled]="!!c.rolledAttributes" />
       </div>
     </div>
   } @else {
     <p class="status" aria-live="polite">Loading…</p>
+  }
+
+  <h2 class="npc-heading" id="my-characters-heading" tabindex="-1" #myHeading>My characters</h2>
+  <!-- The whole list as a JSON file: a backup, or a way to move characters to another browser. -->
+  <div class="npc-file-actions">
+    <button type="button" class="btn btn-secondary btn-small" [disabled]="store.characters().length === 0" (click)="exportAll()">Export all as JSON</button>
+    <button type="button" class="btn btn-secondary btn-small" (click)="fileInput.click()">Import JSON</button>
+    <input #fileInput type="file" accept=".json,application/json" hidden (change)="importFile($event)" />
+    <p class="import-status" role="status">{{ importStatus() }}</p>
+  </div>
+  @if (store.characters().length === 0) {
+    <p class="status">No saved characters yet.</p>
+  } @else {
+    <div class="table-wrap" tabindex="0" role="region" aria-label="My characters table">
+      <table class="data-table stack characters-table">
+        <caption>My characters</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Kin</th>
+            <th scope="col">Profession</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (saved of store.characters(); track saved.id) {
+            <tr>
+              <td class="row-title">{{ saved.name }}</td>
+              <td data-label="Kin">{{ saved.kin }}</td>
+              <td data-label="Profession">{{ saved.profession }}</td>
+              <td>
+                <div class="row-actions">
+                  @if (confirmingDelete() === saved.id) {
+                    <span>Delete {{ saved.name }}?</span>
+                    <button type="button" class="btn btn-primary btn-small" (click)="remove(saved)">Yes, delete</button>
+                    <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
+                  } @else {
+                    <button type="button" class="btn btn-secondary btn-small"
+                      [attr.aria-label]="'Export ' + saved.name" (click)="exportOne(saved)">Export</button>
+                    <button type="button" class="btn btn-secondary btn-small"
+                      [attr.aria-label]="'Delete ' + saved.name" (click)="confirmingDelete.set(saved.id)">Delete</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

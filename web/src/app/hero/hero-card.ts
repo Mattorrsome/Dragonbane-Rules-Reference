@@ -29,3 +29,9 @@ export function spellEntries(spells: readonly SpellRef[], ref: HeroReference, wi
     return { text: `${name} (${details})`, detail: spell.description };
   });
 }
+
+/** "Dispel (General Magic)", "Erase (Symbolism, trick)": unique, so a picked label finds its spell. */
+export function spellLabel(spell: SpellRef): string {
+  const kind = spell.kind === 'Spell' ? '' : `, ${spell.kind.toLowerCase()}`;
+  return `${sentenceCase(spell.name)} (${spell.school}${kind})`;
+}

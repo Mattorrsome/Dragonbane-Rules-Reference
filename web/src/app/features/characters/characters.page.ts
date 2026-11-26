@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import {
   AgeDto, AppearanceDto, EquipmentItemDto, GearPackageDto, HeroicAbilityDto, KinDto, MagicSchoolDto, MementoDto, ProfessionDto, SkillDto,
   SpellDto, WeaknessDto,
 } from '../../api/models';
-import { Character, CreationReference } from '../../character/character';
+import { Character, CreationReference, SavedCharacter } from '../../character/character';
+import { CharacterStore } from '../../character/character.store';
 import {
   Creation, CreationStep, DOSES, MAX_SPELLS, MAX_TRICKS, Step, chooseGearPackage, creationProblems, finishCreation, newCreation,
   professionSkillList, schoolsAvailable, setAge, setAlchemistDoses, setAttributes, setHeroicAbility, setItemNote, setKin,
@@ -13,8 +14,9 @@ import {
 import { randomCharacter, rollStep } from '../../character/random';
 import { DiceRoller } from '../../dice/dice-roller';
 import { ATTRIBUTES, Attribute, SpellRef, same, sameSpell } from '../../hero/hero';
+import { spellLabel } from '../../hero/hero-card';
 import { ChipPicker } from '../../shared/chip-picker';
-import { spellLabel } from '../npcs/npc-editor';
+import { download, fileName } from '../../shared/file';
 import { CharacterSummary } from './character-summary';
 
 /** The creation steps in book order (Random rolls magic before skills; see random.ts). */
@@ -47,6 +49,13 @@ const valueOf = (event: Event) => (event.target as HTMLInputElement | HTMLSelect
 })
 export class CharactersPage {
   private readonly roller = inject(DiceRoller);
+  protected readonly store = inject(CharacterStore);
+  /** The saved character whose row is asking "Delete …?". */
+  protected readonly confirmingDelete = signal<string | null>(null);
+  private readonly myHeading = viewChild<ElementRef<HTMLElement>>('myHeading');
+  /** What the last Save and the last JSON import did. */
+  protected readonly saveStatus = signal('');
+  protected readonly importStatus = signal('');
 
   private readonly resources = {
     skills: httpResource<SkillDto[]>(() => '/api/skills'),
@@ -293,5 +302,50 @@ export class CharactersPage {
     c.character.gear.forEach((g, i) => { if (g.note.startsWith('Enchanted: ')) c = setItemNote(c, i, ''); });
     if (next.item >= 0 && next.spell) c = setItemNote(c, next.item, enchantNote(next.spell));
     this.update(c);
+  }
+
+  /** Stores the finished character and starts a fresh one. */
+  protected save(): void {
+    const saved = this.store.save(this.character());
+    this.creation.set(newCreation());
+    this.cleared.set([]);
+    this.saveStatus.set(`Saved ${saved.name || 'the character'}.`);
+  }
+
+  protected remove(c: SavedCharacter): void {
+    this.store.remove(c.id);
+    this.confirmingDelete.set(null);
+    // The row and its buttons are gone; keep focus in the section.
+    this.myHeading()?.nativeElement.focus();
+  }
+
+  /** One character, as a one-item list so Import JSON takes it back. */
+  protected exportOne(c: SavedCharacter): void {
+    download(new Blob([JSON.stringify([c], null, 2)], { type: 'application/json' }), fileName(c.name, 'json', 'character'));
+  }
+
+  protected exportAll(): void {
+    download(new Blob([this.store.exportJson()], { type: 'application/json' }), 'characters.json');
+  }
+
+  protected async importFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const count = this.store.importJson(await file.text());
+      this.importStatus.set(`Imported ${count} character${count === 1 ? '' : 's'}.`);
+    } catch (error) {
+      // parseCharacterFile names the first problem; a failed file read has no such message.
+      const problem = error instanceof Error ? error.message : 'That file could not be read.';
+      this.importStatus.set(`${problem} Nothing was imported.`);
+    }
+    // Choosing the same file again still fires change.
+    input.value = '';
+  }
+
+  /** "Crossbows", "Hunting and Fishing" → "crossbows", "hunting-and-fishing": an element id has no spaces. */
+  protected slug(text: string): string {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
 }

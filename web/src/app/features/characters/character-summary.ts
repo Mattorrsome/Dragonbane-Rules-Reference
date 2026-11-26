@@ -14,6 +14,8 @@ import { formatCoins } from '../../money/coins';
 export class CharacterSummary {
   readonly character = input.required<Character>();
   readonly ref = input.required<CreationReference>();
+  /** Whether the attributes are set: until then the rows they fix show a dash, not placeholder scores. */
+  readonly rolled = input.required<boolean>();
 
   private readonly rates = inject(CurrencyRatesService).rates;
   protected readonly attributes = ATTRIBUTES;

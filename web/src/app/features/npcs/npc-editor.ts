@@ -1,19 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
 import { SpellDto } from '../../api/models';
 import { addSpell, DAMAGE_BONUS_ATTRIBUTES, describeItem, findItem, isStacking, removeSpell } from '../../hero/hero';
+import { spellLabel } from '../../hero/hero-card';
 import { addGear, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, setAbilityCount, setDamageBonus } from '../../npc/npc';
 import { buildCard } from '../../npc/npc-card';
 import { ChipPicker } from '../../shared/chip-picker';
-import { sentenceCase } from '../../shared/text';
 import { NpcCardView } from './npc-card-view';
 
 type Picker = 'skill' | 'ability' | 'gear' | 'spell';
-
-/** "Dispel (General Magic)", "Erase (Symbolism, trick)": unique, so a picked label finds its spell. */
-export function spellLabel(spell: NpcSpellRef): string {
-  const kind = spell.kind === 'Spell' ? '' : `, ${spell.kind.toLowerCase()}`;
-  return `${sentenceCase(spell.name)} (${spell.school}${kind})`;
-}
 
 /** The whole number in a number box, or null while it is empty or half-typed (mid-edit values change nothing). */
 function typedInteger(event: Event): number | null {
