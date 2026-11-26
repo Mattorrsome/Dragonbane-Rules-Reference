@@ -20,6 +20,11 @@ export const routes: Routes = [
     ],
   },
   { path: 'npcs', title: 'NPC Manager', loadComponent: () => import('./features/npcs/npcs.page').then(m => m.NpcsPage) },
+  {
+    path: 'characters',
+    title: 'Character Creator',
+    loadComponent: () => import('./features/characters/characters.page').then(m => m.CharactersPage),
+  },
   // Bookmarks from before the Reference moved under /reference (query params carry over).
   ...sections.map(path => ({ path, redirectTo: `reference/${path}` })),
   { path: '**', redirectTo: 'reference/skills' },

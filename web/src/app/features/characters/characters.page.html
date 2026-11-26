@@ -1,0 +1,296 @@
+<section class="section">
+  <h1 class="chapter-title">Dragonbane Character Creator</h1>
+
+  @if (loadFailed()) {
+    <p class="status" role="alert">The creation tables could not be loaded. Is the API running?</p>
+  } @else if (ref(); as r) {
+    @let c = creation();
+    @let ch = c.character;
+    <div class="creation-actions">
+      <p>Work through the steps in order, or roll any of them. Changing an early step clears what no longer fits.</p>
+      <button type="button" class="btn btn-primary" (click)="random()">Random character</button>
+    </div>
+
+    <div class="npc-editor">
+      <div class="npc-form creation-steps">
+        @for (s of steps; track s.step) {
+          <div class="creation-step">
+            <details [open]="$first">
+              <summary>
+                <span class="step-label">{{ s.label }}</span>
+                @if (done()[s.step]) {
+                  <span class="step-done"><span aria-hidden="true">✓</span><span class="visually-hidden">done</span></span>
+                }
+              </summary>
+              <div class="step-body">
+                @switch (s.step) {
+                  @case ('kin') {
+                    <div class="field">
+                      <label for="cc-kin">Kin (D12)</label>
+                      <select id="cc-kin" (change)="chooseKin($event)">
+                        <option value="" [selected]="!ch.kin" disabled>Choose a kin</option>
+                        @for (k of r.kin; track k.name) { <option [value]="k.name" [selected]="k.name === ch.kin">{{ k.name }}</option> }
+                      </select>
+                    </div>
+                    @if (kin(); as k) {
+                      <p>Innate {{ k.abilities.length === 1 ? 'ability' : 'abilities' }}: {{ ch.kinAbilities.join(', ') }}. Movement {{ k.movement }}.</p>
+                    }
+                  }
+                  @case ('profession') {
+                    <div class="field">
+                      <label for="cc-profession">Profession (D10)</label>
+                      <select id="cc-profession" (change)="chooseProfession($event)">
+                        <option value="" [selected]="!ch.profession" disabled>Choose a profession</option>
+                        @for (p of r.professions; track p.name) { <option [value]="p.name" [selected]="p.name === ch.profession">{{ p.name }}</option> }
+                      </select>
+                    </div>
+                    @if (profession(); as p) {
+                      <p>Key attribute {{ p.keyAttribute }}.@if (needsSchool()) { A mage chooses a magic school next, under Heroic ability or magic: the school brings the skill list.}</p>
+                    }
+                  }
+                  @case ('age') {
+                    <div class="field">
+                      <label for="cc-age">Age (D6)</label>
+                      <select id="cc-age" (change)="chooseAge($event)">
+                        <option value="" [selected]="!ch.age" disabled>Choose an age</option>
+                        @for (a of r.ages; track a.name) { <option [value]="a.name" [selected]="a.name === ch.age">{{ a.name }}</option> }
+                      </select>
+                    </div>
+                    @if (age(); as a) {
+                      <p>{{ ageNote(a) }}</p>
+                    }
+                  }
+                  @case ('name') {
+                    <div class="field">
+                      <label for="cc-name">Name</label>
+                      <input id="cc-name" type="text" list="cc-names" [value]="ch.name" (input)="setText('name', $event)" />
+                      <datalist id="cc-names">@for (n of kin()?.names ?? []; track n) { <option [value]="n"></option> }</datalist>
+                    </div>
+                    <div class="field">
+                      <label for="cc-nickname">Nickname (optional)</label>
+                      <input id="cc-nickname" type="text" list="cc-nicknames" [value]="ch.nickname" (input)="setText('nickname', $event)" />
+                      <datalist id="cc-nicknames">@for (n of profession()?.nicknames ?? []; track n) { <option [value]="n"></option> }</datalist>
+                    </div>
+                  }
+                  @case ('attributes') {
+                    <p>4D6, drop the lowest, in order; or type scores from 3 to 18. Age adjustments show in the summary.</p>
+                    <div class="field-row attribute-row">
+                      @for (a of attributes; track a) {
+                        <div class="field">
+                          <label [for]="'cc-attr-' + a">{{ a }}</label>
+                          <input [id]="'cc-attr-' + a" type="number" min="3" max="18" [value]="typed()[a] ?? ''" (change)="enterAttribute(a, $event)" />
+                        </div>
+                      }
+                    </div>
+                    <div class="field-row">
+                      <div class="field">
+                        <label for="cc-swap-a">Swap</label>
+                        <select id="cc-swap-a" (change)="chooseSwap(0, $event)">
+                          @for (a of attributes; track a) { <option [value]="a" [selected]="a === swapPair()[0]">{{ a }}</option> }
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="cc-swap-b">with</label>
+                        <select id="cc-swap-b" (change)="chooseSwap(1, $event)">
+                          @for (a of attributes; track a) { <option [value]="a" [selected]="a === swapPair()[1]">{{ a }}</option> }
+                        </select>
+                      </div>
+                      <button type="button" class="btn btn-secondary" [disabled]="c.swapUsed || !c.rolledAttributes" (click)="swap()">Swap</button>
+                    </div>
+                    @if (c.swapUsed) { <p>The one swap is used; roll or type new scores to swap again.</p> }
+                  }
+                  @case ('skills') {
+                    @if (needsSchool()) {
+                      <p>A mage's skills come from the magic school: choose it under Heroic ability or magic first.</p>
+                    } @else if (profession()) {
+                      <fieldset class="chip-group">
+                        <legend>Profession skills ({{ c.professionSkills.length }} of {{ limits().profession }})</legend>
+                        <ul class="skill-checks">
+                          @for (skill of professionList(); track skill) {
+                            <li class="field-check">
+                              <input type="checkbox" [id]="'cc-skill-' + skill" [checked]="isPicked(skill)"
+                                [disabled]="!canToggle(skill)" (change)="toggleSkill(skill)" />
+                              <label [for]="'cc-skill-' + skill">{{ skill }}</label>
+                            </li>
+                          }
+                        </ul>
+                      </fieldset>
+                      <fieldset class="chip-group">
+                        <legend>Free skills ({{ c.freeSkills.length }} of {{ limits().free }})</legend>
+                        @if (!ch.age) {
+                          <p>Choose an age: it sets the number of free skills.</p>
+                        } @else if (c.freeSkills.length < limits().free) {
+                          <app-chip-picker pickerId="cc-free-skill" noun="free skill" [options]="freeOptions()" [accept]="acceptFree" />
+                        }
+                        <ul class="chips" aria-label="Free skills">
+                          @for (skill of c.freeSkills; track skill) {
+                            <li>
+                              <span class="chip-name">{{ skill }}</span>
+                              <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + skill" (click)="toggleSkill(skill)">✕</button>
+                            </li>
+                          }
+                        </ul>
+                      </fieldset>
+                    } @else {
+                      <p>Choose a profession first.</p>
+                    }
+                  }
+                  @case ('magic') {
+                    @if (profession(); as p) {
+                      @if (schools().length || school()) {
+                        <div class="field">
+                          <label for="cc-school">Magic school</label>
+                          <select id="cc-school" (change)="chooseSchool($event)">
+                            <option value="" [selected]="!ch.school" [disabled]="!p.skills.length">{{ p.skills.length ? 'None' : 'Choose a school' }}</option>
+                            @for (s of schools(); track s.name) { <option [value]="s.name" [selected]="s.name === ch.school">{{ s.name }}</option> }
+                          </select>
+                        </div>
+                      }
+                      @if (school(); as s) {
+                        @if (!s.startingSkills.length && s.requiredSkill) {
+                          <p>{{ s.requiredSkill.toUpperCase() }} {{ s.requiredSkillLevel }} needed to learn spells.</p>
+                        }
+                        <fieldset class="chip-group">
+                          <legend>Spells ({{ counts().spells }} of {{ maxSpells }}) and tricks ({{ counts().tricks }} of {{ maxTricks }})</legend>
+                          @if (spellChoices().length) {
+                            <app-chip-picker pickerId="cc-spell" noun="spell" [options]="spellLabels()" [accept]="acceptSpell" />
+                          }
+                          <ul class="chips" aria-label="Spells">
+                            @for (spell of ch.spells; track spellLabel(spell)) {
+                              <li>
+                                <span class="chip-name">{{ spellLabel(spell) }}</span>
+                                <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + spellLabel(spell)" (click)="removeSpell(spell)">✕</button>
+                              </li>
+                            }
+                          </ul>
+                        </fieldset>
+                      } @else if (p.heroicAbilities.length > 1) {
+                        <div class="field">
+                          <label for="cc-ability">Heroic ability</label>
+                          <select id="cc-ability" (change)="chooseAbility($event)">
+                            <option value="" [selected]="!ch.abilities.length" disabled>Choose a heroic ability</option>
+                            @for (a of p.heroicAbilities; track a) { <option [value]="a" [selected]="a === ch.abilities[0]?.name">{{ a }}</option> }
+                          </select>
+                        </div>
+                      } @else if (p.heroicAbilities.length) {
+                        <p>Heroic ability: {{ p.heroicAbilities[0] }}.</p>
+                      }
+                    } @else {
+                      <p>Choose a profession first.</p>
+                    }
+                  }
+                  @case ('weakness') {
+                    <div class="field">
+                      <label for="cc-weakness">Weakness (optional, D20)</label>
+                      <input id="cc-weakness" type="text" list="cc-weaknesses" [value]="ch.weakness" (input)="setText('weakness', $event)" />
+                      <datalist id="cc-weaknesses">@for (w of r.weaknesses; track w.roll) { <option [value]="w.name + '. ' + w.text"></option> }</datalist>
+                    </div>
+                  }
+                  @case ('memento') {
+                    <div class="field">
+                      <label for="cc-memento">Memento (optional, D20)</label>
+                      <input id="cc-memento" type="text" list="cc-mementos" [value]="ch.memento" (input)="setText('memento', $event)" />
+                      <datalist id="cc-mementos">@for (m of r.mementos; track m.roll) { <option [value]="m.text"></option> }</datalist>
+                    </div>
+                  }
+                  @case ('gear') {
+                    @if (profession(); as p) {
+                      <div class="field">
+                        <label for="cc-gear">Gear package (D6)</label>
+                        <select id="cc-gear" (change)="choosePackage($event)">
+                          <option value="" [selected]="c.gearPackage === null" disabled>Choose a gear package</option>
+                          @for (pkg of p.gearPackages; track pkg.rollFrom) {
+                            <option [value]="pkg.rollFrom" [selected]="pkg.rollFrom === c.gearPackage">
+                              {{ packageLabel(pkg) }}
+                            </option>
+                          }
+                        </select>
+                      </div>
+                      @for (e of packageEntries(); track $index; let i = $index) {
+                        @if (e.options.length > 1) {
+                          <div class="field">
+                            <label [for]="'cc-option-' + i">Choose: {{ e.options.join(' or ') }}</label>
+                            <select [id]="'cc-option-' + i" (change)="chooseOption(i, $event)">
+                              @for (o of e.options; track $index; let j = $index) { <option [value]="j" [selected]="j === (c.packageChoices[i] ?? 0)">{{ o }}</option> }
+                            </select>
+                          </div>
+                        }
+                      }
+                      @if (school()?.name === 'Alchemy') {
+                        @if (recipes().length) {
+                          <div class="field-row">
+                            @for (d of doses(); track $index; let i = $index) {
+                              <div class="field">
+                                <label [for]="'cc-dose-' + i">Finished dose {{ i + 1 }}</label>
+                                <select [id]="'cc-dose-' + i" (change)="chooseDose(i, $event)">
+                                  <option value="" [selected]="!d" disabled>Choose a recipe</option>
+                                  @for (rec of recipes(); track rec) { <option [value]="rec" [selected]="rec === d">{{ rec }}</option> }
+                                </select>
+                              </div>
+                            }
+                          </div>
+                        } @else {
+                          <p>Pick your recipes under Heroic ability or magic: the three finished doses come from them.</p>
+                        }
+                      }
+                      @if (school()?.name === 'Enchanting' && ch.gear.length && enchantingSpells().length) {
+                        <div class="field-row">
+                          <div class="field">
+                            <label for="cc-enchant-item">Enchanted item</label>
+                            <select id="cc-enchant-item" (change)="enchant('item', $event)">
+                              <option value="-1" [selected]="enchantment().item < 0">None</option>
+                              @for (g of ch.gear; track $index; let i = $index) { <option [value]="i" [selected]="i === enchantment().item">{{ g.name }}</option> }
+                            </select>
+                          </div>
+                          <div class="field">
+                            <label for="cc-enchant-spell">Enchantment (+ PERMANENCE)</label>
+                            <select id="cc-enchant-spell" (change)="enchant('spell', $event)">
+                              <option value="" [selected]="!enchantment().spell" disabled>Choose a spell</option>
+                              @for (sp of enchantingSpells(); track sp) { <option [value]="sp" [selected]="sp === enchantment().spell">{{ sp }}</option> }
+                            </select>
+                          </div>
+                        </div>
+                      }
+                    } @else {
+                      <p>Choose a profession first.</p>
+                    }
+                  }
+                  @case ('appearance') {
+                    <div class="field">
+                      <label for="cc-appearance">Appearance (optional, D20)</label>
+                      <input id="cc-appearance" type="text" list="cc-appearances" [value]="ch.appearance" (input)="setText('appearance', $event)" />
+                      <datalist id="cc-appearances">@for (a of r.appearances; track a.roll) { <option [value]="a.text"></option> }</datalist>
+                    </div>
+                  }
+                }
+              </div>
+            </details>
+            <button type="button" class="btn btn-secondary btn-small step-roll" [attr.aria-label]="'Roll ' + s.label" (click)="roll(s.step)">
+              <span aria-hidden="true">🎲</span>
+            </button>
+          </div>
+        }
+
+        <div class="creation-cleared" role="status">
+          @for (message of cleared(); track message) { <p>{{ message }}</p> }
+        </div>
+
+        <div class="creation-save">
+          <!-- Task 14 stores the finished character. -->
+          <button type="button" class="btn btn-primary" [disabled]="problems().length" [attr.aria-describedby]="problems().length ? 'cc-problems' : null">Save</button>
+          @if (problems().length) {
+            <ul id="cc-problems" class="creation-problems" aria-label="Still to do">
+              @for (problem of problems(); track problem) { <li>{{ problem }}</li> }
+            </ul>
+          }
+        </div>
+      </div>
+
+      <div class="npc-preview creation-summary">
+        <app-character-summary [character]="character()" [ref]="r" />
+      </div>
+    </div>
+  } @else {
+    <p class="status" aria-live="polite">Loading…</p>
+  }
+</section>

@@ -25,6 +25,7 @@ export class App {
   protected readonly apps = [
     { path: '/reference', label: 'Rules Reference' },
     { path: '/npcs', label: 'NPC Manager' },
+    { path: '/characters', label: 'Character Creator' },
   ];
   /** Which app the page belongs to: the brand, the section tabs and the coin select follow it. */
   protected readonly currentApp = computed(() => this.apps.find(a => this.url().startsWith(a.path)) ?? this.apps[0]);

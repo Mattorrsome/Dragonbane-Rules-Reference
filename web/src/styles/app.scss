@@ -1228,3 +1228,113 @@ html {
   margin: 0;
   font-style: italic;
 }
+
+/* ================ CHARACTER CREATOR ================ */
+/* The intro line with Random character beside it; the steps and the summary below use the NPC editor's grid. */
+.creation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+
+  p {
+    flex: 1 1 20rem;
+    margin: 0;
+  }
+}
+
+.creation-steps {
+  gap: 0;
+}
+
+/* One step: a disclosure, with its roll button in the summary's row (outside it, so it works while closed). */
+.creation-step {
+  position: relative;
+  border-top: 1px solid var(--parchment-darker);
+
+  summary {
+    padding: 0.6rem 3.5rem 0.6rem 0;
+    font-family: var(--font-display);
+    color: var(--accent);
+    cursor: pointer;
+
+    &::marker {
+      color: var(--accent);
+    }
+  }
+
+  .step-roll {
+    position: absolute;
+    top: 0.25rem;
+    right: 0;
+    width: auto;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+  }
+
+  .step-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-bottom: var(--spacing-md);
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+.step-done {
+  margin-left: var(--spacing-xs);
+}
+
+/* Six narrow score boxes: one row beside the summary, two rows of three on a phone. */
+.npc-form .attribute-row .field {
+  flex: 1 1 4.5rem;
+}
+
+.skill-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    margin: 0;
+    padding: 0;
+
+    &::before {
+      content: none;
+    }
+  }
+}
+
+/* What the last change cleared: in the flow under the steps, announced politely. */
+.creation-cleared p {
+  margin: var(--spacing-xs) 0 0;
+  font-style: italic;
+}
+
+.creation-save {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--parchment-darker);
+}
+
+.creation-problems {
+  margin: 0;
+  padding-left: 0;
+}
+
+/* ponytail: not sticky like the NPC preview; a full character outgrows the viewport. Sticky with max-height if wanted. */
+.creation-summary {
+  position: static;
+}

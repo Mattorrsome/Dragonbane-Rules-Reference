@@ -25,9 +25,10 @@ export interface Creation {
 export type Step = { creation: Creation; cleared: string[] };
 
 const PROFESSION_SKILLS = 6;
-const MAX_SPELLS = 3;
-const MAX_TRICKS = 3;
-const DOSES = 3;
+export const MAX_SPELLS = 3;
+export const MAX_TRICKS = 3;
+/** An alchemist's finished doses at creation. */
+export const DOSES = 3;
 const GENERAL_MAGIC = 'General Magic';
 /** Harmonists cannot take General Magic. */
 const HARMONISM = 'Harmonism';
@@ -43,7 +44,7 @@ const plural = (n: number, word: string) => `${n} more ${word}${n === 1 ? '' : '
 /** "an Adult", "a Mage" */
 const article = (word: string) => `${/^[aeiou]/i.test(word) ? 'an' : 'a'} ${word}`;
 const withCharacter = (c: Creation, changes: Partial<Character>): Creation => ({ ...c, character: { ...c.character, ...changes } });
-const unchanged = (creation: Creation): Step => ({ creation, cleared: [] });
+export const unchanged = (creation: Creation): Step => ({ creation, cleared: [] });
 
 const professionOf = (c: Creation, ref: CreationReference) => ref.professions.find(p => same(p.name, c.character.profession));
 const schoolOf = (c: Creation, ref: CreationReference) =>

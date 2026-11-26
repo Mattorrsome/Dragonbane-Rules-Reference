@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { DiceRoller, RANDOM } from '../dice/dice-roller';
 import { seededRandom } from '../dice/seeded-random';
 import { creationRef as ref, fixture } from './character.fixture';
-import { Creation, creationProblems, finishCreation, newCreation, setKin, setProfession } from './creation';
+import { Creation, creationProblems, finishCreation, newCreation, setAge, setKin, setProfession } from './creation';
 import { randomCharacter, rollStep } from './random';
 
 function seeded(seed: number): DiceRoller {
@@ -60,5 +60,10 @@ describe('rollStep', () => {
     const c = newCreation();
     expect(rollStep(c, 'gear', ref, seeded(1))).toEqual({ creation: c, cleared: [] });
     expect(rollStep(c, 'name', ref, seeded(1))).toEqual({ creation: c, cleared: [] });
+  });
+
+  it('skills: a mage without a school changes nothing (the school brings the skill list)', () => {
+    const mage = setAge(setProfession(human(), fixture(ref.professions, 'Mage'), ref).creation, fixture(ref.ages, 'Adult'), ref).creation;
+    expect(rollStep(mage, 'skills', ref, seeded(1))).toEqual({ creation: mage, cleared: [] });
   });
 });

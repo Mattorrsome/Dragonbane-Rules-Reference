@@ -2,8 +2,9 @@ import { DiceRoller } from '../dice/dice-roller';
 import { ATTRIBUTES, Attribute, same } from '../hero/hero';
 import { Character, CreationReference } from './character';
 import {
-  Creation, Step, chooseGearPackage, newCreation, professionSkillList, schoolsAvailable, setAge, setAlchemistDoses,
+  Creation, DOSES, Step, chooseGearPackage, newCreation, professionSkillList, schoolsAvailable, setAge, setAlchemistDoses,
   setAttributes, setHeroicAbility, setKin, setProfession, setSchool, skillLimits, spellOptions, toggleSkill, toggleSpell,
+  unchanged,
 } from './creation';
 import { rollAttribute, rollOnTable } from './rules';
 
@@ -13,7 +14,6 @@ export type CreationStep =
 /** Book order, except magic before skills: a mage's skill list comes from the school. */
 const RANDOM_ORDER: CreationStep[] =
   ['kin', 'profession', 'age', 'name', 'attributes', 'magic', 'skills', 'weakness', 'memento', 'gear', 'appearance'];
-const DOSES = 3;
 
 /** One item, on a die with as many sides as there are items. */
 const oneOf = <T>(roller: DiceRoller, items: readonly T[]): T => items[roller.roll(1, items.length)[0] - 1];
@@ -27,7 +27,6 @@ function shuffled<T>(roller: DiceRoller, items: readonly T[]): T[] {
 
 /** A table with one roll per row, in the shape `rollOnTable` reads. */
 const byRoll = <T extends { roll: number }>(rows: readonly T[]) => rows.map(r => ({ ...r, rollFrom: r.roll, rollTo: r.roll }));
-const unchanged = (creation: Creation): Step => ({ creation, cleared: [] });
 const withCharacter = (c: Creation, changes: Partial<Character>): Step => unchanged({ ...c, character: { ...c.character, ...changes } });
 const picked = (c: Creation, name: string) => [...c.professionSkills, ...c.freeSkills].some(s => same(s, name));
 
@@ -58,7 +57,8 @@ export function rollStep(c: Creation, step: CreationStep, ref: CreationReference
     case 'attributes':
       return setAttributes(c, Object.fromEntries(ATTRIBUTES.map(a => [a, rollAttribute(roller)])) as Record<Attribute, number>, ref);
     case 'skills': {
-      if (!profession) return unchanged(c);
+      // A mage (no skill list of its own) takes the school's list: roll magic first.
+      if (!profession || (!profession.skills.length && !school)) return unchanged(c);
       // A mage's school skill and Enchanting's Crafting first, so they are among the profession picks.
       const own = school?.startingSkills.length ? [school.skill, school.requiredSkill].filter((s): s is string => !!s) : [];
       let next: Creation = { ...c, professionSkills: [], freeSkills: [] };

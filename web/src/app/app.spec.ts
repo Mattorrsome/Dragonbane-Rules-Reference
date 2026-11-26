@@ -34,13 +34,13 @@ describe('App shell', () => {
     ]);
   });
 
-  it('menu lists both apps', async () => {
+  it('menu lists the three apps', async () => {
     const host = await at('/reference/skills');
 
     const menu = host.querySelector('#app-menu')!;
     expect(menu.hasAttribute('popover')).toBe(true);
-    expect([...menu.querySelectorAll('a')].map(a => a.textContent?.trim())).toEqual(['Rules Reference', 'NPC Manager']);
-    expect(hrefs(host, '#app-menu a')).toEqual(['/reference', '/npcs']);
+    expect([...menu.querySelectorAll('a')].map(a => a.textContent?.trim())).toEqual(['Rules Reference', 'NPC Manager', 'Character Creator']);
+    expect(hrefs(host, '#app-menu a')).toEqual(['/reference', '/npcs', '/characters']);
     const button = host.querySelector('button.menu-button')!;
     expect(button.getAttribute('popovertarget')).toBe('app-menu');
     expect(button.getAttribute('aria-label')).toBe('Menu');
@@ -55,6 +55,12 @@ describe('App shell', () => {
     host = await at('/reference/spells');
     expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Rules Reference');
     expect(host.querySelector('nav[aria-label="Sections"]')).not.toBeNull();
+  });
+
+  it('brand reads Character Creator on /characters', async () => {
+    const host = await at('/characters');
+    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Character Creator');
+    expect(host.querySelector('nav[aria-label="Sections"]')).toBeNull();
   });
 
   it('redirects the root, the old section paths and unknown paths into the Reference', async () => {

@@ -29,17 +29,40 @@ for (const viewport of viewports) {
   test.describe(`${viewport.width}×${viewport.height}`, () => {
     test.use({ viewport });
 
-    // The NPC Manager has no filter row, so it joins this check but not the filter alignment below.
-    for (const route of [...routes, '/npcs']) {
+    // The NPC Manager and the Character Creator have no filter row: they join this check but not the alignment below.
+    for (const route of [...routes, '/npcs', '/characters']) {
       test(`${route} is axe-clean and nothing overflows`, async ({ page }) => {
         await page.goto(route);
-        await page.locator('table').first().waitFor();
+        // The Character Creator has no table: wait for its heading, then for its data (the loader lifts).
+        await page.locator(route === '/characters' ? 'h1' : 'table').first().waitFor();
+        await expect(page.locator('.page-shell')).not.toHaveAttribute('inert');
 
         const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
         expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
         expect(await page.evaluate(overflow)).toEqual({ page: false, scrollingTables: 0, clipped: [] });
       });
     }
+
+    test('/characters: a random character with every step open is axe-clean, fits, and puts the summary beside or below', async ({ page }) => {
+      await page.goto('/characters');
+      await expect(page.locator('.page-shell')).not.toHaveAttribute('inert');
+      await page.getByRole('button', { name: 'Random character' }).click();
+      for (const summary of await page.locator('.creation-step summary').all()) {
+        if (!(await summary.evaluate(s => (s.parentElement as HTMLDetailsElement).open))) await summary.click();
+      }
+      await expect(page.locator('.step-done')).toHaveCount(11);
+
+      const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
+      expect(await page.evaluate(overflow)).toEqual({ page: false, scrollingTables: 0, clipped: [] });
+      const { steps, summary } = await page.evaluate(() => ({
+        steps: document.querySelector('.creation-steps')!.getBoundingClientRect().toJSON(),
+        summary: document.querySelector('.creation-summary')!.getBoundingClientRect().toJSON(),
+      }));
+      // Beside the steps from tablet width up, below them on a phone (positions on one page, no scroll in between).
+      if (viewport.width < 768) expect(summary.top).toBeGreaterThanOrEqual(steps.bottom);
+      else expect(summary.left).toBeGreaterThanOrEqual(steps.right);
+    });
   });
 }
 
