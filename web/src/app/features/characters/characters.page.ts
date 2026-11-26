@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import {
-  AgeDto, AppearanceDto, EquipmentItemDto, GearPackageDto, HeroicAbilityDto, KinDto, MagicSchoolDto, MementoDto, ProfessionDto, SkillDto,
+  AgeDto, AppearanceDto, EquipmentItemDto, HeroicAbilityDto, KinDto, MagicSchoolDto, MementoDto, ProfessionDto, SkillDto,
   SpellDto, WeaknessDto,
 } from '../../api/models';
 import { Character, CreationReference, SavedCharacter } from '../../character/character';
 import { CharacterStore } from '../../character/character.store';
 import {
-  Creation, CreationStep, DOSES, MAX_SPELLS, MAX_TRICKS, Step, chooseGearPackage, creationProblems, finishCreation, newCreation,
-  professionSkillList, schoolsAvailable, setAge, setAlchemistDoses, setAttributes, setHeroicAbility, setItemNote, setKin,
+  Creation, CreationStep, MAX_SPELLS, MAX_TRICKS, Step, creationProblems, finishCreation, newCreation,
+  professionSkillList, schoolsAvailable, setAge, setAttributes, setHeroicAbility, setKin,
   setProfession, setSchool, skillLimits, spellOptions, stepDone, swapAttributes, toggleSkill, toggleSpell, unchanged,
 } from '../../character/creation';
 import { randomCharacter, rollStep } from '../../character/random';
@@ -18,6 +18,7 @@ import { spellLabel } from '../../hero/hero-card';
 import { ChipPicker } from '../../shared/chip-picker';
 import { download, fileName } from '../../shared/file';
 import { CharacterSummary } from './character-summary';
+import { CreationGear } from './creation-gear';
 
 /** The creation steps in book order (Random rolls magic before skills; see random.ts). */
 const STEPS: { step: CreationStep; label: string }[] = [
@@ -36,14 +37,12 @@ const STEPS: { step: CreationStep; label: string }[] = [
 
 type TextField = 'name' | 'nickname' | 'weakness' | 'memento' | 'appearance';
 
-const doseName = (recipe: string) => `${recipe}, dose`;
-const enchantNote = (spell: string) => `Enchanted: ${spell} + PERMANENCE`;
 const valueOf = (event: Event) => (event.target as HTMLInputElement | HTMLSelectElement).value;
 
 /** Guided and random character creation (layout B): the steps on the left, the live summary beside or below them. */
 @Component({
   selector: 'app-characters-page',
-  imports: [ChipPicker, CharacterSummary],
+  imports: [ChipPicker, CharacterSummary, CreationGear],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './characters.page.html',
 })
@@ -144,32 +143,6 @@ export class CharactersPage {
     return !!choice;
   };
 
-  /** The chosen package with the school extras after it, as `packageChoices` indexes them. */
-  protected readonly packageEntries = computed(() => {
-    const c = this.creation();
-    const pkg = this.profession()?.gearPackages.find(p => p.rollFrom === c.gearPackage);
-    return pkg ? [...pkg.entries, ...(this.school()?.extras.flatMap(x => x.entries) ?? [])] : [];
-  });
-  protected readonly recipes = computed(() => this.creation().character.spells.filter(s => s.kind === 'Recipe').map(s => s.name));
-  /** The three dose boxes: the doses held, else what has been chosen so far. Reset only when the gear changes. */
-  protected readonly doses = linkedSignal({
-    source: () => this.creation().character.gear,
-    computation: gear => {
-      const held = gear.flatMap(g => this.recipes().filter(r => g.name === doseName(r)));
-      return held.length === DOSES ? held : Array<string>(DOSES).fill('');
-    },
-  });
-  protected readonly enchantingSpells = computed(() =>
-    this.creation().character.spells.filter(s => s.kind === 'Spell' && same(s.school, 'Enchanting')).map(s => s.name));
-  /** The enchanted item (index, -1 for none) and its spell, from the gear's note. Reset only when the gear changes. */
-  protected readonly enchantment = linkedSignal({
-    source: () => this.creation().character.gear,
-    computation: gear => {
-      const item = gear.findIndex(g => this.enchantingSpells().some(s => g.note === enchantNote(s)));
-      return { item, spell: item < 0 ? '' : this.enchantingSpells().find(s => gear[item].note === enchantNote(s))! };
-    },
-  });
-
   /** The six boxes: the rolled or entered scores, or what has been typed so far. */
   protected readonly typed = linkedSignal<Record<Attribute, number> | null, Partial<Record<Attribute, number>>>({
     source: () => this.creation().rolledAttributes,
@@ -186,12 +159,7 @@ export class CharactersPage {
     return `${age.freeSkills} free skills.${adjustments ? ` ${adjustments}.` : ''}`;
   }
 
-  /** "1–2: Broadsword, Battleaxe or Morningstar, …" (rations and silver are rolled, so left out). */
-  protected packageLabel(pkg: GearPackageDto): string {
-    return `${pkg.rollFrom}–${pkg.rollTo}: ${pkg.entries.filter(e => e.kind === 'Item').map(e => e.options.join(' or ')).join(', ')}`;
-  }
-
-  private apply(step: Step): void {
+  protected apply(step: Step): void {
     this.saveStatus.set('');
     this.creation.set(step.creation);
     this.cleared.set(step.cleared);
@@ -275,36 +243,6 @@ export class CharactersPage {
   protected removeSpell(spell: SpellRef): void {
     this.update(toggleSpell(this.creation(), spell, this.ref()!));
   }
-
-  protected choosePackage(event: Event): void {
-    const pkg = this.profession()?.gearPackages.find(p => String(p.rollFrom) === valueOf(event));
-    if (pkg) this.apply(chooseGearPackage(this.creation(), pkg, this.ref()!, this.roller));
-  }
-
-  /** A choice inside the held package: only that item changes. */
-  protected chooseOption(entry: number, event: Event): void {
-    const c = this.creation();
-    const pkg = this.profession()?.gearPackages.find(p => p.rollFrom === c.gearPackage);
-    if (pkg) this.apply(chooseGearPackage(c, pkg, this.ref()!, this.roller, { ...c.packageChoices, [entry]: Number(valueOf(event)) }));
-  }
-
-  protected chooseDose(index: number, event: Event): void {
-    const doses = this.doses().map((d, i) => (i === index ? valueOf(event) : d));
-    this.doses.set(doses);
-    if (doses.every(Boolean)) this.update(setAlchemistDoses(this.creation(), doses));
-  }
-
-  /** One item bears a known enchanting spell plus PERMANENCE; choosing another moves the note. */
-  protected enchant(part: 'item' | 'spell', event: Event): void {
-    const value = valueOf(event);
-    const next = { ...this.enchantment(), [part]: part === 'item' ? Number(value) : value };
-    this.enchantment.set(next);
-    let c = this.creation();
-    c.character.gear.forEach((g, i) => { if (g.note.startsWith('Enchanted: ')) c = setItemNote(c, i, ''); });
-    if (next.item >= 0 && next.spell) c = setItemNote(c, next.item, enchantNote(next.spell));
-    this.update(c);
-  }
-
   /** Stores the finished character and starts a fresh one. */
   protected save(): void {
     const saved = this.store.save(this.character());

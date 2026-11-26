@@ -194,66 +194,7 @@
                     </div>
                   }
                   @case ('gear') {
-                    @if (profession(); as p) {
-                      <div class="field">
-                        <label for="cc-gear">Gear package (D6)</label>
-                        <select id="cc-gear" (change)="choosePackage($event)">
-                          <option value="" [selected]="c.gearPackage === null" disabled>Choose a gear package</option>
-                          @for (pkg of p.gearPackages; track pkg.rollFrom) {
-                            <option [value]="pkg.rollFrom" [selected]="pkg.rollFrom === c.gearPackage">
-                              {{ packageLabel(pkg) }}
-                            </option>
-                          }
-                        </select>
-                      </div>
-                      @for (e of packageEntries(); track $index; let i = $index) {
-                        @if (e.options.length > 1) {
-                          <div class="field">
-                            <label [for]="'cc-option-' + i">Choose: {{ e.options.join(' or ') }}</label>
-                            <select [id]="'cc-option-' + i" (change)="chooseOption(i, $event)">
-                              @for (o of e.options; track $index; let j = $index) { <option [value]="j" [selected]="j === (c.packageChoices[i] ?? 0)">{{ o }}</option> }
-                            </select>
-                          </div>
-                        }
-                      }
-                      @if (school()?.name === 'Alchemy') {
-                        @if (recipes().length) {
-                          <div class="field-row">
-                            @for (d of doses(); track $index; let i = $index) {
-                              <div class="field">
-                                <label [for]="'cc-dose-' + i">Finished dose {{ i + 1 }}</label>
-                                <select [id]="'cc-dose-' + i" (change)="chooseDose(i, $event)">
-                                  <option value="" [selected]="!d" disabled>Choose a recipe</option>
-                                  @for (rec of recipes(); track rec) { <option [value]="rec" [selected]="rec === d">{{ rec }}</option> }
-                                </select>
-                              </div>
-                            }
-                          </div>
-                        } @else {
-                          <p>Pick your recipes under Heroic ability or magic: the three finished doses come from them.</p>
-                        }
-                      }
-                      @if (school()?.name === 'Enchanting' && ch.gear.length && enchantingSpells().length) {
-                        <div class="field-row">
-                          <div class="field">
-                            <label for="cc-enchant-item">Enchanted item</label>
-                            <select id="cc-enchant-item" (change)="enchant('item', $event)">
-                              <option value="-1" [selected]="enchantment().item < 0">None</option>
-                              @for (g of ch.gear; track $index; let i = $index) { <option [value]="i" [selected]="i === enchantment().item">{{ g.name }}</option> }
-                            </select>
-                          </div>
-                          <div class="field">
-                            <label for="cc-enchant-spell">Enchantment (+ PERMANENCE)</label>
-                            <select id="cc-enchant-spell" (change)="enchant('spell', $event)">
-                              <option value="" [selected]="!enchantment().spell" disabled>Choose a spell</option>
-                              @for (sp of enchantingSpells(); track sp) { <option [value]="sp" [selected]="sp === enchantment().spell">{{ sp }}</option> }
-                            </select>
-                          </div>
-                        </div>
-                      }
-                    } @else {
-                      <p>Choose a profession first.</p>
-                    }
+                    <app-creation-gear [creation]="c" [ref]="r" [profession]="profession()" [school]="school()" (changed)="apply($event)" />
                   }
                   @case ('appearance') {
                     <div class="field">
