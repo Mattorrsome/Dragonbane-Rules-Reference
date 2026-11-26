@@ -1,0 +1,133 @@
+@let d = draft();
+<h2 class="npc-heading" tabindex="-1" #heading>Edit {{ character().name }}</h2>
+<div class="npc-editor">
+  <form class="npc-form" (submit)="$event.preventDefault(); save()" novalidate>
+    <!-- Fixed at creation: advancement does not change them. -->
+    <p class="character-locked">
+      <span><b>Kin:</b> {{ d.kin }}</span>
+      <span><b>Profession:</b> {{ d.profession }}@if (d.school) { ({{ d.school }})}</span>
+      <span><b>Age:</b> {{ d.age }}</span>
+    </p>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="ce-name">Name</label>
+        <input id="ce-name" type="text" required [value]="d.name" (input)="setText('name', $event)" />
+      </div>
+      <div class="field">
+        <label for="ce-nickname">Nickname (optional)</label>
+        <input id="ce-nickname" type="text" [value]="d.nickname" (input)="setText('nickname', $event)" />
+      </div>
+    </div>
+
+    <fieldset class="chip-group">
+      <legend>Attributes (1-18)</legend>
+      <div class="field-row attribute-row">
+        @for (a of attributes; track a) {
+          <div class="field">
+            <label [for]="'ce-attr-' + a">{{ a }}</label>
+            <input [id]="'ce-attr-' + a" type="number" min="1" max="18" [value]="d.attributes[a]" (input)="setAttribute(a, $event)" />
+          </div>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="chip-group">
+      <legend>Skill levels (0-18)</legend>
+      <ul class="skill-levels">
+        @for (skill of skills(); track skill.name) {
+          <li>
+            <label [for]="'ce-skill-' + slug(skill.name)">{{ skill.name }}</label>
+            <input [id]="'ce-skill-' + slug(skill.name)" type="number" min="0" max="18" [value]="skill.level" (input)="setSkill(skill.name, $event)" />
+          </li>
+        }
+      </ul>
+    </fieldset>
+
+    <fieldset class="chip-group">
+      <legend>Heroic abilities</legend>
+      <app-chip-picker pickerId="ce-ability" noun="heroic ability" [options]="abilityOptions()" [accept]="acceptAbility" />
+      <ul class="chips" aria-label="Heroic abilities">
+        @for (ability of d.abilities; track ability.name) {
+          <li [attr.title]="prerequisite(ability.name)">
+            <span class="chip-name">{{ ability.name }}</span>
+            @if (isStacking(ability.name)) {
+              <input [id]="'ce-count-' + slug(ability.name)" type="number" min="1" class="chip-number" [attr.aria-label]="ability.name + ' count'"
+                [value]="ability.count" (input)="setCount(ability.name, $event)" />
+            }
+            <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + ability.name" (click)="removeAbility(ability.name)">✕</button>
+          </li>
+        }
+      </ul>
+    </fieldset>
+
+    <fieldset class="chip-group">
+      <legend>Spells</legend>
+      <app-chip-picker pickerId="ce-spell" noun="spell" [options]="spellLabels()" [accept]="acceptSpell" />
+      <ul class="chips" aria-label="Spells">
+        @for (spell of d.spells; track spellLabel(spell)) {
+          <li>
+            <span class="chip-name">{{ spellLabel(spell) }}</span>
+            <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + spellLabel(spell)" (click)="removeSpell(spell)">✕</button>
+          </li>
+        }
+      </ul>
+    </fieldset>
+
+    <fieldset class="chip-group">
+      <legend>Gear</legend>
+      <app-chip-picker pickerId="ce-gear" noun="gear item" [options]="gearOptions()" [accept]="acceptGear" />
+      <ul class="chips gear-chips" aria-label="Gear">
+        @for (item of d.gear; track $index; let i = $index) {
+          <li>
+            <span class="chip-name">{{ item.name }}</span>
+            <input type="number" min="1" class="chip-number" [attr.aria-label]="item.name + ' quantity'" [value]="item.quantity" (input)="setQuantity(i, $event)" />
+            <input type="text" class="chip-note" [attr.aria-label]="item.name + ' note'" placeholder="Note" [value]="item.note" (input)="setNote(i, $event)" />
+            <button type="button" class="chip-remove" [attr.aria-label]="'Remove ' + item.name" (click)="removeGear(i)">✕</button>
+          </li>
+        }
+      </ul>
+    </fieldset>
+
+    @if (money(); as m) {
+      <fieldset class="chip-group">
+        <legend>Money</legend>
+        <div class="field-row attribute-row">
+          @for (coin of coins; track coin) {
+            <div class="field">
+              <label [for]="'ce-' + coin">{{ coin }}</label>
+              <input [id]="'ce-' + coin" type="number" min="0" [value]="m[coin]" (change)="setCoins(coin, $event)" />
+            </div>
+          }
+        </div>
+      </fieldset>
+    }
+
+    <div class="field">
+      <label for="ce-weakness">Weakness (optional)</label>
+      <input id="ce-weakness" type="text" [value]="d.weakness" (input)="setText('weakness', $event)" />
+    </div>
+    <div class="field">
+      <label for="ce-memento">Memento (optional)</label>
+      <input id="ce-memento" type="text" [value]="d.memento" (input)="setText('memento', $event)" />
+    </div>
+    <div class="field">
+      <label for="ce-appearance">Appearance (optional)</label>
+      <input id="ce-appearance" type="text" [value]="d.appearance" (input)="setText('appearance', $event)" />
+    </div>
+
+    @if (errors().length) {
+      <ul class="form-errors" role="alert">
+        @for (error of errors(); track error) { <li>{{ error }}</li> }
+      </ul>
+    }
+    <div class="npc-form-actions">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-secondary" (click)="cancelled.emit()">Cancel</button>
+    </div>
+  </form>
+
+  <div class="npc-preview creation-summary">
+    <app-character-summary [character]="d" [ref]="ref()" [rolled]="true" />
+  </div>
+</div>

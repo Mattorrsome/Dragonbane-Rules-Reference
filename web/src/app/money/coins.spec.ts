@@ -1,4 +1,4 @@
-import { formatCoins, toDisplayCopper } from './coins';
+import { formatCoins, splitCoins, toDisplayCopper } from './coins';
 
 const r = { copper: 1, silver: 10, gold: 100 };
 
@@ -33,5 +33,12 @@ describe('toDisplayCopper', () => {
 
   it('never shows less than 1 copper', () => {
     expect(toDisplayCopper(0.1)).toBe(1);
+  });
+});
+
+describe('splitCoins', () => {
+  it('splits copper into gold, silver and copper', () => {
+    expect(splitCoins(1255, r)).toEqual({ gold: 12, silver: 5, copper: 5 });
+    expect(splitCoins(0, r)).toEqual({ gold: 0, silver: 0, copper: 0 });
   });
 });

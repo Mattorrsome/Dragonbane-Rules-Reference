@@ -17,6 +17,8 @@ import { ATTRIBUTES, Attribute, SpellRef, same, sameSpell } from '../../hero/her
 import { spellLabel } from '../../hero/hero-card';
 import { ChipPicker } from '../../shared/chip-picker';
 import { download, fileName } from '../../shared/file';
+import { slug } from '../../shared/text';
+import { CharacterEditor } from './character-editor';
 import { CharacterSummary } from './character-summary';
 import { CreationGear } from './creation-gear';
 
@@ -42,7 +44,7 @@ const valueOf = (event: Event) => (event.target as HTMLInputElement | HTMLSelect
 /** Guided and random character creation (layout B): the steps on the left, the live summary beside or below them. */
 @Component({
   selector: 'app-characters-page',
-  imports: [ChipPicker, CharacterSummary, CreationGear],
+  imports: [ChipPicker, CharacterEditor, CharacterSummary, CreationGear],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './characters.page.html',
 })
@@ -55,6 +57,9 @@ export class CharactersPage {
   /** What the last Save and the last JSON import did. */
   protected readonly saveStatus = signal('');
   protected readonly importStatus = signal('');
+  /** The saved character open in the editor (advancement), in place of the creator. */
+  protected readonly editing = signal<SavedCharacter | null>(null);
+  private editTrigger?: HTMLElement;
 
   private readonly resources = {
     skills: httpResource<SkillDto[]>(() => '/api/skills'),
@@ -79,6 +84,7 @@ export class CharactersPage {
   protected readonly steps = STEPS;
   protected readonly attributes = ATTRIBUTES;
   protected readonly spellLabel = spellLabel;
+  protected readonly slug = slug;
   protected readonly creation = signal<Creation>(newCreation());
   /** What the last change removed, for the polite live region. */
   protected readonly cleared = signal<string[]>([]);
@@ -251,8 +257,27 @@ export class CharactersPage {
     this.saveStatus.set(`Saved ${saved.name || 'the character'}.`);
   }
 
+  /** Opens the editor on a saved character; closing it returns focus to this Edit button. */
+  protected edit(c: SavedCharacter, event: Event): void {
+    this.editTrigger = event.currentTarget as HTMLElement;
+    this.editing.set(c);
+  }
+
+  /** Replaces the saved character (same id). */
+  protected saveEdit(c: SavedCharacter): void {
+    const saved = this.store.save(c);
+    this.closeEditor();
+    this.saveStatus.set(`Saved ${saved.name}.`);
+  }
+
+  protected closeEditor(): void {
+    this.editing.set(null);
+    this.editTrigger?.focus();
+  }
+
   protected remove(c: SavedCharacter): void {
     this.store.remove(c.id);
+    if (this.editing()?.id === c.id) this.editing.set(null);
     this.confirmingDelete.set(null);
     // The row and its buttons are gone; keep focus in the section.
     this.myHeading()?.nativeElement.focus();
@@ -281,10 +306,5 @@ export class CharactersPage {
     }
     // Choosing the same file again still fires change.
     input.value = '';
-  }
-
-  /** "Crossbows", "Hunting and Fishing" → "crossbows", "hunting-and-fishing": an element id has no spaces. */
-  protected slug(text: string): string {
-    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
 }

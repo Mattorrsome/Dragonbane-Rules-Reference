@@ -1339,3 +1339,52 @@ html {
 .creation-summary {
   position: static;
 }
+
+/* ================ CHARACTER EDITOR ================ */
+/* Kin, profession, age and school: fixed text, in the card's row style. */
+.character-locked {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
+  margin: 0;
+}
+
+/* Every skill: its name, then its level box. */
+.skill-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--spacing-xs) var(--spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+    margin: 0;
+    padding: 0;
+
+    &::before {
+      content: none;
+    }
+  }
+
+  input {
+    width: 4.2rem;
+  }
+}
+
+/* A gear chip holds a quantity and a note too: it wraps rather than run past a phone's edge. */
+.gear-chips {
+  li {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .chip-note {
+    flex: 1 1 8rem;
+    width: 10rem;
+  }
+}

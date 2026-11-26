@@ -77,7 +77,7 @@ export function derived(c: Character, ref: CreationReference) {
 }
 
 /** Sets a skill level (clamped 0-18); a skill not yet listed is added untrained. A level that is not a number changes nothing. */
-export function setSkillLevel(c: Character, name: string, level: number): Character {
+export function setSkillLevel<T extends Character>(c: T, name: string, level: number): T {
   if (Number.isNaN(level)) return c;
   const next = Math.min(18, Math.max(0, Math.trunc(level)));
   const has = c.skills.some(s => same(s.name, name));
@@ -89,6 +89,6 @@ export function setSkillLevel(c: Character, name: string, level: number): Charac
   };
 }
 
-export function setCharacterAbility(c: Character, name: string, count: number): Character {
+export function setCharacterAbility<T extends Character>(c: T, name: string, count: number): T {
   return { ...c, abilities: withAbilityCount(c.abilities, name, count).abilities };
 }

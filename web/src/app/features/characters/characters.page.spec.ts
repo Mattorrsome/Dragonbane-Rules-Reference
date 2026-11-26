@@ -5,6 +5,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { creationRef as ref } from '../../character/character.fixture';
 import { RANDOM } from '../../dice/dice-roller';
 import { seededRandom } from '../../dice/seeded-random';
+import { SavedCharacter } from '../../character/character';
 import { CharacterStore } from '../../character/character.store';
 import { CharactersPage } from './characters.page';
 
@@ -209,6 +210,96 @@ describe('CharactersPage', () => {
 
       expect(page.host.querySelector('.import-status')!.textContent).toContain('Nothing was imported.');
       expect(TestBed.inject(CharacterStore).characters()).toEqual([]);
+    });
+  });
+
+  describe('Edit', () => {
+    const aodhan: SavedCharacter = {
+      id: 'aodhan-1', name: 'Aodhan', nickname: '', kin: 'Human', profession: 'Mage', school: 'Animism', age: 'Adult',
+      attributes: { STR: 10, CON: 11, AGL: 9, INT: 10, WIL: 18, CHA: 10 },
+      skills: [{ name: 'Animism', level: 12, trained: true }], abilities: [], kinAbilities: ['Adaptive'], spells: [], gear: [],
+      copper: 0, weakness: '', memento: '', appearance: '',
+    };
+
+    beforeEach(() => {
+      localStorage.clear();
+      TestBed.inject(CharacterStore).save(aodhan);
+    });
+
+    async function edit() {
+      const page = await render();
+      await page.click('Edit Aodhan');
+      const editor = page.host.querySelector('app-character-editor')!;
+      const box = (id: string) => editor.querySelector<HTMLInputElement>(`#${id}`)!;
+      const type = async (id: string, value: string, event = 'input') => {
+        box(id).value = value;
+        box(id).dispatchEvent(new Event(event));
+        await TestBed.inject(ApplicationRef).whenStable();
+      };
+      return { ...page, editor, box, type };
+    }
+
+    it('shows kin, profession, age and school as text, with no rolls and no Random', async () => {
+      const page = await edit();
+
+      const locked = page.editor.querySelector('.character-locked')!;
+      expect(locked.textContent).toContain('Kin: Human');
+      expect(locked.textContent).toContain('Mage (Animism)');
+      expect(locked.querySelector('input, select')).toBeNull();
+      expect(page.host.querySelector('#cc-kin')).toBeNull();
+      expect(page.host.querySelector('.step-roll')).toBeNull();
+      expect(page.button('Random character')).toBeUndefined();
+    });
+
+    it('Robust 2 shows HP 15 in the summary', async () => {
+      const page = await edit();
+
+      await page.type('ce-ability-to-add', 'Robust');
+      await page.click('Add heroic ability');
+      await page.type('ce-count-robust', '2');
+
+      expect(page.summary()).toContain('HP: 15');
+    });
+
+    it('raising CON raises HP', async () => {
+      const page = await edit();
+
+      await page.type('ce-attr-CON', '13');
+
+      expect(page.summary()).toContain('HP: 13');
+    });
+
+    it('a skill can be set to 18 but not 19', async () => {
+      const page = await edit();
+
+      await page.type('ce-skill-awareness', '18');
+      expect(page.box('ce-skill-awareness').value).toBe('18');
+      await page.type('ce-skill-awareness', '19');
+      expect(page.box('ce-skill-awareness').value).toBe('18');
+    });
+
+    it('Save keeps the id and replaces the saved character; money is stored as copper', async () => {
+      const page = await edit();
+      const store = TestBed.inject(CharacterStore);
+
+      await page.type('ce-name', 'Aodhan the Bold');
+      await page.type('ce-silver', '3', 'change');
+      await page.type('ce-copper', '4', 'change');
+      await page.click('Save');
+
+      expect(store.characters().length).toBe(1);
+      expect(store.characters()[0]).toMatchObject({ id: 'aodhan-1', name: 'Aodhan the Bold', copper: 34 });
+      expect(page.host.querySelector('app-character-editor')).toBeNull();
+    });
+
+    it('Cancel discards the changes', async () => {
+      const page = await edit();
+
+      await page.type('ce-name', 'Bryn');
+      await page.click('Cancel');
+
+      expect(TestBed.inject(CharacterStore).characters()).toEqual([aodhan]);
+      expect(page.host.querySelector('app-character-editor')).toBeNull();
     });
   });
 });

@@ -191,7 +191,7 @@ export const creationRef: CreationReference = {
   spells: SPELLS,
   abilities: [
     ability('Master Blacksmith', 'Crafting 12'), ability('Master Carpenter', 'Crafting 12'), ability('Master Tanner', 'Crafting 12'),
-    ability('Musician', 'Performance 12'), ability('Veteran', 'Any weapon skill 12'),
+    ability('Musician', 'Performance 12'), ability('Veteran', 'Any weapon skill 12'), ability('Robust', 'None'), ability('Focused', 'None'),
   ],
   equipment: [],
   mementos: MEMENTOS.map((text, i) => ({ id: i + 1, roll: i + 1, text })),

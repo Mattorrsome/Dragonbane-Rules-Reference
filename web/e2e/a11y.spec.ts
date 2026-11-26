@@ -63,6 +63,28 @@ for (const viewport of viewports) {
       if (viewport.width < 768) expect(summary.top).toBeGreaterThanOrEqual(steps.bottom);
       else expect(summary.left).toBeGreaterThanOrEqual(steps.right);
     });
+
+    test('/characters: My characters and the editor are axe-clean and fit', async ({ page }) => {
+      const check = async () => {
+        const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+        expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
+        expect(await page.evaluate(overflow)).toEqual({ page: false, scrollingTables: 0, clipped: [] });
+      };
+      await page.goto('/characters');
+      await expect(page.locator('.page-shell')).not.toHaveAttribute('inert');
+      await page.getByRole('button', { name: 'Random character' }).click();
+      await page.getByRole('button', { name: 'Save', exact: true }).click();
+      await expect(page.locator('.characters-table tbody tr')).toHaveCount(1);
+      await check();
+
+      await page.locator('.characters-table').getByRole('button', { name: /^Edit / }).click();
+      await expect(page.locator('app-character-editor h2')).toBeFocused();
+      // A count box beside the gear chips (each with a quantity and a note) the random character carries.
+      await page.locator('#ce-ability-to-add').fill('Robust');
+      await page.getByRole('button', { name: 'Add heroic ability' }).click();
+      await expect(page.locator('#ce-count-robust')).toBeVisible();
+      await check();
+    });
   });
 }
 

@@ -3,6 +3,8 @@
 
   @if (loadFailed()) {
     <p class="status" role="alert">The creation tables could not be loaded. Is the API running?</p>
+  } @else if (editing(); as e) {
+    <app-character-editor [character]="e" [ref]="ref()!" (saved)="saveEdit($event)" (cancelled)="closeEditor()" />
   } @else if (ref(); as r) {
     @let c = creation();
     @let ch = c.character;
@@ -270,6 +272,8 @@
                     <button type="button" class="btn btn-primary btn-small" (click)="remove(saved)">Yes, delete</button>
                     <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
                   } @else {
+                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                      [attr.aria-label]="'Edit ' + saved.name" (click)="edit(saved, $event)">Edit</button>
                     <button type="button" class="btn btn-secondary btn-small"
                       [attr.aria-label]="'Export ' + saved.name" (click)="exportOne(saved)">Export</button>
                     <button type="button" class="btn btn-secondary btn-small"
