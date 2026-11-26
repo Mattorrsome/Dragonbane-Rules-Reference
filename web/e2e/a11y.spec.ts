@@ -88,6 +88,8 @@ test.describe('table headers stick under the navbar', () => {
 test('equipment controls by keyboard', async ({ page }) => {
   await page.goto('/reference/equipment');
   await page.locator('table').first().waitFor();
+  // The loader keeps the page inert (drops focus and keys) for at least its minimum time, even after the table is drawn.
+  await expect(page.locator('.page-shell')).not.toHaveAttribute('inert');
 
   await page.locator('input[name="price-mode"][value="buy"]').focus();
   await page.keyboard.press('ArrowRight');
