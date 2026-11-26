@@ -18,10 +18,12 @@ export function rollAttribute(roller: DiceRoller): number {
   return faces[1] + faces[2] + faces[3];
 }
 
-/** The row whose roll range holds a `sides`-sided roll. */
+/** The row whose roll range holds a `sides`-sided roll; throws when the table has a gap. */
 export function rollOnTable<T extends { rollFrom: number; rollTo: number }>(roller: DiceRoller, sides: number, rows: readonly T[]): T {
   const [roll] = roller.roll(1, sides);
-  return rows.find(r => roll >= r.rollFrom && roll <= r.rollTo) ?? rows[rows.length - 1];
+  const row = rows.find(r => roll >= r.rollFrom && roll <= r.rollTo);
+  if (!row) throw new Error(`No row covers a roll of ${roll} on a D${sides}.`);
+  return row;
 }
 
 /** The age's attribute adjustments, each score kept within 3..18. */

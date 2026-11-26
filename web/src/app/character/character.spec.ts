@@ -45,4 +45,8 @@ describe('skills', () => {
     expect(c.skills).toEqual([{ name: 'Swords', level: 18, trained: false }]);
     expect(setSkillLevel(c, 'Swords', -2).skills[0].level).toBe(0);
   });
+  it('setSkillLevel ignores a level that is not a number', () => {
+    const c = setSkillLevel(aodhan(), 'Swords', 12);
+    expect(setSkillLevel(c, 'Swords', NaN)).toBe(c);
+  });
 });

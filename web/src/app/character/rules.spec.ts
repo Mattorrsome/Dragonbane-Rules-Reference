@@ -35,6 +35,9 @@ describe('rolls', () => {
     const rows = [{ rollFrom: 1, rollTo: 3, n: 'a' }, { rollFrom: 4, rollTo: 6, n: 'b' }];
     expect(rollOnTable(rollerGiving(5), 6, rows).n).toBe('b');
   });
+  it('rollOnTable names the roll no row covers', () => {
+    expect(() => rollOnTable(rollerGiving(5), 6, [{ rollFrom: 1, rollTo: 3 }])).toThrowError('No row covers a roll of 5 on a D6.');
+  });
 });
 
 describe('applyAge', () => {
