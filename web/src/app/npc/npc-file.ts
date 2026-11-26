@@ -1,3 +1,4 @@
+import { parseListFile } from '../shared/list-store';
 import { DAMAGE_BONUS_ATTRIBUTES, DamageBonus, DEFAULT_MOVEMENT, NpcSpellRef, SavedNpc } from './npc';
 
 const DICE = ['D4', 'D6'];
@@ -8,23 +9,7 @@ const SPELL_KINDS = ['Spell', 'Trick', 'Recipe'];
  * and where, in words a GM can act on; nothing is returned in that case, so a bad file imports nothing.
  */
 export function parseNpcFile(text: string): SavedNpc[] {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    throw new Error('That file is not valid JSON.');
-  }
-  if (!Array.isArray(parsed)) throw new Error('That file does not hold a list of NPCs.');
-  if (!parsed.length) throw new Error('That file holds no NPCs.');
-
-  const firstWithId = new Map<string, number>();
-  return parsed.map((entry, i) => {
-    const npc = checkNpc(entry, i + 1);
-    const earlier = firstWithId.get(npc.id);
-    if (earlier) throw new Error(`NPC ${i + 1} ("${npc.name}") has the same id as NPC ${earlier}.`);
-    firstWithId.set(npc.id, i + 1);
-    return npc;
-  });
+  return parseListFile(text, checkNpc, 'NPC');
 }
 
 /**
