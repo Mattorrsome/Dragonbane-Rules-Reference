@@ -31,6 +31,14 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
     public DbSet<NpcSkill> NpcSkills => Set<NpcSkill>();
     public DbSet<NpcHeroicAbility> NpcHeroicAbilities => Set<NpcHeroicAbility>();
     public DbSet<NpcGear> NpcGear => Set<NpcGear>();
+    public DbSet<Kin> Kin => Set<Kin>();
+    public DbSet<KinAbility> KinAbilities => Set<KinAbility>();
+    public DbSet<KinName> KinNames => Set<KinName>();
+    public DbSet<Age> Ages => Set<Age>();
+    public DbSet<AgeAdjustment> AgeAdjustments => Set<AgeAdjustment>();
+    public DbSet<Memento> Mementos => Set<Memento>();
+    public DbSet<Weakness> Weaknesses => Set<Weakness>();
+    public DbSet<Appearance> Appearances => Set<Appearance>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -62,6 +70,15 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
         model.Entity<NpcSkill>().ToTable(t => t.HasCheckConstraint(
             "CK_NpcSkill_OneName", "(\"SkillId\" IS NULL) <> (\"UnlinkedName\" IS NULL)"));
         model.Entity<Npc>().HasIndex(e => e.Name).IsUnique();
+
+        model.Entity<Kin>().HasMany(k => k.Abilities).WithOne().HasForeignKey(a => a.KinId);
+        model.Entity<Kin>().HasMany(k => k.Names).WithOne().HasForeignKey(n => n.KinId);
+        model.Entity<Age>().HasMany(a => a.Adjustments).WithOne().HasForeignKey(j => j.AgeId);
+        model.Entity<Kin>().HasIndex(e => e.Name).IsUnique();
+        model.Entity<Age>().HasIndex(e => e.Name).IsUnique();
+        model.Entity<Weakness>().HasIndex(e => e.Name).IsUnique();
+        model.Entity<KinAbility>().HasIndex(e => new { e.KinId, e.Name }).IsUnique();
+        model.Entity<KinName>().HasIndex(e => new { e.KinId, e.Roll }).IsUnique();
 
         model.Entity<CurrencyRate>().HasIndex(e => e.Name).IsUnique();
         model.Entity<EquipmentCategory>().HasIndex(e => e.Name).IsUnique();
