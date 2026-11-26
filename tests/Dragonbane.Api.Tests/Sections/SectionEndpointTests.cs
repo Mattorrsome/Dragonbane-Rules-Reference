@@ -31,6 +31,36 @@ public class SectionEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory
         Assert.Equal(count, (await List($"/api/{section}")).Length);
 
     [Fact]
+    public async Task Kin_lists_six_and_mallard_has_two_abilities()
+    {
+        var kin = await List("/api/kin");
+
+        Assert.Equal(6, kin.Length);
+        Assert.Equal(2, kin.Single(k => k.GetProperty("name").GetString() == "Mallard").GetProperty("abilities").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Fighter_has_three_gear_packages()
+    {
+        var id = await IdOf("professions", "Fighter");
+        var fighter = (await _client.GetFromJsonAsync<JsonElement>($"/api/professions/{id}", Json))!;
+
+        Assert.Equal(3, fighter.GetProperty("gearPackages").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Harmonism_requires_bard()
+    {
+        var harmonism = (await List("/api/magic-schools")).Single(s => s.GetProperty("name").GetString() == "Harmonism");
+
+        Assert.Equal("Bard", harmonism.GetProperty("requiredProfession").GetString());
+    }
+
+    [Fact]
+    public async Task Weaknesses_returns_twenty() =>
+        Assert.Equal(20, (await List("/api/weaknesses")).Length);
+
+    [Fact]
     public async Task Npcs_list_in_source_order()
     {
         var npcs = await List("/api/npcs");

@@ -5,9 +5,10 @@ import { provideRouter } from '@angular/router';
 import { MagicSchoolDto, SpellDto } from '../../api/models';
 import { SpellsPage } from './spells.page';
 
+const creation = { skill: null, startingSkills: [], requiredProfession: null, requiredSkill: null, requiredSkillLevel: null, choosableAtCreation: true, extras: [] };
 const schools: MagicSchoolDto[] = [
-  { id: 1, name: 'General Magic', description: 'Universal magic.', note: null },
-  { id: 2, name: 'Animism', description: 'Nature magic.', note: 'Animists commune with nature.' },
+  { id: 1, name: 'General Magic', description: 'Universal magic.', note: null, ...creation },
+  { id: 2, name: 'Animism', description: 'Nature magic.', note: 'Animists commune with nature.', ...creation },
 ];
 
 const trick: SpellDto = {

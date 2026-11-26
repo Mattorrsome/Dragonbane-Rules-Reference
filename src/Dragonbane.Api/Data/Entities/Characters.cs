@@ -57,7 +57,7 @@ public class Memento : IEntity
     public string Text { get; set; } = "";
 }
 
-public class Weakness : IEntity
+public class Weakness : INamedEntity
 {
     public int Id { get; set; }
     public int Roll { get; set; }

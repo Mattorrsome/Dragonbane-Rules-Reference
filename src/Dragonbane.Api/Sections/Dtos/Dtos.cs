@@ -35,10 +35,20 @@ public sealed record SpellDto(int Id, string Name, int SchoolId, string School, 
         s is Recipe ? new RecipeDto(((Recipe)s).CostPerDoseCopper, ((Recipe)s).CostPerDoseUnit, ((Recipe)s).Supply!.Name) : null);
 }
 
-public sealed record MagicSchoolDto(int Id, string Name, string Description, string? Note) : ISectionDto<MagicSchool, MagicSchoolDto>
+public sealed record MagicSchoolDto(int Id, string Name, string Description, string? Note, string? Skill, string[] StartingSkills,
+    string? RequiredProfession, string? RequiredSkill, int? RequiredSkillLevel, bool ChoosableAtCreation, GearPackageDto[] Extras)
+    : ISectionDto<MagicSchool, MagicSchoolDto>
 {
-    public static Expression<Func<MagicSchool, MagicSchoolDto>> Projection { get; } = m =>
-        new MagicSchoolDto(m.Id, m.Name, m.Description, m.Note);
+    public static Expression<Func<MagicSchool, MagicSchoolDto>> Projection { get; } = m => new MagicSchoolDto(
+        m.Id, m.Name, m.Description, m.Note, m.Skill!.Name,
+        m.StartingSkills.OrderBy(s => s.Id).Select(s => s.Skill.Name).ToArray(),
+        m.RequiredProfession!.Name, m.RequiredSkill!.Name, m.RequiredSkillLevel, m.ChoosableAtCreation,
+        m.ExtraGearPackages.OrderBy(g => g.Id).Select(g => new GearPackageDto(
+            g.RollFrom, g.RollTo,
+            g.Entries.OrderBy(e => e.Id).Select(e => new GearEntryDto(
+                e.Kind, e.Quantity, e.DiceCount, e.DiceSides,
+                e.Options.OrderBy(o => o.Id).Select(o => o.EquipmentItem != null ? o.EquipmentItem.Name : o.UnlinkedName!).ToArray()))
+                .ToArray())).ToArray());
 }
 
 public sealed record WeaponDto(string? Grip, int? StrRequirement, string Range, string Damage, int? Durability, bool IsRanged,
@@ -111,4 +121,61 @@ public sealed record NpcDto(int Id, string Name, bool IsBoss, int Hp, int? Wp, s
         n.Skills.OrderBy(s => s.Id).Select(s => new NpcSkillDto(s.Skill != null ? s.Skill.Name : s.UnlinkedName!, s.Level)).ToArray(),
         n.HeroicAbilities.OrderBy(a => a.Id).Select(a => new NpcHeroicAbilityDto(a.HeroicAbility.Name, a.Count)).ToArray(),
         n.Gear.OrderBy(g => g.Id).Select(g => g.EquipmentItem.Name).ToArray());
+}
+
+public sealed record KinAbilityDto(string Name, int? Wp, string Effect);
+
+public sealed record KinDto(int Id, string Name, int RollFrom, int RollTo, int Movement, KinAbilityDto[] Abilities, string[] Names)
+    : ISectionDto<Kin, KinDto>
+{
+    public static Expression<Func<Kin, KinDto>> Projection { get; } = k => new KinDto(
+        k.Id, k.Name, k.RollFrom, k.RollTo, k.Movement,
+        k.Abilities.OrderBy(a => a.Id).Select(a => new KinAbilityDto(a.Name, a.Wp, a.Effect)).ToArray(),
+        k.Names.OrderBy(n => n.Roll).ThenBy(n => n.Id).Select(n => n.Name).ToArray());
+}
+
+/// <summary>An entry's amount is Quantity, or DiceCount D DiceSides when those are set. Several options mean a choice.</summary>
+public sealed record GearEntryDto(GearEntryKind Kind, int Quantity, int? DiceCount, int? DiceSides, string[] Options);
+
+public sealed record GearPackageDto(int RollFrom, int RollTo, GearEntryDto[] Entries);
+
+public sealed record ProfessionDto(int Id, string Name, int Roll, string KeyAttribute, string[] Skills, string[] HeroicAbilities,
+    string[] Nicknames, GearPackageDto[] GearPackages) : ISectionDto<Profession, ProfessionDto>
+{
+    public static Expression<Func<Profession, ProfessionDto>> Projection { get; } = p => new ProfessionDto(
+        p.Id, p.Name, p.Roll, p.KeyAttribute.Code,
+        p.Skills.OrderBy(s => s.Id).Select(s => s.Skill.Name).ToArray(),
+        p.HeroicAbilities.OrderBy(h => h.Id).Select(h => h.HeroicAbility.Name).ToArray(),
+        p.Nicknames.OrderBy(n => n.Roll).ThenBy(n => n.Id).Select(n => n.Name).ToArray(),
+        p.GearPackages.OrderBy(g => g.RollFrom).ThenBy(g => g.Id).Select(g => new GearPackageDto(
+            g.RollFrom, g.RollTo,
+            g.Entries.OrderBy(e => e.Id).Select(e => new GearEntryDto(
+                e.Kind, e.Quantity, e.DiceCount, e.DiceSides,
+                e.Options.OrderBy(o => o.Id).Select(o => o.EquipmentItem != null ? o.EquipmentItem.Name : o.UnlinkedName!).ToArray()))
+                .ToArray())).ToArray());
+}
+
+public sealed record AgeAdjustmentDto(string Attribute, int Delta);
+
+public sealed record AgeDto(int Id, string Name, int RollFrom, int RollTo, int FreeSkills, AgeAdjustmentDto[] Adjustments)
+    : ISectionDto<Age, AgeDto>
+{
+    public static Expression<Func<Age, AgeDto>> Projection { get; } = a => new AgeDto(
+        a.Id, a.Name, a.RollFrom, a.RollTo, a.FreeSkills,
+        a.Adjustments.OrderBy(j => j.Id).Select(j => new AgeAdjustmentDto(j.Attribute.Code, j.Delta)).ToArray());
+}
+
+public sealed record MementoDto(int Id, int Roll, string Text) : ISectionDto<Memento, MementoDto>
+{
+    public static Expression<Func<Memento, MementoDto>> Projection { get; } = m => new MementoDto(m.Id, m.Roll, m.Text);
+}
+
+public sealed record WeaknessDto(int Id, int Roll, string Name, string Text) : ISectionDto<Weakness, WeaknessDto>
+{
+    public static Expression<Func<Weakness, WeaknessDto>> Projection { get; } = w => new WeaknessDto(w.Id, w.Roll, w.Name, w.Text);
+}
+
+public sealed record AppearanceDto(int Id, int Roll, string Text) : ISectionDto<Appearance, AppearanceDto>
+{
+    public static Expression<Func<Appearance, AppearanceDto>> Projection { get; } = a => new AppearanceDto(a.Id, a.Roll, a.Text);
 }

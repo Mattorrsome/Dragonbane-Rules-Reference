@@ -61,3 +61,9 @@ public sealed record NameFilter<TEntity>(string? Search) : ISectionFilter<TEntit
     public IQueryable<TEntity> Apply(IQueryable<TEntity> query) =>
         Search is { Length: > 0 } search ? query.Where(e => EF.Functions.Like(e.Name, Contains(search), Escape)) : query;
 }
+
+/// <summary>For roll tables with no name to search (mementos, appearances): returns every row.</summary>
+public sealed record AllRows<TEntity> : ISectionFilter<TEntity> where TEntity : class
+{
+    public IQueryable<TEntity> Apply(IQueryable<TEntity> query) => query;
+}

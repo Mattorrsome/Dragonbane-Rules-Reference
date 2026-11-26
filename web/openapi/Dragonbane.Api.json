@@ -833,10 +833,451 @@
           }
         }
       }
+    },
+    "/api/kin": {
+      "get": {
+        "tags": [
+          "kin"
+        ],
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KinDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kin/{id}": {
+      "get": {
+        "tags": [
+          "kin"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KinDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/professions": {
+      "get": {
+        "tags": [
+          "professions"
+        ],
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProfessionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/professions/{id}": {
+      "get": {
+        "tags": [
+          "professions"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfessionDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/ages": {
+      "get": {
+        "tags": [
+          "ages"
+        ],
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ages/{id}": {
+      "get": {
+        "tags": [
+          "ages"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mementos": {
+      "get": {
+        "tags": [
+          "mementos"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MementoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mementos/{id}": {
+      "get": {
+        "tags": [
+          "mementos"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MementoDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/weaknesses": {
+      "get": {
+        "tags": [
+          "weaknesses"
+        ],
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeaknessDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/weaknesses/{id}": {
+      "get": {
+        "tags": [
+          "weaknesses"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeaknessDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/appearances": {
+      "get": {
+        "tags": [
+          "appearances"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppearanceDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/appearances/{id}": {
+      "get": {
+        "tags": [
+          "appearances"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppearanceDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AgeAdjustmentDto": {
+        "required": [
+          "attribute",
+          "delta"
+        ],
+        "type": "object",
+        "properties": {
+          "attribute": {
+            "type": "string"
+          },
+          "delta": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AgeDto": {
+        "required": [
+          "id",
+          "name",
+          "rollFrom",
+          "rollTo",
+          "freeSkills",
+          "adjustments"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rollFrom": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rollTo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "freeSkills": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "adjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgeAdjustmentDto"
+            }
+          }
+        }
+      },
+      "AppearanceDto": {
+        "required": [
+          "id",
+          "roll",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "roll": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "ArmourDto": {
         "required": [
           "rating",
@@ -998,6 +1439,75 @@
           }
         }
       },
+      "GearEntryDto": {
+        "required": [
+          "kind",
+          "quantity",
+          "diceCount",
+          "diceSides",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/GearEntryKind"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "diceCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "diceSides": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GearEntryKind": {
+        "enum": [
+          "Item",
+          "Silver"
+        ]
+      },
+      "GearPackageDto": {
+        "required": [
+          "rollFrom",
+          "rollTo",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "rollFrom": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rollTo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GearEntryDto"
+            }
+          }
+        }
+      },
       "GlossaryDtoOfSupply": {
         "required": [
           "id",
@@ -1086,12 +1596,87 @@
           }
         }
       },
+      "KinAbilityDto": {
+        "required": [
+          "name",
+          "wp",
+          "effect"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "wp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "effect": {
+            "type": "string"
+          }
+        }
+      },
+      "KinDto": {
+        "required": [
+          "id",
+          "name",
+          "rollFrom",
+          "rollTo",
+          "movement",
+          "abilities",
+          "names"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rollFrom": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rollTo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "movement": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "abilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KinAbilityDto"
+            }
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "MagicSchoolDto": {
         "required": [
           "id",
           "name",
           "description",
-          "note"
+          "note",
+          "skill",
+          "startingSkills",
+          "requiredProfession",
+          "requiredSkill",
+          "requiredSkillLevel",
+          "choosableAtCreation",
+          "extras"
         ],
         "type": "object",
         "properties": {
@@ -1110,6 +1695,67 @@
               "null",
               "string"
             ]
+          },
+          "skill": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startingSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredProfession": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredSkill": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredSkillLevel": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "choosableAtCreation": {
+            "type": "boolean"
+          },
+          "extras": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GearPackageDto"
+            }
+          }
+        }
+      },
+      "MementoDto": {
+        "required": [
+          "id",
+          "roll",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "roll": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "text": {
+            "type": "string"
           }
         }
       },
@@ -1210,6 +1856,59 @@
           "level": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ProfessionDto": {
+        "required": [
+          "id",
+          "name",
+          "roll",
+          "keyAttribute",
+          "skills",
+          "heroicAbilities",
+          "nicknames",
+          "gearPackages"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "roll": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "keyAttribute": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "heroicAbilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nicknames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gearPackages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GearPackageDto"
+            }
           }
         }
       },
@@ -1544,6 +2243,31 @@
           }
         }
       },
+      "WeaknessDto": {
+        "required": [
+          "id",
+          "roll",
+          "name",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "roll": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "WeaponDto": {
         "required": [
           "grip",
@@ -1635,6 +2359,24 @@
     },
     {
       "name": "npcs"
+    },
+    {
+      "name": "kin"
+    },
+    {
+      "name": "professions"
+    },
+    {
+      "name": "ages"
+    },
+    {
+      "name": "mementos"
+    },
+    {
+      "name": "weaknesses"
+    },
+    {
+      "name": "appearances"
     }
   ]
 }
