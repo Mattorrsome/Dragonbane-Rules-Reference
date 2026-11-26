@@ -7,6 +7,7 @@ import { fromTypical, Npc, NpcReference, SavedNpc } from '../../npc/npc';
 import { download } from '../../shared/file';
 import { NpcStore } from '../../npc/npc.store';
 import { NpcEditor } from './npc-editor';
+import { BackdropDismiss, toggleDialog } from '../../shared/dialog';
 import { NpcExportMenu } from './npc-export-menu';
 
 /** A name in a typical NPC's cell, with its Reference description when it has one. */
@@ -50,8 +51,8 @@ export class NpcsPage {
 
   constructor() {
     // Each dialog follows its signal: open while it holds an NPC, closed otherwise.
-    effect(() => toggle(this.dialog().nativeElement, !!this.editing()));
-    effect(() => toggle(this.exportDialog().nativeElement, !!this.exporting()));
+    effect(() => toggleDialog(this.dialog().nativeElement, !!this.editing()));
+    effect(() => toggleDialog(this.exportDialog().nativeElement, !!this.exporting()));
   }
 
   protected save(npc: Npc): void {
@@ -59,25 +60,10 @@ export class NpcsPage {
     this.editing.set(null);
   }
 
+  protected readonly backdrop = new BackdropDismiss();
+
   protected close(): void {
     this.editing.set(null);
-  }
-
-  /** Whether the last press began on a dialog's backdrop (not inside its box). */
-  private pressedOnBackdrop = false;
-
-  protected pressStart(event: MouseEvent): void {
-    this.pressedOnBackdrop = onBackdrop(event);
-  }
-
-  /**
-   * A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. Both the
-   * press and the release must be on the backdrop, so a text selection dragged out of the editor keeps the draft.
-   * The dialog's (close) event then clears its signal.
-   */
-  protected closeOnBackdrop(event: MouseEvent): void {
-    if (this.pressedOnBackdrop && onBackdrop(event)) (event.currentTarget as HTMLDialogElement).close();
-    this.pressedOnBackdrop = false;
   }
 
   protected tweak(dto: NpcDto): void {
@@ -137,18 +123,4 @@ export class NpcsPage {
       return { text: name, description: item ? describeItem(item) : null };
     });
   }
-}
-
-/** The event hit the dialog element itself at a point outside its box: the backdrop. */
-function onBackdrop(event: MouseEvent): boolean {
-  const dialog = event.currentTarget as HTMLDialogElement;
-  if (event.target !== dialog) return false;
-  const box = dialog.getBoundingClientRect();
-  return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
-}
-
-/** Opens a modal dialog or closes it, whichever it is not already. */
-function toggle(dialog: HTMLDialogElement, open: boolean): void {
-  if (open && !dialog.open) dialog.showModal();
-  if (!open && dialog.open) dialog.close();
 }

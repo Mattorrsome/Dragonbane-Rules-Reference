@@ -1,5 +1,5 @@
 import { Attribute, ATTRIBUTES, findItem, formatDamageBonus } from '../hero/hero';
-import { abilityEntries, CardEntry, spellEntries } from '../hero/hero-card';
+import { abilityEntries, CardEntry, entryLines, hasDetail, spellEntries } from '../hero/hero-card';
 import { Npc, NpcReference, npcAttributes } from './npc';
 
 /**
@@ -81,14 +81,14 @@ function rows(card: NpcCard): Row[][] {
 }
 
 /** A list row is written as one line until any entry has a description; then one entry per line. */
-const listed = (row: Row) => !!row.entries?.some(e => e.detail);
+const listed = (row: Row) => hasDetail(row.entries);
 const inline = (row: Row) => row.text ?? row.entries!.map(e => e.text).join(', ');
 
 export function cardToText(card: NpcCard): string {
   const out = [card.name, ...(card.description ? [card.description] : []), ''];
   for (const line of rows(card)) {
     if (line.length === 1 && listed(line[0])) {
-      out.push(`${line[0].label}:`, ...line[0].entries!.map(e => (e.detail ? `- ${e.text}: ${e.detail}` : `- ${e.text}`)));
+      out.push(`${line[0].label}:`, ...entryLines(line[0].entries!, false));
     } else {
       out.push(line.map(r => `${r.label}: ${inline(r)}`).join(' · '));
     }
@@ -101,7 +101,7 @@ export function cardToMarkdown(card: NpcCard): string {
   for (const line of rows(card)) {
     if (line.length === 1 && listed(line[0])) {
       // Lists need a blank line around them to render as lists.
-      out.push(`**${line[0].label}:**`, '', ...line[0].entries!.map(e => (e.detail ? `- **${e.text}**: ${e.detail}` : `- **${e.text}**`)), '');
+      out.push(`**${line[0].label}:**`, '', ...entryLines(line[0].entries!, true), '');
     } else {
       // Two trailing spaces: a line break inside the stat block.
       out.push(line.map(r => `**${r.label}:** ${inline(r)}`).join(' · ') + '  ');

@@ -3,7 +3,7 @@ import { Character, CreationReference, derived } from '../../character/character
 import { CurrencyRatesService } from '../../core/currency-rates';
 import { abilityEntries, spellEntries } from '../../hero/hero-card';
 import { ATTRIBUTES, formatDamageBonus } from '../../hero/hero';
-import { formatCoins } from '../../money/coins';
+import { gearLabel, moneyText } from '../../character/display';
 
 /** The character as it stands, in the NPC card's style: the creator's live preview. */
 @Component({
@@ -26,10 +26,6 @@ export class CharacterSummary {
     [...this.character().kinAbilities, ...abilityEntries(this.character().abilities, this.ref(), false).map(e => e.text)].join(', '));
   protected readonly spells = computed(() => spellEntries(this.character().spells, this.ref(), false).map(e => e.text).join(', '));
   protected readonly gear = computed(() =>
-    this.character().gear.map(g => `${g.quantity > 1 ? `${g.quantity} × ` : ''}${g.name}${g.note ? ` (${g.note})` : ''}`).join(', '));
-  protected readonly money = computed(() => {
-    const rates = this.rates();
-    const copper = this.character().copper;
-    return rates ? formatCoins(copper, 'gold', rates) : `${copper} copper`;
-  });
+    this.character().gear.map(gearLabel).join(', '));
+  protected readonly money = computed(() => moneyText(this.character().copper, this.rates()));
 }

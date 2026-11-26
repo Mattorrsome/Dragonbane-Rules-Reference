@@ -295,7 +295,7 @@
 </section>
 
 <!-- Export: copy or download a saved character as an image, text or Markdown. -->
-<dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (mousedown)="pressStart($event)" (click)="closeOnBackdrop($event)">
+<dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (mousedown)="backdrop.pressStart($event)" (click)="backdrop.closeOnBackdrop($event)">
   <button type="button" class="dialog-close" aria-label="Close" (click)="exporting.set(null)"></button>
   <div class="dialog-body">
     @if (exporting(); as saved) {

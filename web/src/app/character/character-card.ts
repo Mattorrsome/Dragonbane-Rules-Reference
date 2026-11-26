@@ -1,8 +1,8 @@
 import { CurrencyRates } from '../core/currency-rates';
 import { ATTRIBUTES, findItem, formatDamageBonus, same } from '../hero/hero';
-import { abilityEntries, CardEntry, spellEntries } from '../hero/hero-card';
-import { formatCoins } from '../money/coins';
+import { abilityEntries, CardEntry, entryLines, hasDetail, spellEntries } from '../hero/hero-card';
 import { Character, CreationReference, derived, skillLevel } from './character';
+import { gearLabel, moneyText } from './display';
 
 /** One labelled row: plain `text`, or list `entries` (one per line once any has a description). Empty rows are not built. */
 export interface CardRow {
@@ -36,7 +36,7 @@ export function buildCharacterCard(c: Character, ref: CreationReference, withDes
   const gear: string[] = [];
   for (const g of c.gear) {
     const item = findItem(ref, g.name);
-    const label = `${g.quantity > 1 ? `${g.quantity} × ` : ''}${g.name}`;
+    const label = gearLabel({ ...g, note: '' });
     const note = g.note ? ` (${g.note})` : '';
     if (item?.weapon) {
       const skill = ref.skills.find(s => same(s.name, item.weapon!.skill));
@@ -63,7 +63,7 @@ export function buildCharacterCard(c: Character, ref: CreationReference, withDes
     text('Weapons', weapons.join(', ')),
     text('Armour', armour.join(', ')),
     text('Gear', gear.join(', ')),
-    text('Money', c.copper > 0 ? (rates ? formatCoins(c.copper, 'gold', rates) : `${c.copper} copper`) : ''),
+    text('Money', c.copper > 0 ? moneyText(c.copper, rates) : ''),
     text('Weakness', c.weakness),
     text('Memento', c.memento),
     text('Appearance', c.appearance),
@@ -73,13 +73,10 @@ export function buildCharacterCard(c: Character, ref: CreationReference, withDes
   return { name: c.name, nickname: c.nickname, identity: [c.kin, `${c.profession}${school}`, c.age].filter(Boolean).join(', '), rows };
 }
 
-/** A list row is written one entry per line once any entry has a description. */
-export const listed = (row: CardRow) => !!row.entries?.some(e => e.detail);
-
 export function characterCardToText(card: CharacterCard): string {
   const out = [card.name, ...(card.nickname ? [`“${card.nickname}”`] : []), card.identity, ''];
   for (const row of card.rows) {
-    if (listed(row)) out.push(`${row.label}:`, ...row.entries!.map(e => (e.detail ? `- ${e.text}: ${e.detail}` : `- ${e.text}`)));
+    if (hasDetail(row.entries)) out.push(`${row.label}:`, ...entryLines(row.entries!, false));
     else out.push(`${row.label}: ${row.text}`);
   }
   return out.join('\n');
@@ -89,7 +86,7 @@ export function characterCardToMarkdown(card: CharacterCard): string {
   const out = [`# ${card.name}`, '', ...(card.nickname ? [`*“${card.nickname}”*`, ''] : []), card.identity, ''];
   for (const row of card.rows) {
     out.push(`## ${row.label}`, '');
-    if (listed(row)) out.push(...row.entries!.map(e => (e.detail ? `- **${e.text}**: ${e.detail}` : `- **${e.text}**`)));
+    if (hasDetail(row.entries)) out.push(...entryLines(row.entries!, true));
     else out.push(row.text);
     out.push('');
   }

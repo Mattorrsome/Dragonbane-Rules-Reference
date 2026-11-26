@@ -72,3 +72,13 @@ describe('character card', () => {
     expect(text).toContain('Adaptive (3 WP)');
   });
 });
+
+describe('character card money', () => {
+  const rich = { ...aodhan(), copper: 235 };
+  const money = (rates?: Parameters<typeof buildCharacterCard>[3]) => buildCharacterCard(rich, ref, false, rates).rows.find(r => r.label === 'Money')?.text;
+
+  it('shows coins when the rates are known and plain copper otherwise', () => {
+    expect(money({ gold: 100, silver: 10, copper: 1 })).toBe('2 gold 3 silver 5 copper');
+    expect(money()).toBe('235 copper');
+  });
+});

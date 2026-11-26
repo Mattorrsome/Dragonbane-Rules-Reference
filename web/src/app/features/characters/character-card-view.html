@@ -6,7 +6,7 @@
   }
   <p class="npc-card-description">{{ c.identity }}</p>
   @for (row of c.rows; track row.label) {
-    @if (listed(row)) {
+    @if (hasDetail(row.entries)) {
       <div class="npc-card-row">
         <b>{{ row.label }}:</b>
         <ul class="npc-card-entries">

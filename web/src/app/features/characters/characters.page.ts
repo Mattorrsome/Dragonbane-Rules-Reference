@@ -16,6 +16,7 @@ import { DiceRoller } from '../../dice/dice-roller';
 import { ATTRIBUTES, Attribute, SpellRef, same, sameSpell } from '../../hero/hero';
 import { spellLabel } from '../../hero/hero-card';
 import { ChipPicker } from '../../shared/chip-picker';
+import { BackdropDismiss, toggleDialog } from '../../shared/dialog';
 import { download } from '../../shared/file';
 import { slug } from '../../shared/text';
 import { CharacterEditor } from './character-editor';
@@ -65,14 +66,8 @@ export class CharactersPage {
   protected readonly exporting = signal<SavedCharacter | null>(null);
   private readonly exportDialog = viewChild.required<ElementRef<HTMLDialogElement>>('exportDialog');
   // The dialog follows its signal: open while it holds a character, closed otherwise.
-  private readonly syncExportDialog = effect(() => {
-    const dialog = this.exportDialog().nativeElement;
-    const open = !!this.exporting();
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  });
-  /** Whether the last press began on the dialog's backdrop (not inside its box). */
-  private pressedOnBackdrop = false;
+  private readonly syncExportDialog = effect(() => toggleDialog(this.exportDialog().nativeElement, !!this.exporting()));
+  protected readonly backdrop = new BackdropDismiss();
 
   private readonly resources = {
     skills: httpResource<SkillDto[]>(() => '/api/skills'),
@@ -296,16 +291,6 @@ export class CharactersPage {
     this.myHeading()?.nativeElement.focus();
   }
 
-  protected pressStart(event: MouseEvent): void {
-    this.pressedOnBackdrop = onBackdrop(event);
-  }
-
-  /** A click on the backdrop lands on the dialog element itself, outside its box: close, as a light dismiss. */
-  protected closeOnBackdrop(event: MouseEvent): void {
-    if (this.pressedOnBackdrop && onBackdrop(event)) (event.currentTarget as HTMLDialogElement).close();
-    this.pressedOnBackdrop = false;
-  }
-
   protected exportAll(): void {
     download(new Blob([this.store.exportJson()], { type: 'application/json' }), 'characters.json');
   }
@@ -325,12 +310,4 @@ export class CharactersPage {
     // Choosing the same file again still fires change.
     input.value = '';
   }
-}
-
-/** The event hit the dialog element itself at a point outside its box: the backdrop. */
-function onBackdrop(event: MouseEvent): boolean {
-  const dialog = event.currentTarget as HTMLDialogElement;
-  if (event.target !== dialog) return false;
-  const box = dialog.getBoundingClientRect();
-  return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
 }

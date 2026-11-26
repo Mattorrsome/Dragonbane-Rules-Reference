@@ -7,6 +7,17 @@ export interface CardEntry {
   detail: string | null;
 }
 
+/** A list row is written one entry per line once any entry has a description. */
+export const hasDetail = (entries: readonly CardEntry[] | undefined) => !!entries?.some(e => e.detail);
+
+/** The list-row lines of the text ("- name: detail") or Markdown ("- **name**: detail") export. */
+export function entryLines(entries: readonly CardEntry[], markdown: boolean): string[] {
+  return entries.map(e => {
+    const name = markdown ? `**${e.text}**` : e.text;
+    return e.detail ? `- ${name}: ${e.detail}` : `- ${name}`;
+  });
+}
+
 /** Non-stacking abilities in their own order, then Robust, then Focused; stacking ones show "×N" and never a description. */
 export function abilityEntries(abilities: readonly Ability[], ref: HeroReference, withDescriptions: boolean): CardEntry[] {
   return stackingLast(abilities).map(a => {
