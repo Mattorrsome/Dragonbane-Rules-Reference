@@ -307,13 +307,19 @@ for (const viewport of viewports) {
       const knight = table.locator('tbody tr', { hasText: 'Knight champion' });
       const defensive = knight.locator('summary', { hasText: 'Defensive' });
       await defensive.scrollIntoViewIfNeeded();
-      const before = { widths: await widths(), box: await defensive.boundingBox() };
+      // The page scrolls smoothly (parchment.css), so the viewport can still be moving here and after the click.
+      // Measure against the table, which moves with it, not against the viewport.
+      const offset = () => defensive.evaluate(el => {
+        const a = el.getBoundingClientRect(), t = el.closest('table')!.getBoundingClientRect();
+        return { x: a.x - t.x, y: a.y - t.y, width: a.width, height: a.height };
+      });
+      const before = { widths: await widths(), box: await offset() };
 
       await defensive.click();
       await expect(knight.locator('details[open] p')).toBeVisible();
 
       expect(await widths()).toEqual(before.widths);
-      expect(await defensive.boundingBox()).toEqual(before.box);
+      expect(await offset()).toEqual(before.box);
     });
 
     test('the page behind an open dialog does not scroll, and scrolls again once it closes', async ({ page }) => {
