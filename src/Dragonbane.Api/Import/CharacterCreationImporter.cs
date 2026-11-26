@@ -23,7 +23,7 @@ public static partial class CharacterCreationImporter
         foreach (var row in Section(doc, "Kin").Rows)
         {
             var (from, to) = Range(row["D12"]);
-            var kin = new Kin { Name = row["Kin"], RollFrom = from, RollTo = to, Movement = int.Parse(row["Base Movement"]) };
+            var kin = new Kin { Name = row["Kin"], RollFrom = from, RollTo = to, Movement = RollValue(row["Base Movement"]) };
             var matches = AbilityPattern().Matches(row["Innate ability"]);
             if (matches.Count == 0) throw new InvalidDataException($"Kin '{kin.Name}' has no parsable ability.");
             foreach (var m in matches.Cast<Match>())
@@ -37,7 +37,7 @@ public static partial class CharacterCreationImporter
             foreach (var name in names)
                 kin.Names.Add(new KinName
                 {
-                    Roll = int.Parse(name["D6"]),
+                    Roll = RollValue(name["D6"]),
                     Name = name.GetValueOrDefault(kin.Name) ?? throw new InvalidDataException($"No names column for kin '{kin.Name}'."),
                 });
             db.Kin.Add(kin);
@@ -71,15 +71,15 @@ public static partial class CharacterCreationImporter
     static void ImportRollTables(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
     {
         foreach (var row in Section(doc, "Memento").Rows)
-            db.Mementos.Add(new Memento { Roll = int.Parse(row["D20"]), Text = row["Memento"] });
+            db.Mementos.Add(new Memento { Roll = RollValue(row["D20"]), Text = row["Memento"] });
         foreach (var row in Section(doc, "Weakness").Rows)
         {
             var m = WeaknessPattern().Match(row["Weakness"]);
             if (!m.Success) throw new InvalidDataException($"Cannot parse weakness '{row["Weakness"]}'.");
-            db.Weaknesses.Add(new Weakness { Roll = int.Parse(row["D20"]), Name = m.Groups[1].Value, Text = m.Groups[2].Value });
+            db.Weaknesses.Add(new Weakness { Roll = RollValue(row["D20"]), Name = m.Groups[1].Value, Text = m.Groups[2].Value });
         }
         foreach (var row in Section(doc, "Appearance").Rows)
-            db.Appearances.Add(new Appearance { Roll = int.Parse(row["D20"]), Text = row["Appearance"] });
+            db.Appearances.Add(new Appearance { Roll = RollValue(row["D20"]), Text = row["Appearance"] });
         db.SaveChanges();
     }
 
@@ -96,7 +96,7 @@ public static partial class CharacterCreationImporter
             var profession = new Profession
             {
                 Name = name,
-                Roll = int.Parse(row["D10"]),
+                Roll = RollValue(row["D10"]),
                 KeyAttribute = attributes.GetValueOrDefault(row["Key"]) ?? throw new InvalidDataException($"Unknown attribute '{row["Key"]}' for profession '{name}'."),
             };
             // The mage's skills come from the school and it has no starting heroic ability.
@@ -118,17 +118,13 @@ public static partial class CharacterCreationImporter
     static void ImportNicknames(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
     {
         var professions = db.Professions.ToDictionary(p => p.Name);
-        var section = Section(doc, "Nicknames");
-        // Two tables share the heading, so the parser reports the second header as a row. Cells are read by position.
-        var header = section.Columns.ToList();
-        foreach (var row in section.Rows)
-        {
-            var cells = section.Columns.Select(c => row[c]).ToList();
-            if (cells[0] == "D6") { header = cells; continue; }
-            for (var i = 1; i < cells.Count; i++)
-                (professions.GetValueOrDefault(header[i]) ?? throw new InvalidDataException($"Nicknames column '{header[i]}' is not a profession."))
-                    .Nicknames.Add(new ProfessionNickname { Roll = int.Parse(cells[0]), Name = cells[i] });
-        }
+        var tables = doc.Where(s => s.Heading.StartsWith("Nicknames", StringComparison.Ordinal) && s.Rows.Count > 0).ToList();
+        if (tables.Count < 2) throw new InvalidDataException("Character creation markdown needs two headed 'Nicknames' tables.");
+        foreach (var table in tables)
+            foreach (var row in table.Rows)
+                foreach (var column in table.Columns.Skip(1))
+                    (professions.GetValueOrDefault(column) ?? throw new InvalidDataException($"Nicknames column '{column}' is not a profession."))
+                        .Nicknames.Add(new ProfessionNickname { Roll = RollValue(row[table.Columns[0]]), Name = row[column] });
         db.SaveChanges();
     }
 
@@ -172,6 +168,7 @@ public static partial class CharacterCreationImporter
         doc.SingleOrDefault(s => s.Heading.StartsWith(heading, StringComparison.Ordinal) && s.Rows.Count > 0)
         ?? throw new InvalidDataException($"Character creation markdown has no '{heading}' table.");
 
+static int RollValue(string cell) =>        int.TryParse(cell, out var value) ? value : throw new InvalidDataException($"Cannot parse number '{cell}'.");
     /// <summary>"1-4" gives (1, 4); "10" gives (10, 10).</summary>
     static (int From, int To) Range(string cell)
     {

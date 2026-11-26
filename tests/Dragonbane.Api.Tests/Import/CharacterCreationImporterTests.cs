@@ -180,4 +180,18 @@ public sealed class CharacterCreationImporterTests : IDisposable
         var bad = Read(File_).Replace("Axes, Brawling, Crafting,", "Axes, Brawling, Basketweaving,");
         Assert.Throws<InvalidDataException>(() => Import(bad));
     }
+
+    [Fact]
+    public void Missing_second_nickname_table_throws()
+    {
+        var bad = Read(File_).Replace("#### Nicknames (Mage to Thief)", "#### Other");
+        Assert.Throws<InvalidDataException>(() => Import(bad));
+    }
+
+    [Fact]
+    public void Non_numeric_roll_throws_invalid_data()
+    {
+        var bad = Read(File_).Replace("| 20 | Weathered face |", "| x | Weathered face |");
+        Assert.Throws<InvalidDataException>(() => Import(bad));
+    }
 }

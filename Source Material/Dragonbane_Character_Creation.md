@@ -96,6 +96,8 @@ Each kin has six typical first names. Choose or roll one, or invent your own.
 
 Adventurers often take a nickname reflecting appearance, personality or history. Choose one at creation or add one later. Roll D6 on your profession's column.
 
+#### Nicknames (Artisan to Knight)
+
 | D6 | Artisan | Bard | Fighter | Hunter | Knight |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | Stonehammer | Odemaker | Gravemaker | Forest Fox | Dragonheart |
@@ -104,6 +106,8 @@ Adventurers often take a nickname reflecting appearance, personality or history.
 | 4 | Barrelmaker | Gildenclef | Coldsteel | The Weathered | The Noble |
 | 5 | Bridgebuilder | Honeytongue | The Fearless | Bloodhunger | Gleamhelm |
 | 6 | Ironmaster | Rhymesmith | The Butcher | Shadowbolt | Mourningcloak |
+
+#### Nicknames (Mage to Thief)
 
 | D6 | Mage | Mariner | Merchant | Scholar | Thief |
 | ---: | --- | --- | --- | --- | --- |
