@@ -50,20 +50,20 @@ Six trained starting skills must come from the profession's skill list. Choose o
 
 ### Mage Starting-skill lists and School entry requirements
 
-| School | Suggested profession skills / entry rule |
-| --- | --- |
-| Animism | Animism, Beast Lore, Bushcraft, Evade, Healing, Hunting & Fishing, Sneaking, Staves |
-| Demonology | Demonology, Bartering, Bluffing, Evade, Languages, Myths & Legends, Persuasion, Sneaking |
-| Elementalism | Elementalism, Awareness, Evade, Healing, Languages, Myths & Legends, Spot Hidden, Staves |
-| Harmonism | Use the bard profession. Replace Musician with three rank 1 harmonistic spells, three harmonistic tricks and a grimoire. Harmonism uses PERFORMANCE; PERFORMANCE 12 is required to learn its spells. A non-starting harmonist also needs Magic Talent. |
-| Illusionism | Illusionism, Bartering, Bluffing, Evade, Performance, Persuasion, Sleight of Hand, Sneaking |
-| Mentalism | Mentalism, Acrobatics, Awareness, Brawling, Evade, Healing, Languages, Myths & Legends |
-| Necromancy | Necromancy, Awareness, Bluffing, Healing, Languages, Myths & Legends, Sneaking, Spot Hidden |
-| Symbolism | Symbolism, Awareness, Crafting, Evade, Myths & Legends, Sleight of Hand, Sneaking, Spot Hidden |
-| Witchcraft | Witchcraft, Awareness, Beast Lore, Bluffing, Healing, Myths & Legends, Persuasion, Sneaking |
-| Alchemy | Alchemy, Bartering, Beast Lore, Bushcraft, Healing, Myths & Legends, Sleight of Hand, Spot Hidden. A starting alchemist also receives a small field laboratory, D6 doses of general herbs and three completed doses selected from known recipes. |
-| Enchanting | Enchanting, Bartering, Crafting, Hammers, Knives, Myths & Legends, Sleight of Hand, Spot Hidden. CRAFTING 12 is required. A starting enchanter receives blacksmithing, carpentry or tanning tools and may make one starting item bear a known enchanting spell plus PERMANENCE. |
-| Dracomancy | Must already know at least one rank 5 spell from another school. All dracomantic spells are rank 6. |
+| School | Profession | Starting skills | Requires | At creation | Note |
+| --- | --- | --- | --- | --- | --- |
+| Animism | Mage | Animism, Beast Lore, Bushcraft, Evade, Healing, Hunting and Fishing, Sneaking, Staves | - | Yes | |
+| Demonology | Mage | Demonology, Bartering, Bluffing, Evade, Languages, Myths and Legends, Persuasion, Sneaking | - | Yes | |
+| Elementalism | Mage | Elementalism, Awareness, Evade, Healing, Languages, Myths and Legends, Spot Hidden, Staves | - | Yes | |
+| Harmonism | Bard | - | Performance 12 | Yes | Use the bard profession. Replace Musician with three rank 1 harmonistic spells, three harmonistic tricks and a grimoire. Harmonism uses PERFORMANCE; PERFORMANCE 12 is required to learn its spells. A non-starting harmonist also needs Magic Talent. |
+| Illusionism | Mage | Illusionism, Bartering, Bluffing, Evade, Performance, Persuasion, Sleight of Hand, Sneaking | - | Yes | |
+| Mentalism | Mage | Mentalism, Acrobatics, Awareness, Brawling, Evade, Healing, Languages, Myths and Legends | - | Yes | |
+| Necromancy | Mage | Necromancy, Awareness, Bluffing, Healing, Languages, Myths and Legends, Sneaking, Spot Hidden | - | Yes | |
+| Symbolism | Mage | Symbolism, Awareness, Crafting, Evade, Myths and Legends, Sleight of Hand, Sneaking, Spot Hidden | - | Yes | |
+| Witchcraft | Mage | Witchcraft, Awareness, Beast Lore, Bluffing, Healing, Myths and Legends, Persuasion, Sneaking | - | Yes | |
+| Alchemy | Mage | Alchemy, Bartering, Beast Lore, Bushcraft, Healing, Myths and Legends, Sleight of Hand, Spot Hidden | - | Yes | A starting alchemist also receives a small field laboratory, D6 doses of general herbs and three completed doses selected from known recipes. |
+| Enchanting | Mage | Enchanting, Bartering, Crafting, Hammers, Knives, Myths and Legends, Sleight of Hand, Spot Hidden | Crafting 12 | Yes | CRAFTING 12 is required. A starting enchanter receives blacksmithing, carpentry or tanning tools and may make one starting item bear a known enchanting spell plus PERMANENCE. |
+| Dracomancy | Mage | - | - | No | Must already know at least one rank 5 spell from another school. All dracomantic spells are rank 6. |
 
 ## Age
 

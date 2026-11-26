@@ -17,8 +17,13 @@ public sealed class CharacterCreationImporterTests : IDisposable
         _connection.Open();
         _db = new DragonbaneDbContext(new DbContextOptionsBuilder<DragonbaneDbContext>().UseSqlite(_connection).Options);
         _db.Database.EnsureCreated();
-        // Age adjustments link to attributes, which the skills import creates (all six).
+        // Age adjustments link to attributes (skills import); professions link to skills, abilities and schools.
         SkillsImporter.Import(MarkdownDocument.Parse(Read("Dragonbane_Skills_Table.md")), _db);
+        var equipment = MarkdownDocument.Parse(Read("Dragonbane_Equipment_Tables.md"));
+        CurrencyImporter.Import(equipment, _db);
+        EquipmentImporter.Import(equipment, _db);
+        HeroicAbilitiesImporter.Import(MarkdownDocument.Parse(Read("Dragonbane_Heroic_Abilities_Table.md")), _db);
+        SpellsImporter.Import(MarkdownDocument.Parse(Read("Dragonbane_Spell_Tables.md")), _db);
     }
 
     public void Dispose()
@@ -92,6 +97,87 @@ public sealed class CharacterCreationImporterTests : IDisposable
     public void Malformed_kin_ability_throws()
     {
         var bad = Read(File_).Replace("**Hard to Catch (3 WP):**", "**Hard to Catch 3 WP:**");
+        Assert.Throws<InvalidDataException>(() => Import(bad));
+    }
+
+    [Fact]
+    public void Imports_ten_professions_in_d10_order_with_key_attribute_and_skills()
+    {
+        Import();
+        var professions = _db.Professions.Include(p => p.KeyAttribute).Include(p => p.Skills).ThenInclude(s => s.Skill)
+            .OrderBy(p => p.Roll).ToList();
+        Assert.Equal(["Artisan", "Bard", "Fighter", "Hunter", "Knight", "Mage", "Mariner", "Merchant", "Scholar", "Thief"],
+            professions.Select(p => p.Name));
+        Assert.Equal(Enumerable.Range(1, 10), professions.Select(p => p.Roll));
+        var artisan = professions[0];
+        Assert.Equal("STR", artisan.KeyAttribute.Code);
+        Assert.Equal(8, artisan.Skills.Count);
+        Assert.Contains("Sleight of Hand", artisan.Skills.Select(s => s.Skill.Name));
+        Assert.Empty(professions.Single(p => p.Name == "Mage").Skills);
+    }
+
+    [Fact]
+    public void Imports_profession_starting_heroic_abilities()
+    {
+        Import();
+        string[] Abilities(string profession) => _db.ProfessionHeroicAbilities
+            .Where(a => a.ProfessionId == _db.Professions.Single(p => p.Name == profession).Id)
+            .OrderBy(a => a.Id).Select(a => a.HeroicAbility.Name).ToArray();
+        Assert.Equal(["Master Blacksmith", "Master Carpenter", "Master Tanner"], Abilities("Artisan"));
+        Assert.Empty(Abilities("Mage"));
+        Assert.Equal(["Guardian"], Abilities("Knight"));
+    }
+
+    [Fact]
+    public void Imports_six_nicknames_per_profession()
+    {
+        Import();
+        Assert.All(_db.Professions.Include(p => p.Nicknames).ToList(), p => Assert.Equal(6, p.Nicknames.Count));
+        var thief = _db.ProfessionNicknames.Where(n => n.ProfessionId == _db.Professions.Single(p => p.Name == "Thief").Id);
+        Assert.Equal("Nightstabber", thief.Single(n => n.Roll == 6).Name);
+        Assert.Equal("Stonehammer", _db.Professions.Include(p => p.Nicknames).Single(p => p.Name == "Artisan").Nicknames.Single(n => n.Roll == 1).Name);
+    }
+
+    [Fact]
+    public void Harmonism_needs_a_bard_with_performance_12_and_has_no_skill_of_its_own()
+    {
+        Import();
+        var school = _db.MagicSchools.Include(s => s.RequiredProfession).Include(s => s.RequiredSkill)
+            .Include(s => s.StartingSkills).Single(s => s.Name == "Harmonism");
+        Assert.Equal("Bard", school.RequiredProfession!.Name);
+        Assert.Equal(("Performance", 12), (school.RequiredSkill!.Name, school.RequiredSkillLevel));
+        Assert.Null(school.SkillId);
+        Assert.Empty(school.StartingSkills);
+        Assert.True(school.ChoosableAtCreation);
+    }
+
+    [Fact]
+    public void Enchanting_needs_crafting_12_and_has_its_skill_and_eight_starting_skills()
+    {
+        Import();
+        var school = _db.MagicSchools.Include(s => s.Skill).Include(s => s.RequiredSkill).Include(s => s.RequiredProfession)
+            .Include(s => s.StartingSkills).Single(s => s.Name == "Enchanting");
+        Assert.Equal(("Crafting", 12), (school.RequiredSkill!.Name, school.RequiredSkillLevel));
+        Assert.Equal("Enchanting", school.Skill!.Name);
+        Assert.Equal(8, school.StartingSkills.Count);
+        Assert.Equal("Mage", school.RequiredProfession!.Name);
+    }
+
+    [Fact]
+    public void Eleven_schools_are_choosable_at_creation_and_dracomancy_is_not()
+    {
+        Import();
+        Assert.Equal(11, _db.MagicSchools.Count(s => s.ChoosableAtCreation));
+        Assert.False(_db.MagicSchools.Single(s => s.Name == "Dracomancy").ChoosableAtCreation);
+        var general = _db.MagicSchools.Include(s => s.StartingSkills).Single(s => s.Name == "General Magic");
+        Assert.Equal((null, null, null, false), (general.SkillId, general.RequiredProfessionId, general.RequiredSkillId, general.ChoosableAtCreation));
+        Assert.Empty(general.StartingSkills);
+    }
+
+    [Fact]
+    public void Unknown_skill_in_a_profession_list_throws()
+    {
+        var bad = Read(File_).Replace("Axes, Brawling, Crafting,", "Axes, Brawling, Basketweaving,");
         Assert.Throws<InvalidDataException>(() => Import(bad));
     }
 }

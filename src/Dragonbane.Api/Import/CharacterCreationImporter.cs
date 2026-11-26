@@ -12,6 +12,9 @@ public static partial class CharacterCreationImporter
         ImportKin(doc, db);
         ImportAges(doc, db);
         ImportRollTables(doc, db);
+        ImportProfessions(doc, db);
+        ImportNicknames(doc, db);
+        ImportMagicSchools(doc, db);
     }
 
     static void ImportKin(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
@@ -80,6 +83,91 @@ public static partial class CharacterCreationImporter
         db.SaveChanges();
     }
 
+    const string MageProfession = "Mage";
+
+    static void ImportProfessions(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
+    {
+        var attributes = db.Attributes.ToDictionary(a => a.Code);
+        var skills = db.Skills.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+        var abilities = db.HeroicAbilities.ToDictionary(a => a.Name, StringComparer.OrdinalIgnoreCase);
+        foreach (var row in Section(doc, "Professions").Rows)
+        {
+            var name = row["Profession"];
+            var profession = new Profession
+            {
+                Name = name,
+                Roll = int.Parse(row["D10"]),
+                KeyAttribute = attributes.GetValueOrDefault(row["Key"]) ?? throw new InvalidDataException($"Unknown attribute '{row["Key"]}' for profession '{name}'."),
+            };
+            // The mage's skills come from the school and it has no starting heroic ability.
+            if (name != MageProfession)
+            {
+                foreach (var skill in SkillList(row["Profession skills"], skills))
+                    profession.Skills.Add(new ProfessionSkill { Skill = skill });
+                foreach (var ability in row["Starting benefit"].Replace("**", "").Split([",", " or "], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                    profession.HeroicAbilities.Add(new ProfessionHeroicAbility
+                    {
+                        HeroicAbility = abilities.GetValueOrDefault(ability) ?? throw new InvalidDataException($"Unknown heroic ability '{ability}' for profession '{name}'."),
+                    });
+            }
+            db.Professions.Add(profession);
+        }
+        db.SaveChanges();
+    }
+
+    static void ImportNicknames(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
+    {
+        var professions = db.Professions.ToDictionary(p => p.Name);
+        var section = Section(doc, "Nicknames");
+        // Two tables share the heading, so the parser reports the second header as a row. Cells are read by position.
+        var header = section.Columns.ToList();
+        foreach (var row in section.Rows)
+        {
+            var cells = section.Columns.Select(c => row[c]).ToList();
+            if (cells[0] == "D6") { header = cells; continue; }
+            for (var i = 1; i < cells.Count; i++)
+                (professions.GetValueOrDefault(header[i]) ?? throw new InvalidDataException($"Nicknames column '{header[i]}' is not a profession."))
+                    .Nicknames.Add(new ProfessionNickname { Roll = int.Parse(cells[0]), Name = cells[i] });
+        }
+        db.SaveChanges();
+    }
+
+    static void ImportMagicSchools(IReadOnlyList<MarkdownSection> doc, DragonbaneDbContext db)
+    {
+        var professions = db.Professions.ToDictionary(p => p.Name);
+        var skills = db.Skills.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+        var schools = db.MagicSchools.ToDictionary(s => s.Name);
+        foreach (var row in Section(doc, "Mage Starting").Rows)
+        {
+            var name = row["School"];
+            var school = schools.GetValueOrDefault(name) ?? throw new InvalidDataException($"Unknown magic school '{name}'.");
+            school.RequiredProfession = professions.GetValueOrDefault(row["Profession"]) ?? throw new InvalidDataException($"Unknown profession '{row["Profession"]}' for school '{name}'.");
+            school.ChoosableAtCreation = row["At creation"] switch
+            {
+                "Yes" => true,
+                "No" => false,
+                var other => throw new InvalidDataException($"Cannot parse 'At creation' value '{other}' for school '{name}'."),
+            };
+            // Harmonism is cast with Performance and has no skill of its own.
+            school.Skill = name == "Harmonism" ? null : skills.GetValueOrDefault(name) ?? throw new InvalidDataException($"No skill for school '{name}'.");
+            foreach (var skill in SkillList(row["Starting skills"], skills))
+                school.StartingSkills.Add(new MagicSchoolStartingSkill { Skill = skill });
+            if (row["Requires"] != "-")
+            {
+                var m = RequirePattern().Match(row["Requires"]);
+                if (!m.Success) throw new InvalidDataException($"Cannot parse requirement '{row["Requires"]}' for school '{name}'.");
+                school.RequiredSkill = skills.GetValueOrDefault(m.Groups[1].Value) ?? throw new InvalidDataException($"Unknown skill '{m.Groups[1].Value}' for school '{name}'.");
+                school.RequiredSkillLevel = int.Parse(m.Groups[2].Value);
+            }
+        }
+        db.SaveChanges();
+    }
+
+    /// <summary>Comma-separated skill names ("-" for none), each of which must exist in the Skills table.</summary>
+    static IEnumerable<Skill> SkillList(string cell, Dictionary<string, Skill> skills) =>
+        cell == "-" ? [] : cell.Split(',', StringSplitOptions.TrimEntries).Select(n =>
+            skills.GetValueOrDefault(n) ?? throw new InvalidDataException($"Unknown skill '{n}'."));
+
     static MarkdownSection Section(IReadOnlyList<MarkdownSection> doc, string heading) =>
         doc.SingleOrDefault(s => s.Heading.StartsWith(heading, StringComparison.Ordinal) && s.Rows.Count > 0)
         ?? throw new InvalidDataException($"Character creation markdown has no '{heading}' table.");
@@ -96,6 +184,9 @@ public static partial class CharacterCreationImporter
     // "**Name (3 WP):** effect" or "**Name (no WP):** effect"; the effect runs to the next ability.
     [GeneratedRegex(@"\*\*(?<name>[^*(]+?) \((?:(?<wp>\d+) WP|no WP)\):\*\*(?<effect>.*?)(?=\*\*[^*(]+? \((?:\d+ WP|no WP)\):\*\*|$)", RegexOptions.Singleline)]
     private static partial Regex AbilityPattern();
+
+    [GeneratedRegex(@"^(.+) (\d+)$")]
+    private static partial Regex RequirePattern();
 
     [GeneratedRegex(@"^6 profession \+ (\d+) free$")]
     private static partial Regex FreePattern();

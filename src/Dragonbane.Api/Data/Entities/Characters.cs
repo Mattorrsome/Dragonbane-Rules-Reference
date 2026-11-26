@@ -71,3 +71,41 @@ public class Appearance : IEntity
     public int Roll { get; set; }
     public string Text { get; set; } = "";
 }
+
+/// <summary>A profession from the D10 table. GearPackages arrive with the gear import.</summary>
+public class Profession : INamedEntity
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public int Roll { get; set; }
+    public int KeyAttributeId { get; set; }
+    public Attribute KeyAttribute { get; set; } = null!;
+    public List<ProfessionSkill> Skills { get; set; } = [];
+    public List<ProfessionHeroicAbility> HeroicAbilities { get; set; } = [];
+    public List<ProfessionNickname> Nicknames { get; set; } = [];
+}
+
+public class ProfessionSkill : IEntity
+{
+    public int Id { get; set; }
+    public int ProfessionId { get; set; }
+    public int SkillId { get; set; }
+    public Skill Skill { get; set; } = null!;
+}
+
+/// <summary>A starting benefit. More than one row means the player chooses one.</summary>
+public class ProfessionHeroicAbility : IEntity
+{
+    public int Id { get; set; }
+    public int ProfessionId { get; set; }
+    public int HeroicAbilityId { get; set; }
+    public HeroicAbility HeroicAbility { get; set; } = null!;
+}
+
+public class ProfessionNickname : INamedEntity
+{
+    public int Id { get; set; }
+    public int ProfessionId { get; set; }
+    public int Roll { get; set; }
+    public string Name { get; set; } = "";
+}

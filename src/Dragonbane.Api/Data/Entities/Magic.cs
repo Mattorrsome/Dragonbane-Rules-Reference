@@ -6,6 +6,24 @@ public class MagicSchool : INamedEntity
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public string? Note { get; set; }
+    /// <summary>The school's own skill row. Null for Harmonism, which is cast with Performance.</summary>
+    public int? SkillId { get; set; }
+    public Skill? Skill { get; set; }
+    public List<MagicSchoolStartingSkill> StartingSkills { get; set; } = [];
+    public int? RequiredProfessionId { get; set; }
+    public Profession? RequiredProfession { get; set; }
+    public int? RequiredSkillId { get; set; }
+    public Skill? RequiredSkill { get; set; }
+    public int? RequiredSkillLevel { get; set; }
+    public bool ChoosableAtCreation { get; set; }
+}
+
+public class MagicSchoolStartingSkill : IEntity
+{
+    public int Id { get; set; }
+    public int MagicSchoolId { get; set; }
+    public int SkillId { get; set; }
+    public Skill Skill { get; set; } = null!;
 }
 
 public class Requirement : IEntity

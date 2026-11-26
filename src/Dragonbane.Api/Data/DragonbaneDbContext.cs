@@ -39,6 +39,11 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
     public DbSet<Memento> Mementos => Set<Memento>();
     public DbSet<Weakness> Weaknesses => Set<Weakness>();
     public DbSet<Appearance> Appearances => Set<Appearance>();
+    public DbSet<Profession> Professions => Set<Profession>();
+    public DbSet<ProfessionSkill> ProfessionSkills => Set<ProfessionSkill>();
+    public DbSet<ProfessionHeroicAbility> ProfessionHeroicAbilities => Set<ProfessionHeroicAbility>();
+    public DbSet<ProfessionNickname> ProfessionNicknames => Set<ProfessionNickname>();
+    public DbSet<MagicSchoolStartingSkill> MagicSchoolStartingSkills => Set<MagicSchoolStartingSkill>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -79,6 +84,20 @@ public class DragonbaneDbContext(DbContextOptions<DragonbaneDbContext> options) 
         model.Entity<Weakness>().HasIndex(e => e.Name).IsUnique();
         model.Entity<KinAbility>().HasIndex(e => new { e.KinId, e.Name }).IsUnique();
         model.Entity<KinName>().HasIndex(e => new { e.KinId, e.Roll }).IsUnique();
+
+        model.Entity<Profession>().HasMany(p => p.Skills).WithOne().HasForeignKey(s => s.ProfessionId);
+        model.Entity<Profession>().HasMany(p => p.HeroicAbilities).WithOne().HasForeignKey(a => a.ProfessionId);
+        model.Entity<Profession>().HasMany(p => p.Nicknames).WithOne().HasForeignKey(n => n.ProfessionId);
+        model.Entity<Profession>().HasIndex(e => e.Name).IsUnique();
+        model.Entity<Profession>().HasIndex(e => e.Roll).IsUnique();
+        model.Entity<ProfessionSkill>().HasIndex(e => new { e.ProfessionId, e.SkillId }).IsUnique();
+        model.Entity<ProfessionHeroicAbility>().HasIndex(e => new { e.ProfessionId, e.HeroicAbilityId }).IsUnique();
+        model.Entity<ProfessionNickname>().HasIndex(e => new { e.ProfessionId, e.Roll }).IsUnique();
+        model.Entity<MagicSchool>().HasMany(s => s.StartingSkills).WithOne().HasForeignKey(k => k.MagicSchoolId);
+        model.Entity<MagicSchool>().HasOne(s => s.Skill).WithMany().HasForeignKey(s => s.SkillId);
+        model.Entity<MagicSchool>().HasOne(s => s.RequiredProfession).WithMany().HasForeignKey(s => s.RequiredProfessionId);
+        model.Entity<MagicSchool>().HasOne(s => s.RequiredSkill).WithMany().HasForeignKey(s => s.RequiredSkillId);
+        model.Entity<MagicSchoolStartingSkill>().HasIndex(e => new { e.MagicSchoolId, e.SkillId }).IsUnique();
 
         model.Entity<CurrencyRate>().HasIndex(e => e.Name).IsUnique();
         model.Entity<EquipmentCategory>().HasIndex(e => e.Name).IsUnique();
