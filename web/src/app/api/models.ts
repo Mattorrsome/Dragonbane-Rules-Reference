@@ -25,7 +25,17 @@ export type CurrencyRateDto = Schemas['CurrencyRateDto'];
 export type NpcDto = Schemas['NpcDto'];
 export type NpcSkillDto = Schemas['NpcSkillDto'];
 export type NpcHeroicAbilityDto = Schemas['NpcHeroicAbilityDto'];
-export type KinDto = Schemas['KinDto'];export type KinAbilityDto = Schemas['KinAbilityDto'];export type ProfessionDto = Schemas['ProfessionDto'];export type GearPackageDto = Schemas['GearPackageDto'];export type GearEntryDto = Schemas['GearEntryDto'];export type GearEntryKind = Schemas['GearEntryKind'];export type AgeDto = Schemas['AgeDto'];export type AgeAdjustmentDto = Schemas['AgeAdjustmentDto'];export type MementoDto = Schemas['MementoDto'];export type WeaknessDto = Schemas['WeaknessDto'];export type AppearanceDto = Schemas['AppearanceDto'];
+export type KinDto = Schemas['KinDto'];
+export type KinAbilityDto = Schemas['KinAbilityDto'];
+export type ProfessionDto = Schemas['ProfessionDto'];
+export type GearPackageDto = Schemas['GearPackageDto'];
+export type GearEntryDto = Schemas['GearEntryDto'];
+export type GearEntryKind = Schemas['GearEntryKind'];
+export type AgeDto = Schemas['AgeDto'];
+export type AgeAdjustmentDto = Schemas['AgeAdjustmentDto'];
+export type MementoDto = Schemas['MementoDto'];
+export type WeaknessDto = Schemas['WeaknessDto'];
+export type AppearanceDto = Schemas['AppearanceDto'];
 
 /** How prices are shown: as written in the source, or converted into one coin. */
 export type CoinStandard = 'written' | 'copper' | 'silver' | 'gold';
