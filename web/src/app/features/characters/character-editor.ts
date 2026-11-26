@@ -105,10 +105,10 @@ export class CharacterEditor {
     this.draft.update(d => setCharacterAbility(d, name, 0));
   }
 
-  /** "Prerequisite: Crafting 12": shown, not enforced. */
+  /** "Prerequisite: Crafting 12": shown in the chip, not enforced; none for an ability without one ("None"). */
   protected prerequisite(name: string): string | null {
     const ability = this.ref().abilities.find(a => same(a.name, name));
-    return ability ? `Prerequisite: ${ability.prerequisite}` : null;
+    return ability?.prerequisite && !same(ability.prerequisite, 'None') ? `Prerequisite: ${ability.prerequisite}` : null;
   }
 
   protected readonly acceptAbility = (text: string): boolean => {

@@ -1388,3 +1388,9 @@ html {
     width: 10rem;
   }
 }
+
+/* A chip's fixed detail, such as a heroic ability's prerequisite: smaller, beside the name. */
+.chips .chip-detail {
+  font-size: 0.85rem;
+  font-style: italic;
+}

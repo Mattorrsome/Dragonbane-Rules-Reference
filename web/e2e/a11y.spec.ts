@@ -72,17 +72,24 @@ for (const viewport of viewports) {
       };
       await page.goto('/characters');
       await expect(page.locator('.page-shell')).not.toHaveAttribute('inert');
-      await page.getByRole('button', { name: 'Random character' }).click();
-      await page.getByRole('button', { name: 'Save', exact: true }).click();
-      await expect(page.locator('.characters-table tbody tr')).toHaveCount(1);
+      for (let i = 0; i < 2; i++) {
+        await page.getByRole('button', { name: 'Random character' }).click();
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+      }
+      await expect(page.locator('.characters-table tbody tr')).toHaveCount(2);
       await check();
 
-      await page.locator('.characters-table').getByRole('button', { name: /^Edit / }).click();
+      await page.locator('.characters-table').getByRole('button', { name: /^Edit / }).first().click();
+      // The other row's Edit is disabled, with the hint saying why.
+      await expect(page.locator('#edit-open')).toBeVisible();
       await expect(page.locator('app-character-editor h2')).toBeFocused();
       // A count box beside the gear chips (each with a quantity and a note) the random character carries.
       await page.locator('#ce-ability-to-add').fill('Robust');
       await page.getByRole('button', { name: 'Add heroic ability' }).click();
       await expect(page.locator('#ce-count-robust')).toBeVisible();
+      await page.locator('#ce-ability-to-add').fill('Veteran');
+      await page.getByRole('button', { name: 'Add heroic ability' }).click();
+      await expect(page.locator('app-character-editor .chips li', { hasText: 'Veteran' }).locator('.chip-detail')).toContainText('Prerequisite');
       await check();
     });
   });

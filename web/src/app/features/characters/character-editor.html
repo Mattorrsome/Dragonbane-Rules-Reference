@@ -49,8 +49,9 @@
       <app-chip-picker pickerId="ce-ability" noun="heroic ability" [options]="abilityOptions()" [accept]="acceptAbility" />
       <ul class="chips" aria-label="Heroic abilities">
         @for (ability of d.abilities; track ability.name) {
-          <li [attr.title]="prerequisite(ability.name)">
+          <li>
             <span class="chip-name">{{ ability.name }}</span>
+            @if (prerequisite(ability.name); as p) { <span class="chip-detail">{{ p }}</span> }
             @if (isStacking(ability.name)) {
               <input [id]="'ce-count-' + slug(ability.name)" type="number" min="1" class="chip-number" [attr.aria-label]="ability.name + ' count'"
                 [value]="ability.count" (input)="setCount(ability.name, $event)" />

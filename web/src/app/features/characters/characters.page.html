@@ -219,7 +219,6 @@
         </div>
 
         <div class="creation-save">
-          <p class="save-status" role="status">{{ saveStatus() }}</p>
           <button type="button" class="btn btn-primary" [disabled]="problems().length" (click)="save()" [attr.aria-describedby]="problems().length ? 'cc-problems' : null">Save</button>
           @if (problems().length) {
             <ul id="cc-problems" class="creation-problems" aria-label="Still to do">
@@ -238,6 +237,8 @@
   }
 
   <h2 class="npc-heading" id="my-characters-heading" tabindex="-1" #myHeading>My characters</h2>
+  <!-- Always on the page, so a save from the creator or the editor is announced (the editor replaces the creator). -->
+  <p class="save-status" role="status">{{ saveStatus() }}</p>
   <!-- The whole list as a JSON file: a backup, or a way to move characters to another browser. -->
   <div class="npc-file-actions">
     <button type="button" class="btn btn-secondary btn-small" [disabled]="store.characters().length === 0" (click)="exportAll()">Export all as JSON</button>
@@ -248,6 +249,9 @@
   @if (store.characters().length === 0) {
     <p class="status">No saved characters yet.</p>
   } @else {
+    @if (editing(); as e) {
+      <p class="status" id="edit-open">Editing {{ e.name }}. Save or cancel it to edit another character.</p>
+    }
     <div class="table-wrap" tabindex="0" role="region" aria-label="My characters table">
       <table class="data-table stack characters-table">
         <caption>My characters</caption>
@@ -272,8 +276,9 @@
                     <button type="button" class="btn btn-primary btn-small" (click)="remove(saved)">Yes, delete</button>
                     <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
                   } @else {
-                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
-                      [attr.aria-label]="'Edit ' + saved.name" (click)="edit(saved, $event)">Edit</button>
+                    @let otherOpen = !!editing() && editing()!.id !== saved.id;
+                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref() || otherOpen"
+                      [attr.aria-describedby]="otherOpen ? 'edit-open' : null" [attr.aria-label]="'Edit ' + saved.name" (click)="edit(saved, $event)">Edit</button>
                     <button type="button" class="btn btn-secondary btn-small"
                       [attr.aria-label]="'Export ' + saved.name" (click)="exportOne(saved)">Export</button>
                     <button type="button" class="btn btn-secondary btn-small"

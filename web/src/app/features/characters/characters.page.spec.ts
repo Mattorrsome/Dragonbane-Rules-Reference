@@ -301,5 +301,49 @@ describe('CharactersPage', () => {
       expect(TestBed.inject(CharacterStore).characters()).toEqual([aodhan]);
       expect(page.host.querySelector('app-character-editor')).toBeNull();
     });
+
+    it('while one character is open, the other rows cannot open theirs (the open draft is kept)', async () => {
+      TestBed.inject(CharacterStore).save({ ...aodhan, id: 'bryn-1', name: 'Bryn' });
+      const page = await edit();
+      await page.type('ce-name', 'Aodhan the Bold');
+
+      expect(page.button('Edit Bryn').disabled).toBe(true);
+      expect(page.button('Edit Bryn').getAttribute('aria-describedby')).toBe('edit-open');
+      expect(page.host.querySelector('#edit-open')!.textContent).toContain('Save or cancel');
+      expect(page.box('ce-name').value).toBe('Aodhan the Bold');
+    });
+
+    it('announces an edit save in a status region that stays on the page', async () => {
+      const page = await render();
+      const status = page.host.querySelector('.save-status')!;
+      await page.click('Edit Aodhan');
+      expect(page.host.querySelector('.save-status')).toBe(status);
+
+      await page.click('Save');
+
+      expect(page.host.querySelector('.save-status')).toBe(status);
+      expect(status.getAttribute('role')).toBe('status');
+      expect(status.textContent).toContain('Saved Aodhan.');
+    });
+
+    it('shows a heroic ability prerequisite as text in its chip', async () => {
+      const page = await edit();
+
+      await page.type('ce-ability-to-add', 'Veteran');
+      await page.click('Add heroic ability');
+
+      expect(page.editor.querySelector('.chips[aria-label="Heroic abilities"]')!.textContent).toContain('Prerequisite: Any weapon skill 12');
+    });
+
+    it('the creator draft survives Edit then Cancel', async () => {
+      const page = await render();
+      await page.choose('cc-kin', 'Dwarf');
+
+      await page.click('Edit Aodhan');
+      await page.click('Cancel');
+
+      expect(page.select('cc-kin').value).toBe('Dwarf');
+      expect(page.summary()).toContain('Kin: Dwarf');
+    });
   });
 });
