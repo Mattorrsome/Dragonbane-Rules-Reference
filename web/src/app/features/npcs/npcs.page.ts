@@ -3,7 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../../api/models';
 import { describeItem, fromTypical, Npc, NpcReference, SavedNpc, stackingLast } from '../../npc/npc';
-import { download } from '../../npc/npc-export';
+import { download } from '../../shared/file';
 import { NpcStore } from '../../npc/npc.store';
 import { NpcEditor } from './npc-editor';
 import { NpcExportMenu } from './npc-export-menu';

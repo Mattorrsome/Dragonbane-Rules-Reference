@@ -1,4 +1,4 @@
-import { download, fileName } from './npc-export';
+import { download, fileName } from './file';
 
 describe('fileName', () => {
   it('slugs the NPC name', () => {
@@ -10,6 +10,11 @@ describe('fileName', () => {
   it('falls back to "npc" when nothing usable is left', () => {
     expect(fileName('', 'txt')).toBe('npc.txt');
     expect(fileName('★ ★', 'png')).toBe('npc.png');
+  });
+
+  it('handles the pdf and json extensions and a custom fallback', () => {
+    expect(fileName('Aodhan', 'pdf')).toBe('aodhan.pdf');
+    expect(fileName('!!', 'json', 'character')).toBe('character.json');
   });
 
   it('keeps letters with accents', () => {

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, Injec
 import { toBlob } from 'html-to-image';
 import { Npc, NpcReference } from '../../npc/npc';
 import { buildCard, cardToMarkdown, cardToText } from '../../npc/npc-card';
-import { download, fileName } from '../../npc/npc-export';
+import { download, fileName } from '../../shared/file';
 import { NpcCardView } from './npc-card-view';
 
 /** Turns the rendered card into a PNG. Injectable so tests need no canvas. */

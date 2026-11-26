@@ -1,11 +1,11 @@
 /** "Old Tom's Bandit #2" → "old-toms-bandit-2.md": lower case, apostrophes dropped, other non-letters become dashes. */
-export function fileName(npcName: string, ext: 'png' | 'txt' | 'md'): string {
-  const slug = npcName
+export function fileName(name: string, ext: 'png' | 'txt' | 'md' | 'pdf' | 'json', fallback = 'npc'): string {
+  const slug = name
     .toLocaleLowerCase()
     .replace(/['’]/g, '')
     .replace(/[^\p{L}\p{N}]+/gu, '-')
     .replace(/^-+|-+$/g, '');
-  return `${slug || 'npc'}.${ext}`;
+  return `${slug || fallback}.${ext}`;
 }
 
 /** Saves a blob as a file through a temporary download link. */
