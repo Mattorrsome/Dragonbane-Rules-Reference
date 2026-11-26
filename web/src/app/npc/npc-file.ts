@@ -1,5 +1,6 @@
 import { parseListFile } from '../shared/list-store';
-import { DAMAGE_BONUS_ATTRIBUTES, DamageBonus, DEFAULT_MOVEMENT, NpcSpellRef, SavedNpc } from './npc';
+import { DAMAGE_BONUS_ATTRIBUTES, DamageBonus } from '../hero/hero';
+import { DEFAULT_MOVEMENT, NpcSpellRef, SavedNpc } from './npc';
 
 const DICE = ['D4', 'D6'];
 const SPELL_KINDS = ['Spell', 'Trick', 'Recipe'];

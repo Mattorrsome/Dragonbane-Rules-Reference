@@ -1,4 +1,5 @@
-import { addGear, addSpell, fromTypical, Npc, setAbilityCount, setDamageBonus } from './npc';
+import { addSpell } from '../hero/hero';
+import { addGear, fromTypical, Npc, setAbilityCount, setDamageBonus } from './npc';
 import { buildCard, cardToMarkdown, cardToText } from './npc-card';
 import { BANDIT, BANDIT_CHIEF, NPC_REFERENCE as ref } from './npc.fixture';
 

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { addSpell, fromTypical, Npc } from '../../npc/npc';
+import { addSpell } from '../../hero/hero';
+import { fromTypical, Npc } from '../../npc/npc';
 import { buildCard, cardToMarkdown, cardToText } from '../../npc/npc-card';
 import { BANDIT_CHIEF, NPC_REFERENCE as ref } from '../../npc/npc.fixture';
 import { CARD_RENDERER, NpcExportMenu } from './npc-export-menu';

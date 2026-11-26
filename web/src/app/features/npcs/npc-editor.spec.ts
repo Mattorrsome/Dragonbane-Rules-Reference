@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { addSpell, fromTypical, Npc } from '../../npc/npc';
+import { addSpell } from '../../hero/hero';
+import { fromTypical, Npc } from '../../npc/npc';
 import { BANDIT_CHIEF, GUARD, NPC_REFERENCE as ref } from '../../npc/npc.fixture';
 import { NpcEditor } from './npc-editor';
 

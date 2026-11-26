@@ -1,11 +1,8 @@
-import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto, SpellKind } from '../api/models';
+import { NpcDto } from '../api/models';
+import { Attribute, ATTRIBUTES, DAMAGE_BONUS_ATTRIBUTES, DamageBonus, findItem, HeroReference, POINTS_PER_STACK, same, SpellRef, withAbilityCount } from '../hero/hero';
 
-/** A spell by name, school and kind: names alone are not unique (the Erase trick and the ERASE spell). */
-export interface NpcSpellRef {
-  name: string;
-  school: string;
-  kind: SpellKind;
-}
+export type NpcSpellRef = SpellRef;
+export type NpcReference = HeroReference;
 
 /** An NPC being tweaked or saved. Every list names rows of the Reference by name, so it survives a database rebuild. */
 export interface Npc {
@@ -24,55 +21,14 @@ export interface Npc {
   spells: NpcSpellRef[];
 }
 
-export interface DamageBonus {
-  attribute: string;
-  dice: string;
-}
-
-/** The attributes a damage bonus can come from, in the order they are listed. */
-export const DAMAGE_BONUS_ATTRIBUTES = ['STR', 'AGL'] as const;
-
 export interface SavedNpc extends Npc {
   id: string;
 }
-
-/** The Reference rows NPC names are looked up in. */
-export interface NpcReference {
-  skills: SkillDto[];
-  abilities: HeroicAbilityDto[];
-  equipment: EquipmentItemDto[];
-  spells: SpellDto[];
-}
-
-/** Abilities taken more than once; each Robust is +2 max HP, each Focused +2 max WP. */
-export const STACKING_ABILITIES = ['Robust', 'Focused'] as const;
 
 /** The source has no Movement column; 10 is the usual human value. */
 export const DEFAULT_MOVEMENT = 10;
 /** Level given to a weapon skill the NPC lacks when it gains that weapon. */
 export const NEW_WEAPON_SKILL_LEVEL = 5;
-const POINTS_PER_STACK = 2;
-
-const same = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
-
-/** The reference item with this name, ignoring case. */
-export function findItem(ref: NpcReference, name: string): EquipmentItemDto | undefined {
-  return ref.equipment.find(i => same(i.name, name));
-}
-
-/** A weapon's or armour's stats first (their effect is often empty), then the item's effect. */
-export function describeItem(item: EquipmentItemDto): string | null {
-  const parts = [
-    item.weapon ? `Damage ${item.weapon.damage}, ${item.weapon.featuresText.toLowerCase()}` : null,
-    item.armour ? `Armour rating ${item.armour.rating}` : null,
-    item.weapon ? null : item.effect,
-  ].filter(Boolean);
-  return parts.length ? parts.join('. ') : null;
-}
-
-export function isStacking(name: string): boolean {
-  return STACKING_ABILITIES.some(s => same(s, name));
-}
 
 /** A copy of a typical NPC to tweak; weapons it carries without their skill get that skill at 5. */
 export function fromTypical(dto: NpcDto, ref: NpcReference): Npc {
@@ -110,17 +66,9 @@ export function removeGear(npc: Npc, itemName: string): Npc {
  * Focused moves WP by 2 per step (no WP counts as 0), never below 0.
  */
 export function setAbilityCount(npc: Npc, name: string, count: number): Npc {
-  const stacking = isStacking(name);
-  const next = Math.max(0, stacking ? Math.trunc(count) : Math.min(1, count));
-  const current = npc.abilities.find(a => same(a.name, name));
-  const delta = next - (current?.count ?? 0);
+  const { abilities, delta } = withAbilityCount(npc.abilities, name, count);
   if (delta === 0) return npc;
 
-  const abilities = !current
-    ? [...npc.abilities, { name, count: next }]
-    : next === 0
-      ? npc.abilities.filter(a => a !== current)
-      : npc.abilities.map(a => (a === current ? { ...a, count: next } : a));
   const points = delta * POINTS_PER_STACK;
   return {
     ...npc,
@@ -136,16 +84,6 @@ export function setDamageBonus(npc: Npc, attribute: string, dice: string | null)
   const order = (b: DamageBonus) => DAMAGE_BONUS_ATTRIBUTES.indexOf(b.attribute as (typeof DAMAGE_BONUS_ATTRIBUTES)[number]);
   return { ...npc, damageBonuses: (dice ? [...others, { attribute, dice }] : others).sort((a, b) => order(a) - order(b)) };
 }
-
-/** Abilities in their own order, then Robust, then Focused (as the book lists them). */
-export function stackingLast<T extends { name: string }>(abilities: readonly T[]): T[] {
-  const rank = (name: string) => STACKING_ABILITIES.findIndex(s => same(s, name));
-  return [...abilities].sort((a, b) => rank(a.name) - rank(b.name));
-}
-
-/** The six attributes in book order. */
-export const ATTRIBUTES = ['STR', 'CON', 'AGL', 'INT', 'WIL', 'CHA'] as const;
-export type Attribute = (typeof ATTRIBUTES)[number];
 
 /** Attribute score by damage bonus dice: the core rules' guideline for NPC attribute rolls. */
 const SCORE_BY_BONUS: Record<string, number> = { D6: 17, D4: 14 };
@@ -167,16 +105,6 @@ export function npcAttributes(npc: Npc): Record<Attribute, number> {
     WIL: npc.wp === null ? BASE_ATTRIBUTE : Math.max(0, npc.wp - POINTS_PER_STACK * stacks('Focused')),
     CHA: BASE_ATTRIBUTE,
   };
-}
-
-const sameSpell = (a: NpcSpellRef, b: NpcSpellRef) => a.name === b.name && a.school === b.school && a.kind === b.kind;
-
-export function addSpell(npc: Npc, spell: NpcSpellRef): Npc {
-  return npc.spells.some(s => sameSpell(s, spell)) ? npc : { ...npc, spells: [...npc.spells, { ...spell }] };
-}
-
-export function removeSpell(npc: Npc, spell: NpcSpellRef): Npc {
-  return { ...npc, spells: npc.spells.filter(s => !sameSpell(s, spell)) };
 }
 
 /** Appends each carried weapon's skill at 5 when the NPC lacks it. */

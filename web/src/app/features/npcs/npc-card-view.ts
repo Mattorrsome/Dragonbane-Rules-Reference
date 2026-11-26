@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { CardEntry, NpcCard } from '../../npc/npc-card';
+import { CardEntry } from '../../hero/hero-card';
+import { NpcCard } from '../../npc/npc-card';
 
 /** The book-style NPC box (see NPC_Image_Example.png): the live preview and the image export render this. */
 @Component({

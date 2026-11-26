@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { SpellDto } from '../../api/models';
-import {
-  addGear, addSpell, DAMAGE_BONUS_ATTRIBUTES, describeItem, findItem, isStacking, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, removeSpell,
-  setAbilityCount, setDamageBonus,
-} from '../../npc/npc';
+import { addSpell, DAMAGE_BONUS_ATTRIBUTES, describeItem, findItem, isStacking, removeSpell } from '../../hero/hero';
+import { addGear, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, setAbilityCount, setDamageBonus } from '../../npc/npc';
 import { buildCard } from '../../npc/npc-card';
 import { sentenceCase } from '../../shared/text';
 import { NpcCardView } from './npc-card-view';

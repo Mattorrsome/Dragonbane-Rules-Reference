@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, injec
 import { NgTemplateOutlet } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../../api/models';
-import { describeItem, fromTypical, Npc, NpcReference, SavedNpc, stackingLast } from '../../npc/npc';
+import { describeItem, stackingLast } from '../../hero/hero';
+import { fromTypical, Npc, NpcReference, SavedNpc } from '../../npc/npc';
 import { download } from '../../shared/file';
 import { NpcStore } from '../../npc/npc.store';
 import { NpcEditor } from './npc-editor';

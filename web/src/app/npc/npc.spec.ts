@@ -1,4 +1,5 @@
-import { addGear, addSpell, fromTypical, Npc, npcAttributes, removeGear, removeSpell, setAbilityCount, setDamageBonus, stackingLast } from './npc';
+import { addSpell, removeSpell, stackingLast } from '../hero/hero';
+import { addGear, fromTypical, Npc, npcAttributes, removeGear, setAbilityCount, setDamageBonus } from './npc';
 import { ARCHMAGE, BANDIT_CHIEF, GUARD, NPC_REFERENCE as ref, VILLAGER } from './npc.fixture';
 
 const skills = (npc: Npc) => npc.skills.map(s => `${s.name} ${s.level}`);

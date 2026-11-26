@@ -1,11 +1,6 @@
-import { sentenceCase } from '../shared/text';
-import { Attribute, ATTRIBUTES, findItem, isStacking, Npc, NpcReference, npcAttributes, stackingLast } from './npc';
-
-/** One entry in a list row; `detail` is the smaller description line, shown only when descriptions are on. */
-export interface CardEntry {
-  text: string;
-  detail: string | null;
-}
+import { Attribute, ATTRIBUTES, findItem, formatDamageBonus } from '../hero/hero';
+import { abilityEntries, CardEntry, spellEntries } from '../hero/hero-card';
+import { Npc, NpcReference, npcAttributes } from './npc';
 
 /**
  * The export card's rows in book order (see NPC_Image_Example.png). Empty strings, empty lists and null mean the
@@ -41,7 +36,7 @@ export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean
     name: npc.name,
     description: npc.description.trim(),
     movement: npc.movement,
-    damageBonus: npc.damageBonuses.map(b => `${b.attribute}: ${b.dice}`).join(', ') || null,
+    damageBonus: npc.damageBonuses.map(formatDamageBonus).join(', ') || null,
     armour: armour.length
       ? `${bookList(armour.map(a => a.name))} (${armour.reduce((sum, a) => sum + a.item!.armour!.rating, 0)})`
       : null,
@@ -49,33 +44,14 @@ export function buildCard(npc: Npc, ref: NpcReference, withDescriptions: boolean
     wp: npc.wp,
     // Every skill, weapon skills too, although the weapon line repeats their level (the book's boxes leave them out).
     skills: npc.skills.map(s => `${s.name} ${s.level}`).join(', '),
-    abilities: abilityEntries(npc, ref, withDescriptions),
+    abilities: abilityEntries(npc.abilities, ref, withDescriptions),
     weapons: bookList(
       weapons.map(w => `${w.name} (skill level ${level(w.item!.weapon!.skill) ?? MISSING_LEVEL}, damage ${w.item!.weapon!.damage})`),
     ),
-    spells: npc.spells.map(chosen => {
-      const spell = ref.spells.find(s => s.name === chosen.name && s.school === chosen.school && s.kind === chosen.kind);
-      const name = sentenceCase(chosen.name);
-      if (!withDescriptions || !spell) return { text: name, detail: null };
-      const details = spell.ranked
-        ? `rank ${spell.rank}; ${spell.castingTime}; ${spell.ranked.range}; ${spell.ranked.duration}`
-        : 'trick';
-      return { text: `${name} (${details})`, detail: spell.description };
-    }),
+    spells: spellEntries(npc.spells, ref, withDescriptions),
     gear: bookList(items.filter(i => !i.item?.weapon && !i.item?.armour).map(i => i.name)),
     attributes: withAttributes ? ATTRIBUTES.map(label => ({ label, value: scores[label] })) : null,
   };
-}
-
-/** Non-stacking abilities in NPC order, then Robust, then Focused; stacking ones show "×N" and never a description. */
-function abilityEntries(npc: Npc, ref: NpcReference, withDescriptions: boolean): CardEntry[] {
-  return stackingLast(npc.abilities).map(a => {
-    if (isStacking(a.name)) return { text: `${a.name} ×${a.count}`, detail: null };
-    const ability = ref.abilities.find(h => h.name.toLowerCase() === a.name.toLowerCase());
-    return withDescriptions && ability
-      ? { text: `${a.name} (${ability.wp} WP)`, detail: ability.effect }
-      : { text: a.name, detail: null };
-  });
 }
 
 /** "Chainmail, open helmet": the first item keeps its case, the rest start lower case, as in the book. */
