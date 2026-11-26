@@ -39,7 +39,7 @@ describe('App shell', () => {
 
     const menu = host.querySelector('#app-menu')!;
     expect(menu.hasAttribute('popover')).toBe(true);
-    expect([...menu.querySelectorAll('a')].map(a => a.textContent?.trim())).toEqual(['Dragonbane Reference', 'NPC Manager']);
+    expect([...menu.querySelectorAll('a')].map(a => a.textContent?.trim())).toEqual(['Rules Reference', 'NPC Manager']);
     expect(hrefs(host, '#app-menu a')).toEqual(['/reference', '/npcs']);
     const button = host.querySelector('button.menu-button')!;
     expect(button.getAttribute('popovertarget')).toBe('app-menu');
@@ -53,7 +53,7 @@ describe('App shell', () => {
     expect(host.querySelector('select#coin-standard')).toBeNull();
 
     host = await at('/reference/spells');
-    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Dragonbane Reference');
+    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Rules Reference');
     expect(host.querySelector('nav[aria-label="Sections"]')).not.toBeNull();
   });
 

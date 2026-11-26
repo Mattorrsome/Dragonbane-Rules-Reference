@@ -22,13 +22,12 @@ export class App {
     this.router.events.pipe(filter(e => e instanceof NavigationEnd), map(e => e.urlAfterRedirects)),
     { initialValue: this.router.url },
   );
-  /** Which app the page belongs to: the brand, the section tabs and the coin select follow it. */
-  protected readonly currentApp = computed(() => (this.url().startsWith('/npcs') ? 'npcs' : 'reference'));
-
   protected readonly apps = [
-    { path: '/reference', label: 'Dragonbane Reference' },
+    { path: '/reference', label: 'Rules Reference' },
     { path: '/npcs', label: 'NPC Manager' },
   ];
+  /** Which app the page belongs to: the brand, the section tabs and the coin select follow it. */
+  protected readonly currentApp = computed(() => this.apps.find(a => this.url().startsWith(a.path)) ?? this.apps[0]);
   protected readonly sections = [
     { path: '/reference/skills', label: 'Skills' },
     { path: '/reference/heroic-abilities', label: 'Heroic Abilities' },

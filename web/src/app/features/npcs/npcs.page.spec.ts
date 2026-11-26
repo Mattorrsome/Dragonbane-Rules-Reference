@@ -42,6 +42,12 @@ describe('NpcsPage', () => {
     return { fixture, host, table, button, settle: () => fixture.whenStable() };
   }
 
+  it('titles the page Dragonbane NPC Manager', async () => {
+    const page = await render();
+
+    expect(page.host.querySelector('h1')?.textContent?.trim()).toBe('Dragonbane NPC Manager');
+  });
+
   it('lists the typical NPCs in source order', async () => {
     const page = await render();
     const typical = page.table('Typical NPCs');
