@@ -71,7 +71,7 @@ describe('CharactersPage', () => {
     await page.click('Random character');
 
     const name = page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim();
-    expect(ref.kin.flatMap(k => k.names)).toContain(name);
+    expect(ref.kin.flatMap(k => k.names).some(n => name.startsWith(n))).toBe(true);
     expect(ref.kin.some(k => page.summary().includes(`Kin: ${k.name}`))).toBe(true);
     expect(Number(/HP (\d+)/.exec(page.summary())![1])).toBeGreaterThan(0);
     expect(page.host.querySelectorAll('.step-done').length).toBe(11);
@@ -168,15 +168,15 @@ describe('CharactersPage', () => {
 
       await page.click('Save');
 
-      expect(TestBed.inject(CharacterStore).characters().map(c => c.name)).toEqual([name]);
+      expect(TestBed.inject(CharacterStore).characters().map(c => [c.name, c.nickname].filter(Boolean).join(' '))).toEqual([name]);
       expect(page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim()).toBe('Unnamed hero');
       expect(page.button('Save').disabled).toBe(true);
       const statuses = [...page.host.querySelectorAll('.save-status')];
       expect(statuses.length).toBe(1);
-      expect(statuses[0].textContent).toContain(`Saved ${name}.`);
+      expect(statuses[0].textContent).toContain(`Saved ${TestBed.inject(CharacterStore).characters()[0].name}.`);
       await page.click('Random character');
       expect(page.host.querySelector('.save-status')!.textContent!.trim()).toBe('');
-      expect(page.host.querySelector('.characters-table tbody')!.textContent).toContain(name);
+      expect(page.host.querySelector('.characters-table tbody')!.textContent).toContain(TestBed.inject(CharacterStore).characters()[0].name);
     });
 
     it('Save keeps keyboard focus on the page: it moves to the My characters heading', async () => {

@@ -1,9 +1,6 @@
 @let c = card();
 <article class="npc-card export-card">
   <p class="npc-card-name">{{ c.name }}</p>
-  @if (c.nickname) {
-    <p class="npc-card-description">“{{ c.nickname }}”</p>
-  }
   @if (c.identity) {
     <p class="npc-card-description">{{ c.identity }}</p>
   }

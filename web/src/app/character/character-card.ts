@@ -13,8 +13,8 @@ export interface CardRow {
 
 /** The export card: the image, the text and the Markdown all come from this. */
 export interface CharacterCard {
+  /** The name, with the nickname after it when there is one. */
   name: string;
-  nickname: string;
   /** "Human, Mage (Elementalism), Old" */
   identity: string;
   rows: CardRow[];
@@ -74,11 +74,11 @@ export function buildCharacterCard(c: Character, ref: CreationReference, withDes
   ].filter(r => r.text);
 
   const school = c.school ? ` (${c.school})` : '';
-  return { name: c.name, nickname: c.nickname, identity: [c.kin, `${c.profession}${school}`, c.age].filter(Boolean).join(', '), rows };
+  return { name: [c.name, c.nickname].filter(Boolean).join(' '), identity: [c.kin, `${c.profession}${school}`, c.age].filter(Boolean).join(', '), rows };
 }
 
 export function characterCardToText(card: CharacterCard): string {
-  const out = [card.name, ...(card.nickname ? [`“${card.nickname}”`] : []), card.identity, ''];
+  const out = [card.name, card.identity, ''];
   for (const row of card.rows) {
     if (hasDetail(row.entries)) out.push(`${row.label}:`, ...entryLines(row.entries!, false));
     else out.push(`${row.label}: ${row.text}`);
@@ -87,7 +87,7 @@ export function characterCardToText(card: CharacterCard): string {
 }
 
 export function characterCardToMarkdown(card: CharacterCard): string {
-  const out = [`# ${card.name}`, '', ...(card.nickname ? [`*“${card.nickname}”*`, ''] : []), card.identity, ''];
+  const out = [`# ${card.name}`, '', card.identity, ''];
   for (const row of card.rows) {
     out.push(`## ${row.label}`, '');
     if (hasDetail(row.entries)) out.push(...entryLines(row.entries!, true));

@@ -31,6 +31,22 @@ function aodhan(): Character {
 }
 
 describe('character card', () => {
+  it('puts the nickname beside the name in the card, text and Markdown', () => {
+    const card = buildCharacterCard({ ...aodhan(), name: 'Veroulun', nickname: 'Waverider' }, ref, false);
+    const text = characterCardToText(card);
+    const md = characterCardToMarkdown(card);
+
+    expect(card.name).toBe('Veroulun Waverider');
+    expect(text.startsWith('Veroulun Waverider\n')).toBe(true);
+    expect(text).not.toContain('“');
+    expect(md.startsWith('# Veroulun Waverider\n')).toBe(true);
+    expect(md).not.toContain('*“');
+  });
+
+  it('uses the bare name without a nickname', () => {
+    expect(buildCharacterCard({ ...aodhan(), name: 'Veroulun', nickname: '' }, ref, false).name).toBe('Veroulun');
+  });
+
   it('text carries identity, attributes and ratings', () => {
     const text = characterCardToText(buildCharacterCard(aodhan(), ref, false));
 

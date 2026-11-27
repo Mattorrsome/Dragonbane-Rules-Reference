@@ -32,6 +32,6 @@ export class CharacterSummary {
     ];
     const rows = card.rows.map(r =>
       this.rolled() || (r.label !== 'Attributes' && r.label !== 'Ratings') ? r : { ...r, text: r.text.replace(/\d+/g, DASH) });
-    return { ...card, name: c.name || 'Unnamed hero', identity: '', rows: [...choices, ...rows] };
+    return { ...card, name: [c.name || 'Unnamed hero', c.nickname].filter(Boolean).join(' '), identity: '', rows: [...choices, ...rows] };
   });
 }
