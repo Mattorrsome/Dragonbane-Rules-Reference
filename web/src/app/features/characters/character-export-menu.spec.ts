@@ -65,5 +65,6 @@ describe('CharacterExportMenu', () => {
     (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('#export-printer')!.click();
     expect(localStorage.getItem('dragonbane.characterExport.printerFriendly')).toBe('true');
     expect(await size()).toEqual({ width: 500, height: 700 });
+    localStorage.removeItem('dragonbane.characterExport.printerFriendly');
   });
 });

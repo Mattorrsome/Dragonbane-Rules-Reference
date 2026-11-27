@@ -396,7 +396,7 @@ One entry per significant technical decision. Template:
 
 ## Official sheet page 2 shipped in public/ (Fria Ligan character sheets are free to use) (2026-11-27)
 - Context: The PDF export should look like the official Dragonbane character sheet. `DB-Character-Sheet.pdf` has two pages; page 2 is the easy-print version.
-- Decision: Ship only page 2, as `web/public/character-sheet.pdf` (1.8 MB, loaded only when a PDF is made), extracted by the re-runnable `scripts/extract-sheet-page.mjs`. Fria Ligan's character sheets are free to use (the user's statement, 2026-11-26).
+- Decision: Ship only page 2, as `web/public/character-sheet.pdf` (1.8 MB, loaded only when a PDF is made), extracted by a one-off script (since deleted: the asset is now a straight copy of both pages, see the 2026-11-27 colour or printer friendly entry). Fria Ligan's character sheets are free to use (the user's statement, 2026-11-26).
 - Alternatives: Draw our own sheet in the parchment style (not the official look the players know); have each user load their own copy of the official PDF (an extra step at the table for no gain, since the sheet is free to use); ship both pages (page 1 is never used and doubles the size).
 - Why: The user chose the official sheet; the easy-print page prints well and is half the size.
 

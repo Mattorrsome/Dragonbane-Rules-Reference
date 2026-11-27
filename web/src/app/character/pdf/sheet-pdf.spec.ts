@@ -183,6 +183,10 @@ describe('buildSheetPdf', () => {
     expect(pdf.getPageCount()).toBeGreaterThanOrEqual(2);
   });
 
+  it('the shipped sheet has both pages: 1 colour, 2 printer friendly', async () => {
+    expect((await PDFDocument.load(assets().sheet)).getPageCount()).toBe(2);
+  });
+
   describe('colour or printer friendly', () => {
     const COLOUR = [600, 800] as const;
     const PRINTER = [500, 700] as const;
