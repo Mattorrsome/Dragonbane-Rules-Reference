@@ -7,7 +7,7 @@ import {
   Creation, chooseGearPackage, creationProblems, doseName, stepDone, finishCreation, newCreation, professionSkillList,
   resolveGearPackage, schoolsAvailable, setAge, setAlchemistDoses, setAttributes, setEnchantment, setHeroicAbility, setItemNote,
   setKin, setProfession,
-  setSchool, spellOptions, swapAttributes, toggleSkill, toggleSpell,
+  learnableSpells, setSchool, spellOptions, swapAttributes, toggleSkill, toggleSpell,
 } from './creation';
 
 const profession = (name: string) => fixture(ref.professions, name);
@@ -391,5 +391,39 @@ describe('creationProblems', () => {
     mage = learn(mage, 'FIREBALL', 'FROST', 'ALARM', 'Ignite', 'Fetch', 'Flick');
     mage = chooseGearPackage(mage, profession('Mage').gearPackages[1], ref, seeded()).creation;
     expect(creationProblems(mage, ref)).toEqual([]);
+  });
+});
+
+describe('learnableSpells', () => {
+  const withSkills = (...skills: [string, number][]) =>
+    ({ ...newCreation().character, skills: skills.map(([name, level]) => ({ name, level, trained: true })) });
+  const names = (spells: { name: string }[]) => spells.map(s => s.name);
+  const ofSchool = (n: string) => ref.spells.filter(s => s.school === n);
+
+  it('is empty without a school skill, or with one at level 0', () => {
+    expect(learnableSpells(withSkills(), ref)).toEqual([]);
+    expect(learnableSpells(withSkills(['Animism', 0]), ref)).toEqual([]);
+  });
+
+  it('Animism gives all its spells and all General Magic, rank 2 included', () => {
+    const got = names(learnableSpells(withSkills(['Animism', 1]), ref));
+    expect(got).toEqual(names([...ofSchool('Animism'), ...ofSchool('General Magic')]));
+    expect(got).toContain('MAGIC SHIELD');
+  });
+
+  it('Harmonism alone takes no General Magic', () => {
+    expect(names(learnableSpells(withSkills(['Harmonism', 1]), ref))).toEqual(names(ofSchool('Harmonism')));
+  });
+
+  it('Enchanting alone takes only the General Magic tricks', () => {
+    const general = learnableSpells(withSkills(['Enchanting', 1]), ref).filter(s => s.school === 'General Magic');
+    expect(general.length).toBeGreaterThan(0);
+    expect(general.every(s => s.kind === 'Trick')).toBe(true);
+  });
+
+  it('Enchanting with Animism takes all General Magic', () => {
+    const got = names(learnableSpells(withSkills(['Enchanting', 1], ['Animism', 2]), ref));
+    expect(got).toContain('MAGIC SHIELD');
+    expect(got).toContain('ALARM');
   });
 });

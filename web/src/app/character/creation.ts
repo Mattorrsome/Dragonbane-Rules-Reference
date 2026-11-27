@@ -186,6 +186,22 @@ export function spellOptions(c: Creation, ref: CreationReference): SpellDto[] {
   return [...own, ...ref.spells.filter(s => same(s.school, GENERAL_MAGIC) && (tricksOnly ? s.kind === 'Trick' : starting(s)))];
 }
 
+/**
+ * Every spell (all ranks, tricks and recipes) of the schools whose skill the character holds at level 1 or more, plus
+ * General Magic: all of it for any school outside Harmonism, Alchemy and Enchanting; else its tricks for Alchemy or
+ * Enchanting; none for Harmonism alone.
+ */
+export function learnableSpells(c: Character, ref: CreationReference): SpellDto[] {
+  const held = ref.schools.filter(s => s.skill && c.skills.some(k => same(k.name, s.skill!) && k.level >= 1));
+  if (!held.length) return [];
+  const own = ref.spells.filter(s => held.some(h => same(s.school, h.name)));
+  const general = ref.spells.filter(s => same(s.school, GENERAL_MAGIC));
+  const outside = (h: MagicSchoolDto) => !same(h.name, HARMONISM) && !has(TRICKS_FROM_GENERAL_MAGIC, h.name);
+  if (held.some(outside)) return [...own, ...general];
+  if (held.some(h => has(TRICKS_FROM_GENERAL_MAGIC, h.name))) return [...own, ...general.filter(s => s.kind === 'Trick')];
+  return own;
+}
+
 const isTrick = (s: SpellRef) => s.kind === 'Trick';
 
 /** Forgets a known spell; else learns an option, up to 3 spells (or recipes) and 3 tricks. */

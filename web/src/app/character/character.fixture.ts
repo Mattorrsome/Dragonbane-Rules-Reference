@@ -34,6 +34,7 @@ const spells = (school: string, rank: number, kind: SpellKind, ...names: string[
 
 const SPELLS: SpellDto[] = [
   ...spells('General Magic', 1, 'Spell', 'ALARM', 'DISPEL', 'PROTECTOR'),
+  ...spells('General Magic', 2, 'Spell', 'MAGIC SHIELD'),
   ...spells('General Magic', 0, 'Trick', 'Fetch', 'Flick', 'Light', 'Open/Close'),
   ...spells('Animism', 1, 'Spell', 'ANIMAL WHISPERER', 'BANISH', 'CURE', 'ENSNARING ROOTS'),
   ...spells('Animism', 0, 'Trick', 'Birdsong', 'Clean', 'Cook Food'),
@@ -59,7 +60,7 @@ const SCHOOLS: MagicSchoolDto[] = [
   school('Animism', ['Animism', 'Beast Lore', 'Bushcraft', 'Evade', 'Healing', 'Hunting and Fishing', 'Sneaking', 'Staves']),
   school('Elementalism', ['Elementalism', 'Awareness', 'Evade', 'Healing', 'Languages', 'Myths and Legends', 'Spot Hidden', 'Staves']),
   school('Harmonism', [], {
-    requiredProfession: 'Bard', requiredSkill: 'Performance', requiredSkillLevel: 12, extras: [pkg(0, 0, item('Grimoire'))],
+    skill: 'Harmonism', requiredProfession: 'Bard', requiredSkill: 'Performance', requiredSkillLevel: 12, extras: [pkg(0, 0, item('Grimoire'))],
   }),
   school('Alchemy', ['Alchemy', 'Bartering', 'Beast Lore', 'Bushcraft', 'Healing', 'Myths and Legends', 'Sleight of Hand', 'Spot Hidden'], {
     extras: [pkg(0, 0, item('Small field laboratory'), dice('General herbs', 6))],
