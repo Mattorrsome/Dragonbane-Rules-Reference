@@ -11,7 +11,8 @@ const WEAPON_COLUMNS = ['name', 'grip', 'range', 'damage', 'durability', 'featur
 
 type Row3 = 1 | 2 | 3;
 type Row6 = Row3 | 4 | 5 | 6;
-type Row10 = Row6 | 7 | 8 | 9 | 10;
+type Row7 = Row6 | 7;
+type Row10 = Row7 | 8 | 9 | 10;
 type Row15 = Row10 | 11 | 12 | 13 | 14 | 15;
 
 export type SheetField =
@@ -20,7 +21,7 @@ export type SheetField =
   | 'damageBonus:STR' | 'damageBonus:AGL' | 'movement' | 'encumbrance'
   | `abilities:${Row15}`
   | `skill:${(typeof CORE_SKILLS)[number] | (typeof WEAPON_SKILLS)[number]}`
-  | `secondary:${Row6}:${'level' | 'name'}`
+  | `secondary:${Row7}:${'level' | 'name'}`
   | `inventory:${Row10}`
   | 'memento' | 'tiny'
   | `money:${'gold' | 'silver' | 'copper'}`
@@ -72,8 +73,8 @@ export const SHEET_FIELDS: Record<SheetField, SheetBox> = {
   ...rows<`abilities:${Row15}`>(15, r => `abilities:${r}`, { x: 35, y: 498, width: 124, size: HAND }, 14.4),
   ...named<`skill:${(typeof CORE_SKILLS)[number]}`, (typeof CORE_SKILLS)[number]>(CORE_SKILLS, s => `skill:${s}`, { x: 197, y: 497, width: 22, size: HAND }, SKILL_STEP),
   ...named<`skill:${(typeof WEAPON_SKILLS)[number]}`, (typeof WEAPON_SKILLS)[number]>(WEAPON_SKILLS, s => `skill:${s}`, { x: 321, y: 483, width: 22, size: HAND }, SKILL_STEP),
-  ...rows<`secondary:${Row6}:level`>(6, r => `secondary:${r}:level`, { x: 321, y: 314, width: 22, size: HAND }, SKILL_STEP),
-  ...rows<`secondary:${Row6}:name`>(6, r => `secondary:${r}:name`, { x: 350, y: 314, width: 74, size: HAND }, SKILL_STEP),
+  ...rows<`secondary:${Row7}:level`>(7, r => `secondary:${r}:level`, { x: 321, y: 314, width: 22, size: HAND }, SKILL_STEP),
+  ...rows<`secondary:${Row7}:name`>(7, r => `secondary:${r}:name`, { x: 350, y: 314, width: 74, size: HAND }, SKILL_STEP),
   ...rows<`inventory:${Row10}`>(10, r => `inventory:${r}`, { x: 463, y: 499, width: 115, size: HAND }, 14.07),
   memento: { x: 453, y: 343, width: 125, size: HAND, lines: 3, lineHeight: 14.4 },
   tiny: { x: 459, y: 275, width: 116, size: HAND, lines: 5, lineHeight: 14.2 },

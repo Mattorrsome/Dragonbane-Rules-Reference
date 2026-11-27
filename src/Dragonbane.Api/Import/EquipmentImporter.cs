@@ -65,7 +65,8 @@ public static class EquipmentImporter
                 item.CostOrMore = cost.OrMore;
                 item.CostText = row["Cost"];
                 item.Supply = Cell(row, "Supply") is { } supply ? supplies[supply] : null;
-                item.Weight = Cell(row, "Weight");
+                // "-" is kept: it means weightless (a tiny item), while null means the table has no Weight column.
+                item.Weight = row.GetValueOrDefault("Weight");
                 db.EquipmentItems.Add(item);
             }
             db.SaveChanges();

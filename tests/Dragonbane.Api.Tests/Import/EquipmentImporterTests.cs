@@ -76,6 +76,8 @@ public sealed class EquipmentImporterTests : IDisposable
         Assert.True(_db.EquipmentItems.Single(i => i.Name == "Teacher").CostOrMore);
         Assert.Null(_db.EquipmentItems.Single(i => i.Name == "Unarmed").CostCopper);
         Assert.Equal("1/4", _db.EquipmentItems.Single(i => i.Name == "Field ration").Weight);
+        Assert.Equal("-", _db.EquipmentItems.Single(i => i.Name == "Flint and tinder").Weight);
+        Assert.Null(_db.EquipmentItems.Single(i => i.Name == "Simple clothes").Weight);
     }
 
     [Fact]

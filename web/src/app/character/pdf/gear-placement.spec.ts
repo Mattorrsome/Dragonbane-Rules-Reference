@@ -14,7 +14,10 @@ const ref: CreationReference = {
     weapon('Dagger'), weapon('Staff'), weapon('Short sword'), weapon('Small shield'),
     item('Chainmail', null, { armour: { rating: 4, isHelmet: false } }),
     item('Open helmet', null, { armour: { rating: 1, isHelmet: true } }),
+    item('Leather', null, { armour: { rating: 1, isHelmet: false } }),
+    item('Great helm', null, { armour: { rating: 2, isHelmet: true } }),
     item('Field ration', '1/4'), item('Flint and tinder', '-'), item('Fishing net', '2'), item('Torch', '1'),
+    item('Simple clothes', null), item('Donkey', null),
   ],
 };
 
@@ -60,5 +63,32 @@ describe('placeGear', () => {
     const placed = placeGear(withGear(['Torch', 9], ['Fishing net']), ref);
     expect(placed.inventory.length).toBe(9);
     expect(placed.overflow).toEqual(['Fishing net']);
+  });
+
+  it('lists items with no weight at all (clothes, animals) as overflow, not tiny items', () => {
+    const placed = placeGear(withGear(['Simple clothes'], ['Donkey']), ref);
+    expect(placed.tiny).toEqual([]);
+    expect(placed.overflow).toEqual(['Simple clothes', 'Donkey']);
+  });
+
+  it('readies three of a stack of weapons and lists the rest as one overflow entry', () => {
+    const placed = placeGear(withGear(['Dagger', 5]), ref);
+    expect(placed.weapons).toEqual(Array(3).fill({ name: 'Dagger', quantity: 1, note: '' }));
+    expect(placed.overflow).toEqual(['2 × Dagger']);
+  });
+
+  it('lists a second armour and a second helmet as overflow', () => {
+    const placed = placeGear(withGear(['Chainmail'], ['Open helmet'], ['Leather'], ['Great helm']), ref);
+    expect([placed.armour?.name, placed.helmet?.name]).toEqual(['Chainmail', 'Open helmet']);
+    expect(placed.overflow).toEqual(['Leather', 'Great helm']);
+  });
+
+  it('counts an item that is not in the Equipment table as weight 1 each', () => {
+    expect(placeGear(withGear(['General herbs', 2]), ref).inventory).toEqual(['2 × General herbs', '(General herbs)']);
+  });
+
+  it('places nothing for a quantity of 0', () => {
+    const placed = placeGear(withGear(['Torch', 0], ['Dagger', 0], ['General herbs', 0]), ref);
+    expect([placed.inventory, placed.weapons, placed.overflow]).toEqual([[], [], []]);
   });
 });
