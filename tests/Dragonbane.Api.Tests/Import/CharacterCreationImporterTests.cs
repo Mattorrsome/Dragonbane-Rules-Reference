@@ -274,4 +274,22 @@ public sealed class CharacterCreationImporterTests : IDisposable
         var ex = Assert.Throws<InvalidDataException>(() => CharacterCreationImporter.Import(MarkdownDocument.Parse(Read(File_)), _db, bad));
         Assert.Contains("vorpal blade", ex.Message);
     }
+
+    [Fact]
+    public void Gear_packages_with_a_gap_throw()
+    {
+        var fighter = GearPackageSeed.Packages["Fighter"];
+        var gapped = new Dictionary<string, SeedPackage[]>(GearPackageSeed.Packages) { ["Fighter"] = [fighter[0], fighter[2]] };
+        var ex = Assert.Throws<InvalidDataException>(() => CharacterCreationImporter.Import(MarkdownDocument.Parse(Read(File_)), _db, gapped));
+        Assert.Contains("Fighter", ex.Message);
+    }
+
+    [Fact]
+    public void Gear_packages_that_overlap_throw()
+    {
+        var fighter = GearPackageSeed.Packages["Fighter"];
+        var overlapping = new Dictionary<string, SeedPackage[]>(GearPackageSeed.Packages) { ["Fighter"] = [.. fighter, fighter[2] with { From = 6 }] };
+        var ex = Assert.Throws<InvalidDataException>(() => CharacterCreationImporter.Import(MarkdownDocument.Parse(Read(File_)), _db, overlapping));
+        Assert.Contains("Fighter", ex.Message);
+    }
 }

@@ -188,6 +188,14 @@ public static partial class CharacterCreationImporter
                 packages.Add(package);
             }
         }
+        // The front end rolls a D6 on each profession's packages: a gap or overlap would break that roll.
+        foreach (var profession in professions.Values)
+        {
+            var next = 1; // the roll the next package must start at; 0 once one does not
+            foreach (var package in profession.GearPackages.OrderBy(p => p.RollFrom))
+                next = package.RollFrom == next && package.RollTo >= package.RollFrom ? package.RollTo + 1 : 0;
+            if (next != 7) throw new InvalidDataException($"Gear packages for '{profession.Name}' do not cover D6 1-6 without gaps or overlaps.");
+        }
         db.SaveChanges();
     }
 
@@ -200,7 +208,8 @@ public static partial class CharacterCreationImporter
         doc.SingleOrDefault(s => s.Heading.StartsWith(heading, StringComparison.Ordinal) && s.Rows.Count > 0)
         ?? throw new InvalidDataException($"Character creation markdown has no '{heading}' table.");
 
-static int RollValue(string cell) =>        int.TryParse(cell, out var value) ? value : throw new InvalidDataException($"Cannot parse number '{cell}'.");
+    static int RollValue(string cell) =>
+        int.TryParse(cell, out var value) ? value : throw new InvalidDataException($"Cannot parse number '{cell}'.");
     /// <summary>"1-4" gives (1, 4); "10" gives (10, 10).</summary>
     static (int From, int To) Range(string cell)
     {
