@@ -47,6 +47,13 @@ describe('character card', () => {
     expect(buildCharacterCard({ ...aodhan(), name: 'Veroulun', nickname: '' }, ref, false).name).toBe('Veroulun');
   });
 
+  it('calls a nameless character Unnamed hero in the text and Markdown', () => {
+    const card = buildCharacterCard({ ...aodhan(), name: '', nickname: '' }, ref, false);
+
+    expect(characterCardToText(card).startsWith('Unnamed hero\n')).toBe(true);
+    expect(characterCardToMarkdown(card).startsWith('# Unnamed hero\n')).toBe(true);
+  });
+
   it('text carries identity, attributes and ratings', () => {
     const text = characterCardToText(buildCharacterCard(aodhan(), ref, false));
 

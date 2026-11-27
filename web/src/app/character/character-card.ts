@@ -74,7 +74,7 @@ export function buildCharacterCard(c: Character, ref: CreationReference, withDes
   ].filter(r => r.text);
 
   const school = c.school ? ` (${c.school})` : '';
-  return { name: [c.name, c.nickname].filter(Boolean).join(' '), identity: [c.kin, `${c.profession}${school}`, c.age].filter(Boolean).join(', '), rows };
+  return { name: [c.name || 'Unnamed hero', c.nickname].filter(Boolean).join(' '), identity: [c.kin, `${c.profession}${school}`, c.age].filter(Boolean).join(', '), rows };
 }
 
 export function characterCardToText(card: CharacterCard): string {
