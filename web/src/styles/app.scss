@@ -1087,6 +1087,7 @@ html {
 
 .npc-form-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
 }
 

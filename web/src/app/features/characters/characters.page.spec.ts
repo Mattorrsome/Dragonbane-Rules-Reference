@@ -1,5 +1,9 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { PDFDocument } from 'pdf-lib';
+import { SHEET_ASSETS, SheetAssets } from '../../character/pdf/sheet-assets';
+import { CharacterExportMenu } from './character-export-menu';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { creationRef as ref } from '../../character/character.fixture';
@@ -9,19 +13,34 @@ import { SavedCharacter } from '../../character/character';
 import { CharacterStore } from '../../character/character.store';
 import { CharactersPage } from './characters.page';
 
+/** A two-page blank sheet (colour, printer-friendly) and the real handwriting font, in place of the fetched assets. */
+async function sheetAssets(): Promise<SheetAssets> {
+  const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(path: string): Uint8Array } } }).process.getBuiltinModule('node:fs');
+  // Copied into this realm's ArrayBuffer: pdf-lib checks `instanceof ArrayBuffer`.
+  const buffer = (from: ArrayLike<number>) => { const out = new ArrayBuffer(from.length); new Uint8Array(out).set(from); return out; };
+  const sheet = await PDFDocument.create();
+  sheet.addPage([600, 800]);
+  sheet.addPage([600, 800]);
+  return { sheet: buffer(await sheet.save()), font: buffer(fs.readFileSync('public/fonts/Caveat-Regular.ttf')), heading: new ArrayBuffer(0), parchment: new ArrayBuffer(0) };
+}
+
 describe('CharactersPage', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [CharactersPage],
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: RANDOM, useValue: seededRandom(7) }],
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: RANDOM, useValue: seededRandom(7) }, { provide: SHEET_ASSETS, useValue: sheetAssets }],
     });
     http = TestBed.inject(HttpTestingController);
+    // jsdom has no modal dialog; close fires the close event, as the browser does.
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) { this.open = true; };
+    HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) { this.open = false; this.dispatchEvent(new Event('close')); };
   });
 
   afterEach(() => http.verify());
 
+  /** The page as it lands: the My characters list. */
   async function render() {
     const fixture = TestBed.createComponent(CharactersPage);
     TestBed.tick();
@@ -31,13 +50,16 @@ describe('CharactersPage', () => {
       weaknesses: ref.weaknesses, appearances: ref.appearances,
     };
     for (const [section, body] of Object.entries(rows)) http.expectOne(`/api/${section}`).flush(body);
-    // The summary, shown once the tables are in, asks for the coin rates (whenStable would wait on that request).
-    await new Promise(resolve => setTimeout(resolve));
-    TestBed.tick();
-    http.expectOne('/api/currency-rates').flush([
-      { name: 'Copper', copperValue: 1 }, { name: 'Silver', copperValue: 10 }, { name: 'Gold', copperValue: 100 },
-    ]);
-    await fixture.whenStable();
+    // A summary or export card, once shown, asks for the coin rates (whenStable would wait on that request).
+    const settle = async () => {
+      await new Promise(resolve => setTimeout(resolve));
+      TestBed.tick();
+      for (const request of http.match('/api/currency-rates')) {
+        request.flush([{ name: 'Copper', copperValue: 1 }, { name: 'Silver', copperValue: 10 }, { name: 'Gold', copperValue: 100 }]);
+      }
+      await fixture.whenStable();
+    };
+    await settle();
     const host = fixture.nativeElement as HTMLElement;
     const button = (name: string) =>
       [...host.querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent?.trim()) === name)!;
@@ -45,18 +67,110 @@ describe('CharactersPage', () => {
     const choose = async (id: string, value: string) => {
       select(id).value = value;
       select(id).dispatchEvent(new Event('change'));
-      await fixture.whenStable();
+      await settle();
     };
     const click = async (name: string) => {
       button(name).click();
-      await fixture.whenStable();
+      await settle();
     };
     const summary = () => host.querySelector('app-character-summary')!.textContent!;
-    return { host, button, select, choose, click, summary };
+    const options = (scope: Element) => [...scope.querySelectorAll<HTMLElement>('[role="option"]')];
+    /** Picks, in the dialog inside `scope`, the option whose text starts with `label`; returns the dialog's message. */
+    const pick = async (scope: Element, label: string) => {
+      options(scope).find(o => o.textContent!.trim().startsWith(label))!.click();
+      await settle();
+      return scope.querySelector('.picker-dialog [role="alert"]')?.textContent?.trim() ?? null;
+    };
+    return { fixture, host, button, select, choose, click, summary, options, pick };
   }
 
-  it('titles the page Dragonbane Character Creator, with a section and a roll button per step in book order', async () => {
+  /** The page with the creator open. */
+  async function create() {
     const page = await render();
+    await page.click('Create character');
+    return page;
+  }
+
+  it('lands on My characters, with no creator, and Create character opens the creator in place of the list', async () => {
+    const page = await render();
+
+    expect(page.host.querySelector('.creation-steps')).toBeNull();
+    expect(page.button('Create character').classList).toContain('btn-primary');
+    expect(page.host.querySelector('#my-characters-heading')).not.toBeNull();
+
+    await page.click('Create character');
+
+    expect(page.host.querySelector('.creation-steps')).not.toBeNull();
+    expect(page.host.querySelector('#my-characters-heading')).toBeNull();
+    expect(page.host.querySelector('.characters-table, .npc-file-actions')).toBeNull();
+    const heading = page.host.querySelector<HTMLElement>('h2#create-heading')!;
+    expect(heading.textContent?.trim()).toBe('New character');
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(heading);
+  });
+
+  it('Back to list discards the creation and returns focus to the My characters heading', async () => {
+    const page = await create();
+    await page.click('Random character');
+
+    await page.click('Back to list');
+
+    expect(page.host.querySelector('.creation-steps')).toBeNull();
+    expect(document.activeElement).toBe(page.host.querySelector('#my-characters-heading'));
+    await page.click('Create character');
+    expect(page.host.querySelector<HTMLInputElement>('#cc-name')!.value).toBe('');
+    expect(page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim()).toBe('Unnamed hero');
+  });
+
+  it('Export works before saving: a fresh, empty creation opens the dialog and makes text, Markdown and the PDF', async () => {
+    const page = await create();
+
+    await page.click('Export');
+
+    const dialog = page.host.querySelector<HTMLDialogElement>('dialog.export-dialog')!;
+    expect(dialog.open).toBe(true);
+    expect(dialog.querySelector('h2')?.textContent?.trim()).toBe('Export Unnamed hero');
+    const menu = page.fixture.debugElement.query(By.directive(CharacterExportMenu)).componentInstance as unknown as {
+      toText(): string; toMarkdown(): string; pdf(): Promise<Blob>;
+    };
+    expect(menu.toText()).toContain('Attributes:');
+    expect(menu.toMarkdown()).toContain('Attributes');
+    expect((await menu.pdf()).size).toBeGreaterThan(0);
+
+    await page.click('Close');
+    expect(dialog.querySelector('app-character-export-menu')).toBeNull();
+    expect(page.host.querySelector('.creation-steps')).not.toBeNull();
+  });
+
+  it('the spell dialog adds starting spells and says when the spells are full', async () => {
+    const page = await create();
+    await page.choose('cc-profession', 'Mage');
+    await page.choose('cc-school', 'Animism');
+    const spells = [...page.host.querySelectorAll('fieldset')].find(f => f.querySelector('legend')?.textContent?.startsWith('Spells'))!;
+
+    for (const name of ['Animal whisperer', 'Banish', 'Cure']) expect(await page.pick(spells, name)).toBeNull();
+    expect(spells.querySelector('.chips')!.textContent).toContain('Cure (Animism)');
+    expect(await page.pick(spells, 'Cure')).toBe('Already known.');
+    expect(await page.pick(spells, 'Ensnaring roots')).toBe('No room: 3 spells and 3 tricks at most.');
+    expect(spells.querySelector('.chips')!.textContent).not.toContain('Ensnaring');
+  });
+
+  it('the heroic ability dialog sets the ability and names it on its button', async () => {
+    const page = await create();
+    await page.choose('cc-profession', 'Artisan');
+    expect(page.button('Choose heroic ability…')).toBeTruthy();
+    expect(page.host.querySelector('#cc-ability')).toBeNull();
+    const step = page.host.querySelectorAll('.creation-step')[6];
+    expect(page.options(step).map(o => o.textContent!.trim())).toEqual(['Master Blacksmith', 'Master Carpenter', 'Master Tanner']);
+
+    expect(await page.pick(step, 'Master Carpenter')).toBeNull();
+
+    expect(page.summary()).toContain('Master Carpenter');
+    expect(page.button('Master Carpenter (change)')).toBeTruthy();
+  });
+
+  it('titles the page Dragonbane Character Creator, with a section and a roll button per step in book order', async () => {
+    const page = await create();
 
     expect(page.host.querySelector('h1')?.textContent?.trim()).toBe('Dragonbane Character Creator');
     expect([...page.host.querySelectorAll('details summary .step-label')].map(s => s.textContent?.trim())).toEqual([
@@ -69,7 +183,7 @@ describe('CharactersPage', () => {
   });
 
   it('Random character fills the summary: a name, a kin and HP above 0', async () => {
-    const page = await render();
+    const page = await create();
 
     await page.click('Random character');
 
@@ -81,7 +195,7 @@ describe('CharactersPage', () => {
   });
 
   it('the profession roll changes only the profession section and announces the cleared picks', async () => {
-    const page = await render();
+    const page = await create();
     await page.choose('cc-kin', 'Human');
     await page.choose('cc-age', 'Adult');
     await page.choose('cc-profession', 'Fighter');
@@ -97,7 +211,7 @@ describe('CharactersPage', () => {
   });
 
   it('a choice inside the gear package swaps that item and keeps the money', async () => {
-    const page = await render();
+    const page = await create();
     await page.choose('cc-profession', 'Fighter');
     await page.choose('cc-gear', '1');
     const money = /Money: ([^\n]*?)(?=Weakness|$)/.exec(page.summary())![1];
@@ -110,7 +224,7 @@ describe('CharactersPage', () => {
   });
 
   it('Save is disabled on a fresh page and lists what is missing', async () => {
-    const page = await render();
+    const page = await create();
 
     expect(page.button('Save').disabled).toBe(true);
     const problems = [...page.host.querySelectorAll('.creation-problems li')].map(li => li.textContent?.trim());
@@ -119,7 +233,7 @@ describe('CharactersPage', () => {
   });
 
   it('attributes: six typed scores set them, kept within 3-18, and one swap is allowed', async () => {
-    const page = await render();
+    const page = await create();
     const scores = { STR: 25, CON: 12, AGL: 9, INT: 14, WIL: 11, CHA: 2 };
     for (const [a, v] of Object.entries(scores)) {
       const box = page.host.querySelector<HTMLInputElement>(`#cc-attr-${a}`)!;
@@ -136,7 +250,7 @@ describe('CharactersPage', () => {
   });
 
   it('the summary shows dashes, not placeholder scores, until the attributes are set', async () => {
-    const page = await render();
+    const page = await create();
 
     expect(page.summary()).toContain('STR – CON –');
     expect(page.summary()).toContain('HP –');
@@ -146,7 +260,7 @@ describe('CharactersPage', () => {
   });
 
   it('skill checkbox ids have no spaces', async () => {
-    const page = await render();
+    const page = await create();
     await page.choose('cc-profession', 'Fighter');
 
     const ids = [...page.host.querySelectorAll<HTMLInputElement>('.skill-checks input')].map(i => i.id);
@@ -164,26 +278,30 @@ describe('CharactersPage', () => {
       expect(page.host.textContent).toContain('No saved characters yet.');
     });
 
-    it('Save stores the finished character, resets the creator and lists it', async () => {
-      const page = await render();
+    it('Save stores the finished character, returns to the list with its row and announces it', async () => {
+      const page = await create();
       await page.click('Random character');
       const name = page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim();
 
       await page.click('Save');
 
-      expect(TestBed.inject(CharacterStore).characters().map(c => [c.name, c.nickname].filter(Boolean).join(' '))).toEqual([name]);
-      expect(page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim()).toBe('Unnamed hero');
-      expect(page.button('Save').disabled).toBe(true);
+      const store = TestBed.inject(CharacterStore);
+      expect(store.characters().map(c => [c.name, c.nickname].filter(Boolean).join(' '))).toEqual([name]);
+      expect(page.host.querySelector('.creation-steps')).toBeNull();
+      expect(page.host.querySelector('.characters-table tbody')!.textContent).toContain(store.characters()[0].name);
       const statuses = [...page.host.querySelectorAll('.save-status')];
       expect(statuses.length).toBe(1);
-      expect(statuses[0].textContent).toContain(`Saved ${TestBed.inject(CharacterStore).characters()[0].name}.`);
+      expect(statuses[0].textContent?.trim()).toBe(`Saved ${store.characters()[0].name}.`);
+      // A fresh creation: nothing carried over, and the first change clears the status.
+      await page.click('Create character');
+      expect(page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim()).toBe('Unnamed hero');
+      expect(page.button('Save').disabled).toBe(true);
       await page.click('Random character');
       expect(page.host.querySelector('.save-status')!.textContent!.trim()).toBe('');
-      expect(page.host.querySelector('.characters-table tbody')!.textContent).toContain(TestBed.inject(CharacterStore).characters()[0].name);
     });
 
     it('Save keeps keyboard focus on the page: it moves to the My characters heading', async () => {
-      const page = await render();
+      const page = await create();
       await page.click('Random character');
       page.button('Save').focus();
 
@@ -196,6 +314,7 @@ describe('CharactersPage', () => {
       const page = await render();
       const store = TestBed.inject(CharacterStore);
       for (let i = 0; i < 2; i++) {
+        await page.click('Create character');
         await page.click('Random character');
         await page.click('Save');
       }
@@ -260,15 +379,7 @@ describe('CharactersPage', () => {
       return { ...page, editor, box, type, fieldset, options, pick };
     }
 
-    beforeEach(() => {
-      // jsdom has no modal dialog.
-      HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
-      HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; };
-    });
-
     it('Export opens the export menu for that character in a dialog, and Close empties it', async () => {
-      HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
-      HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; this.dispatchEvent(new Event('close')); };
       const page = await render();
       await page.click('Export Aodhan');
 
@@ -348,17 +459,16 @@ describe('CharactersPage', () => {
 
       expect(TestBed.inject(CharacterStore).characters()).toEqual([aodhan]);
       expect(page.host.querySelector('app-character-editor')).toBeNull();
+      expect(page.host.querySelector('.characters-table')).not.toBeNull();
+      expect(document.activeElement).toBe(page.host.querySelector('#my-characters-heading'));
     });
 
-    it('while one character is open, the other rows cannot open theirs (the open draft is kept)', async () => {
-      TestBed.inject(CharacterStore).save({ ...aodhan, id: 'bryn-1', name: 'Bryn' });
+    it('Edit shows the editor in place of the list, with no creator', async () => {
       const page = await edit();
-      await page.type('ce-name', 'Aodhan the Bold');
 
-      expect(page.button('Edit Bryn').disabled).toBe(true);
-      expect(page.button('Edit Bryn').getAttribute('aria-describedby')).toBe('edit-open');
-      expect(page.host.querySelector('#edit-open')!.textContent).toContain('Save or cancel');
-      expect(page.box('ce-name').value).toBe('Aodhan the Bold');
+      expect(page.editor).not.toBeNull();
+      expect(page.host.querySelector('.characters-table, #my-characters-heading, .creation-steps')).toBeNull();
+      expect(page.button('Create character')).toBeUndefined();
     });
 
     it('announces an edit save in a status region that stays on the page', async () => {
@@ -432,17 +542,6 @@ describe('CharactersPage', () => {
         ref.categories.pop();
         ref.equipment.pop();
       }
-    });
-
-    it('the creator draft survives Edit then Cancel', async () => {
-      const page = await render();
-      await page.choose('cc-kin', 'Dwarf');
-
-      await page.click('Edit Aodhan');
-      await page.click('Cancel');
-
-      expect(page.select('cc-kin').value).toBe('Dwarf');
-      expect(page.summary()).toContain('Kin: Dwarf');
     });
   });
 });

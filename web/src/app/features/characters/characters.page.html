@@ -3,13 +3,13 @@
 
   @if (loadFailed()) {
     <p class="status" role="alert">The creation tables could not be loaded. Is the API running?</p>
-  } @else if (editing(); as e) {
+  } @else if (view() === 'edit' && editing(); as e) {
     <app-character-editor [character]="e" [ref]="ref()!" (saved)="saveEdit($event)" (cancelled)="closeEditor()" />
-  } @else if (ref(); as r) {
+  } @else if (view() === 'create' && ref(); as r) {
     @let c = creation();
     @let ch = c.character;
+    <h2 class="npc-heading" id="create-heading" tabindex="-1" #createHeading>New character</h2>
     <div class="creation-actions">
-      <p>Work through the steps in order, or roll any of them. Changing an early step clears what no longer fits.</p>
       <button type="button" class="btn btn-primary" (click)="random()">Random character</button>
     </div>
 
@@ -154,9 +154,7 @@
                         }
                         <fieldset class="chip-group">
                           <legend>Spells ({{ counts().spells }} of {{ maxSpells }}) and tricks ({{ counts().tricks }} of {{ maxTricks }})</legend>
-                          @if (spellChoices().length) {
-                            <app-chip-picker pickerId="cc-spell" noun="spell" [options]="spellLabels()" [accept]="acceptSpell" />
-                          }
+                          <app-picker-dialog buttonLabel="Add spell…" heading="Add a spell" [groups]="spellPicks()" [accept]="acceptSpell" />
                           <ul class="chips" aria-label="Spells">
                             @for (spell of ch.spells; track spellLabel(spell)) {
                               <li>
@@ -167,13 +165,8 @@
                           </ul>
                         </fieldset>
                       } @else if (p.heroicAbilities.length > 1) {
-                        <div class="field">
-                          <label for="cc-ability">Heroic ability</label>
-                          <select id="cc-ability" (change)="chooseAbility($event)">
-                            <option value="" [selected]="!ch.abilities.length" disabled>Choose a heroic ability</option>
-                            @for (a of p.heroicAbilities; track a) { <option [value]="a" [selected]="a === ch.abilities[0]?.name">{{ a }}</option> }
-                          </select>
-                        </div>
+                        <app-picker-dialog [buttonLabel]="ch.abilities[0] ? ch.abilities[0].name + ' (change)' : 'Choose heroic ability…'"
+                          heading="Choose a heroic ability" [groups]="abilityPicks()" [accept]="acceptAbility" />
                       } @else if (p.heroicAbilities.length) {
                         <p>Heroic ability: {{ p.heroicAbilities[0] }}.</p>
                       }
@@ -217,7 +210,12 @@
         </div>
 
         <div class="creation-save">
-          <button type="button" class="btn btn-primary" [disabled]="problems().length" (click)="save()" [attr.aria-describedby]="problems().length ? 'cc-problems' : null">Save</button>
+          <div class="npc-form-actions">
+            <button type="button" class="btn btn-primary" [disabled]="problems().length" (click)="save()" [attr.aria-describedby]="problems().length ? 'cc-problems' : null">Save</button>
+            <!-- Any time, finished or not: an unsaved character is still worth a printout. -->
+            <button type="button" class="btn btn-secondary" (click)="exporting.set(character())">Export</button>
+            <button type="button" class="btn btn-secondary" (click)="backToList()">Back to list</button>
+          </div>
           @if (problems().length) {
             <ul id="cc-problems" class="creation-problems" aria-label="Still to do">
               @for (problem of problems(); track problem) { <li>{{ problem }}</li> }
@@ -230,75 +228,78 @@
         <app-character-summary [character]="character()" [ref]="r" [rolled]="!!c.rolledAttributes" />
       </div>
     </div>
-  } @else {
+  } @else if (!ref()) {
     <p class="status" aria-live="polite">Loading…</p>
   }
 
-  <h2 class="npc-heading" id="my-characters-heading" tabindex="-1" #myHeading>My characters</h2>
-  <!-- Always on the page, so a save from the creator or the editor is announced (the editor replaces the creator). -->
-  <p class="save-status" role="status">{{ saveStatus() }}</p>
-  <!-- The whole list as a JSON file: a backup, or a way to move characters to another browser. -->
-  <div class="npc-file-actions">
-    <button type="button" class="btn btn-secondary btn-small" [disabled]="store.characters().length === 0" (click)="exportAll()">Export all as JSON</button>
-    <button type="button" class="btn btn-secondary btn-small" (click)="fileInput.click()">Import JSON</button>
-    <input #fileInput type="file" accept=".json,application/json" hidden (change)="importFile($event)" />
-    <p class="import-status" role="status">{{ importStatus() }}</p>
-  </div>
-  @if (store.characters().length === 0) {
-    <p class="status">No saved characters yet.</p>
-  } @else {
-    @if (editing(); as e) {
-      <p class="status" id="edit-open">Editing {{ e.name }}. Save or cancel it to edit another character.</p>
-    }
-    <div class="table-wrap" tabindex="0" role="region" aria-label="My characters table">
-      <table class="data-table stack characters-table">
-        <caption>My characters</caption>
-        <thead>
-          <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Kin</th>
-            <th scope="col">Profession</th>
-            <th scope="col"><span class="visually-hidden">Actions</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (saved of store.characters(); track saved.id) {
-            <tr>
-              <td class="row-title">{{ saved.name }}</td>
-              <td data-label="Kin">{{ saved.kin }}</td>
-              <td data-label="Profession">{{ saved.profession }}</td>
-              <td>
-                <div class="row-actions">
-                  @if (confirmingDelete() === saved.id) {
-                    <span>Delete {{ saved.name }}?</span>
-                    <button type="button" class="btn btn-primary btn-small" (click)="remove(saved)">Yes, delete</button>
-                    <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
-                  } @else {
-                    @let otherOpen = !!editing() && editing()!.id !== saved.id;
-                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref() || otherOpen"
-                      [attr.aria-describedby]="otherOpen ? 'edit-open' : null" [attr.aria-label]="'Edit ' + saved.name" (click)="edit(saved, $event)">Edit</button>
-                    <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
-                      [attr.aria-label]="'Export ' + saved.name" (click)="exporting.set(saved)">Export</button>
-                    <button type="button" class="btn btn-secondary btn-small"
-                      [attr.aria-label]="'Delete ' + saved.name" (click)="confirmingDelete.set(saved.id)">Delete</button>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+  @if (view() === 'list') {
+    <div class="creation-actions">
+      <button type="button" class="btn btn-primary" [disabled]="!ref()" (click)="startCreation()">Create character</button>
     </div>
+    <h2 class="npc-heading" id="my-characters-heading" tabindex="-1" #myHeading>My characters</h2>
+  }
+  <!-- Outside the views, so a save from the creator or the editor is still announced once the list is back. -->
+  <p class="save-status" role="status">{{ saveStatus() }}</p>
+  @if (view() === 'list') {
+    <!-- The whole list as a JSON file: a backup, or a way to move characters to another browser. -->
+    <div class="npc-file-actions">
+      <button type="button" class="btn btn-secondary btn-small" [disabled]="store.characters().length === 0" (click)="exportAll()">Export all as JSON</button>
+      <button type="button" class="btn btn-secondary btn-small" (click)="fileInput.click()">Import JSON</button>
+      <input #fileInput type="file" accept=".json,application/json" hidden (change)="importFile($event)" />
+      <p class="import-status" role="status">{{ importStatus() }}</p>
+    </div>
+    @if (store.characters().length === 0) {
+      <p class="status">No saved characters yet.</p>
+    } @else {
+      <div class="table-wrap" tabindex="0" role="region" aria-label="My characters table">
+        <table class="data-table stack characters-table">
+          <caption>My characters</caption>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Kin</th>
+              <th scope="col">Profession</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (saved of store.characters(); track saved.id) {
+              <tr>
+                <td class="row-title">{{ saved.name }}</td>
+                <td data-label="Kin">{{ saved.kin }}</td>
+                <td data-label="Profession">{{ saved.profession }}</td>
+                <td>
+                  <div class="row-actions">
+                    @if (confirmingDelete() === saved.id) {
+                      <span>Delete {{ saved.name }}?</span>
+                      <button type="button" class="btn btn-primary btn-small" (click)="remove(saved)">Yes, delete</button>
+                      <button type="button" class="btn btn-secondary btn-small" (click)="confirmingDelete.set(null)">Keep</button>
+                    } @else {
+                      <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                        [attr.aria-label]="'Edit ' + saved.name" (click)="edit(saved)">Edit</button>
+                      <button type="button" class="btn btn-secondary btn-small" [disabled]="!ref()"
+                        [attr.aria-label]="'Export ' + saved.name" (click)="exporting.set(saved)">Export</button>
+                      <button type="button" class="btn btn-secondary btn-small"
+                        [attr.aria-label]="'Delete ' + saved.name" (click)="confirmingDelete.set(saved.id)">Delete</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   }
 </section>
 
-<!-- Export: copy or download a saved character as an image, text or Markdown. -->
+<!-- Export: copy or download a character, saved or still in the creator, as an image, text, Markdown or the sheet PDF. -->
 <dialog #exportDialog class="app-dialog export-dialog" aria-labelledby="export-dialog-title" (close)="exporting.set(null)" (mousedown)="backdrop.pressStart($event)" (click)="backdrop.closeOnBackdrop($event)">
   <button type="button" class="dialog-close" aria-label="Close" (click)="exporting.set(null)"></button>
   <div class="dialog-body">
-    @if (exporting(); as saved) {
-      <h2 id="export-dialog-title" class="npc-heading">Export {{ saved.name }}</h2>
-      <app-character-export-menu [character]="saved" [ref]="ref()!" />
+    @if (exporting(); as c) {
+      <h2 id="export-dialog-title" class="npc-heading">Export {{ c.name || 'Unnamed hero' }}</h2>
+      <app-character-export-menu [character]="c" [ref]="ref()!" />
     }
   </div>
 </dialog>

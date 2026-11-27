@@ -46,6 +46,7 @@ for (const viewport of viewports) {
     test('/characters: a random character with every step open is axe-clean, fits, and puts the summary beside or below', async ({ page }) => {
       await page.goto('/characters');
       await expect(page.locator('.page-shell')).not.toHaveAttribute('inert');
+      await page.getByRole('button', { name: 'Create character' }).click();
       await page.getByRole('button', { name: 'Random character' }).click();
       for (const summary of await page.locator('.creation-step summary').all()) {
         if (!(await summary.evaluate(s => (s.parentElement as HTMLDetailsElement).open))) await summary.click();
@@ -73,6 +74,7 @@ for (const viewport of viewports) {
       await page.goto('/characters');
       await expect(page.locator('.page-shell')).not.toHaveAttribute('inert');
       for (let i = 0; i < 2; i++) {
+        await page.getByRole('button', { name: 'Create character' }).click();
         await page.getByRole('button', { name: 'Random character' }).click();
         await page.getByRole('button', { name: 'Save', exact: true }).click();
       }
@@ -96,9 +98,9 @@ for (const viewport of viewports) {
       await expect(exportDialog).toBeHidden();
 
       await page.locator('.characters-table').getByRole('button', { name: /^Edit / }).first().click();
-      // The other row's Edit is disabled, with the hint saying why.
-      await expect(page.locator('#edit-open')).toBeVisible();
-      await expect(page.locator('app-character-editor h2')).toBeFocused();
+      // The editor replaces the list.
+      await expect(page.locator('.characters-table')).toBeHidden();
+      await expect(page.locator('app-character-editor > h2')).toBeFocused();
       // A count box beside the gear chips (each with a quantity and a note) the random character carries.
       const addAbility = async (name: string) => {
         await page.getByRole('button', { name: 'Add heroic ability…' }).click();

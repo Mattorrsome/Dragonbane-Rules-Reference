@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, linkedSignal, signal, viewChild } from '@angular/core';
+import {
+  afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, linkedSignal, signal, viewChild,
+} from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import {
   AgeDto, AppearanceDto, EquipmentCategoryDto, EquipmentItemDto, HeroicAbilityDto, KinDto, MagicSchoolDto, MementoDto, ProfessionDto, SkillDto,
@@ -15,8 +17,10 @@ import { randomCharacter, rollStep } from '../../character/random';
 import { DiceRoller } from '../../dice/dice-roller';
 import { ATTRIBUTES, Attribute, SpellRef, same, sameSpell } from '../../hero/hero';
 import { spellLabel } from '../../hero/hero-card';
+import { abilityGroups, spellGroups } from '../../hero/picker-groups';
 import { ChipPicker } from '../../shared/chip-picker';
 import { BackdropDismiss, toggleDialog } from '../../shared/dialog';
+import { PickerDialog } from '../../shared/picker-dialog';
 import { download } from '../../shared/file';
 import { slug } from '../../shared/text';
 import { CharacterEditor } from './character-editor';
@@ -43,10 +47,13 @@ type TextField = 'name' | 'nickname' | 'weakness' | 'memento' | 'appearance';
 
 const valueOf = (event: Event) => (event.target as HTMLInputElement | HTMLSelectElement).value;
 
-/** Guided and random character creation (layout B): the steps on the left, the live summary beside or below them. */
+/**
+ * My characters first; Create character opens guided and random creation (layout B: the steps on the left, the live
+ * summary beside or below them) and Edit opens the editor, each in place of the list.
+ */
 @Component({
   selector: 'app-characters-page',
-  imports: [ChipPicker, CharacterEditor, CharacterSummary, CreationGear, CharacterExportMenu],
+  imports: [ChipPicker, PickerDialog, CharacterEditor, CharacterSummary, CreationGear, CharacterExportMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './characters.page.html',
 })
@@ -59,11 +66,14 @@ export class CharactersPage {
   /** What the last Save and the last JSON import did. */
   protected readonly saveStatus = signal('');
   protected readonly importStatus = signal('');
-  /** The saved character open in the editor (advancement), in place of the creator. */
+  /** One view at a time: the saved list (landing), the creator, or the editor on a saved character. */
+  protected readonly view = signal<'list' | 'create' | 'edit'>('list');
+  private readonly createHeading = viewChild<ElementRef<HTMLElement>>('createHeading');
+  private readonly injector = inject(Injector);
+  /** The saved character open in the editor (advancement). */
   protected readonly editing = signal<SavedCharacter | null>(null);
-  private editTrigger?: HTMLElement;
-  /** The saved character open in the export menu. */
-  protected readonly exporting = signal<SavedCharacter | null>(null);
+  /** The character open in the export menu: a saved one, or the creation before it is saved. */
+  protected readonly exporting = signal<Character | null>(null);
   private readonly exportDialog = viewChild.required<ElementRef<HTMLDialogElement>>('exportDialog');
   // The dialog follows its signal: open while it holds a character, closed otherwise.
   private readonly syncExportDialog = effect(() => toggleDialog(this.exportDialog().nativeElement, !!this.exporting()));
@@ -143,19 +153,28 @@ export class CharactersPage {
   });
   protected readonly maxSpells = MAX_SPELLS;
   protected readonly maxTricks = MAX_TRICKS;
-  /** Spell options still open: not known, and their kind (spell or trick) not yet full. */
-  protected readonly spellChoices = computed(() => {
-    const { spells, tricks } = this.counts();
-    const known = this.creation().character.spells;
-    return spellOptions(this.creation(), this.ref()!)
-      .filter(o => !known.some(k => sameSpell(k, o)) && (o.kind === 'Trick' ? tricks < MAX_TRICKS : spells < MAX_SPELLS))
-      .map(o => ({ label: spellLabel(o), spell: { name: o.name, school: o.school, kind: o.kind } as SpellRef }));
+  /** The school's starting spells and tricks, grouped for the add dialog. */
+  protected readonly spellPicks = computed(() => spellGroups(spellOptions(this.creation(), this.ref()!), this.creation().character.spells));
+  protected readonly acceptSpell = (id: string): string | null => {
+    const c = this.creation();
+    const option = spellOptions(c, this.ref()!).find(o => spellLabel(o) === id);
+    if (!option) return 'Not found.';
+    if (c.character.spells.some(k => sameSpell(k, option))) return 'Already known.';
+    const next = toggleSpell(c, { name: option.name, school: option.school, kind: option.kind } as SpellRef, this.ref()!);
+    if (next === c) return `No room: ${MAX_SPELLS} spells and ${MAX_TRICKS} tricks at most.`;
+    this.update(next);
+    return null;
+  };
+
+  /** The profession's heroic abilities (Artisan chooses one), grouped for the dialog. */
+  protected readonly abilityPicks = computed(() => {
+    const names = this.profession()?.heroicAbilities ?? [];
+    const abilities = this.ref()!.abilities.filter(a => names.some(n => same(n, a.name)));
+    return abilityGroups(abilities, this.creation().character.abilities.map(a => a.name));
   });
-  protected readonly spellLabels = computed(() => this.spellChoices().map(o => o.label));
-  protected readonly acceptSpell = (text: string): boolean => {
-    const choice = this.spellChoices().find(o => same(o.label, text));
-    if (choice) this.update(toggleSpell(this.creation(), choice.spell, this.ref()!));
-    return !!choice;
+  protected readonly acceptAbility = (id: string): string | null => {
+    this.update(setHeroicAbility(this.creation(), id));
+    return null;
   };
 
   /** The six boxes: the rolled or entered scores, or what has been typed so far. */
@@ -251,27 +270,40 @@ export class CharactersPage {
     this.apply(setSchool(this.creation(), school, this.ref()!));
   }
 
-  protected chooseAbility(event: Event): void {
-    this.update(setHeroicAbility(this.creation(), valueOf(event)));
-  }
-
   protected removeSpell(spell: SpellRef): void {
     this.update(toggleSpell(this.creation(), spell, this.ref()!));
   }
-  /** Stores the finished character and starts a fresh one. */
-  protected save(): void {
-    const saved = this.store.save(this.character());
-    this.creation.set(newCreation());
-    this.cleared.set([]);
-    this.saveStatus.set(`Saved ${saved.name || 'the character'}.`);
-    // Save is now disabled (the fresh creator lists what is missing); keep focus in the page, beside the new row.
-    this.myHeading()?.nativeElement.focus();
+
+  /** Switches view, then focuses its heading once it is drawn (the editor focuses its own). */
+  private show(view: 'list' | 'create' | 'edit'): void {
+    this.view.set(view);
+    const heading = view === 'list' ? this.myHeading : view === 'create' ? this.createHeading : null;
+    if (heading) afterNextRender(() => heading()?.nativeElement.focus(), { injector: this.injector });
   }
 
-  /** Opens the editor on a saved character; closing it returns focus to this Edit button. */
-  protected edit(c: SavedCharacter, event: Event): void {
-    this.editTrigger = event.currentTarget as HTMLElement;
+  /** A fresh creation, always: Back to list and Save both discard the draft. */
+  protected startCreation(): void {
+    this.creation.set(newCreation());
+    this.cleared.set([]);
+    this.show('create');
+  }
+
+  protected backToList(): void {
+    this.creation.set(newCreation());
+    this.cleared.set([]);
+    this.show('list');
+  }
+
+  /** Stores the finished character and returns to the list, where its row now is. */
+  protected save(): void {
+    const saved = this.store.save(this.character());
+    this.backToList();
+    this.saveStatus.set(`Saved ${saved.name || 'the character'}.`);
+  }
+
+  protected edit(c: SavedCharacter): void {
     this.editing.set(c);
+    this.show('edit');
   }
 
   /** Replaces the saved character (same id). */
@@ -283,12 +315,11 @@ export class CharactersPage {
 
   protected closeEditor(): void {
     this.editing.set(null);
-    this.editTrigger?.focus();
+    this.show('list');
   }
 
   protected remove(c: SavedCharacter): void {
     this.store.remove(c.id);
-    if (this.editing()?.id === c.id) this.editing.set(null);
     this.confirmingDelete.set(null);
     // The row and its buttons are gone; keep focus in the section.
     this.myHeading()?.nativeElement.focus();
