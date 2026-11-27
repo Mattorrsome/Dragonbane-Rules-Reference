@@ -23,7 +23,7 @@ All five sections built: API in `Dragonbane.slnx` (`src/Dragonbane.Api`, `tests/
 
 ## What it is
 
-A Dragonbane RPG lookup app used at the gaming table, plus a showcase of current Angular and ASP.NET best practices. The Reference has five sections: Skills, Heroic Abilities, Spells, Equipment and Treasure. The NPC Manager (`/npcs`) tweaks the typical NPCs from `Dragonbane_NPC_Table.md` and saves them in local storage; see `docs/superpowers/specs/2026-10-27-npc-manager-and-feedback-design.md`. The Character Creator (`/characters`) builds characters step by step or at random from `Dragonbane_Character_Creation.md`, saves and advances them in local storage, and exports them as text, Markdown, an image or a filled-in official character sheet PDF; see `docs/superpowers/specs/2026-11-26-character-creator-design.md`.
+A Dragonbane RPG lookup app used at the gaming table, plus a showcase of current Angular and ASP.NET best practices. The Reference has five sections: Skills, Heroic Abilities, Spells, Equipment and Treasure. The NPC Manager (`/npcs`) tweaks the typical NPCs from `Dragonbane_NPC_Table.md` and saves them in local storage; see `docs/superpowers/specs/2026-10-27-npc-manager-and-feedback-design.md`. The Character Creator (`/characters`) opens on a list of saved characters (Create character starts a new one), builds characters step by step or at random from `Dragonbane_Character_Creation.md`, exports them before saving (text, Markdown, an image or a filled-in official character sheet PDF, in colour or printer-friendly black and white), and saves and advances them in local storage; see `docs/superpowers/specs/2026-11-26-character-creator-design.md`.
 
 ## Architecture (from the design)
 

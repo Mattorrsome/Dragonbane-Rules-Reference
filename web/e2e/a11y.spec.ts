@@ -76,7 +76,19 @@ for (const viewport of viewports) {
       for (let i = 0; i < 2; i++) {
         await page.getByRole('button', { name: 'Create character' }).click();
         await page.getByRole('button', { name: 'Random character' }).click();
+        if (i === 0) {
+          // Export before saving: the printer-friendly sheet PDF downloads, then Save returns to the list.
+          await page.getByRole('button', { name: 'Export', exact: true }).click();
+          const creatorExport = page.getByRole('dialog', { name: /^Export / });
+          await creatorExport.getByRole('button', { name: 'Download', exact: true }).click();
+          await creatorExport.locator('#export-printer').check();
+          const [bw] = await Promise.all([page.waitForEvent('download'), creatorExport.getByRole('button', { name: 'Download PDF' }).click()]);
+          expect(bw.suggestedFilename()).toMatch(/\.pdf$/);
+          await creatorExport.getByRole('button', { name: 'Close' }).click();
+          await expect(creatorExport).toBeHidden();
+        }
         await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await expect(page.getByRole('button', { name: 'Create character' })).toBeVisible();
       }
       await expect(page.locator('.characters-table tbody tr')).toHaveCount(2);
       await check();
@@ -448,6 +460,82 @@ for (const viewport of viewports) {
 
       await page.keyboard.press('Escape');
       await expect(dialog).toBeHidden();
+    });
+  });
+}
+
+/** Picker dialog: axe, focus return, stacking, and the header brand at phone width. */
+for (const viewport of viewports) {
+  test.describe(`picker dialog ${viewport.width}×${viewport.height}`, () => {
+    test.use({ viewport });
+    type Page = import('@playwright/test').Page;
+    const axeOpen = async (page: Page) => {
+      const results = await new AxeBuilder({ page }).include('dialog[open]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(results.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).slice(0, 3).join(', ')}`)).toEqual([]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    };
+
+    /** Escape, Close and a pick each hand focus back to the opening button. */
+    const focusReturns = async (page: Page, opener: import('@playwright/test').Locator) => {
+      const dialog = page.locator('dialog.picker-dialog[open]');
+      await opener.click();
+      await expect(dialog).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(opener).toBeFocused();
+
+      await opener.click();
+      await dialog.locator('.dialog-close').click();
+      await expect(dialog).toBeHidden();
+      await expect(opener).toBeFocused();
+
+      await opener.click();
+      await dialog.getByRole('option').first().click();
+      await expect(dialog).toBeHidden();
+      await expect(opener).toBeFocused();
+    };
+
+    test('NPC spell picker is axe-clean, stacks on a phone, and returns focus', async ({ page }) => {
+      await page.goto('/npcs');
+      await page.evaluate(() => localStorage.removeItem('dragonbane.npcs.v1'));
+      await page.reload();
+      await expect(page.getByRole('button', { name: 'Tweak Bandit chief' })).toBeEnabled();
+      await page.getByRole('button', { name: 'Tweak Bandit chief' }).click();
+      const opener = page.getByRole('button', { name: 'Add spell…' });
+      await opener.click();
+      const dialog = page.getByRole('dialog', { name: 'Add a spell' });
+      await expect(dialog.getByRole('option').first()).toBeVisible();
+      await axeOpen(page);
+      const { list, desc } = await dialog.evaluate(d => ({
+        list: d.querySelector('.picker-dialog-list')!.getBoundingClientRect().toJSON(),
+        desc: d.querySelector('.picker-dialog-description')!.getBoundingClientRect().toJSON(),
+      }));
+      // Side by side on a laptop, description below the list on a phone.
+      if (viewport.width < 768) expect(desc.top).toBeGreaterThanOrEqual(list.bottom);
+      else expect(desc.left).toBeGreaterThanOrEqual(list.right);
+      await page.keyboard.press('Escape');
+      await expect(opener).toBeFocused();
+      await focusReturns(page, opener);
+    });
+
+    test('creator gear package picker is axe-clean and returns focus; the brand does not overflow', async ({ page }) => {
+      await page.goto('/characters');
+      await expect(page.locator('.page-shell')).not.toHaveAttribute('inert', { timeout: 20000 });
+      await page.getByRole('button', { name: 'Create character' }).click();
+      await page.getByRole('button', { name: 'Random character' }).click();
+      for (const summary of await page.locator('.creation-step summary').all()) {
+        if (!(await summary.evaluate(s => (s.parentElement as HTMLDetailsElement).open))) await summary.click();
+      }
+      const opener = page.getByRole('button', { name: /^Gear package \(D6\): / });
+      await opener.scrollIntoViewIfNeeded();
+      await opener.click();
+      await expect(page.getByRole('dialog', { name: 'Choose a gear package' })).toBeVisible();
+      await axeOpen(page);
+      await page.keyboard.press('Escape');
+      await expect(opener).toBeFocused();
+      await focusReturns(page, opener);
+      await expect(page.locator('.nav-brand')).toHaveText('Dragonbane Character Creator');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     });
   });
 }
