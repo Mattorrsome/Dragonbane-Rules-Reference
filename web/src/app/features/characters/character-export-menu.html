@@ -1,4 +1,4 @@
-<app-export-menu [fileBase]="character().name" fallbackName="character" [text]="toText" [markdown]="toMarkdown" [pdf]="pdf()">
+<app-export-menu [fileBase]="character().name" fallbackName="character" [text]="toText" [markdown]="toMarkdown" [pdf]="pdf">
   <ng-container ngProjectAs="[exportOptions]">
     <div class="field-check">
       <input id="export-descriptions" type="checkbox" [checked]="descriptions()" (change)="setDescriptions($any($event.target).checked)" />

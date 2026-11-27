@@ -20,6 +20,17 @@ export interface CharacterCard {
   rows: CardRow[];
 }
 
+/** The kin abilities, as `abilityEntries` gives heroic ones ("Adaptive (3 WP)" and the effect with descriptions). */
+export function kinEntries(c: Character, ref: CreationReference, withDescriptions: boolean): CardEntry[] {
+  const kin = ref.kin.find(k => same(k.name, c.kin));
+  return c.kinAbilities.map((name): CardEntry => {
+    const ability = kin?.abilities.find(a => same(a.name, name));
+    return withDescriptions && ability
+      ? { text: ability.wp === null ? name : `${name} (${ability.wp} WP)`, detail: ability.effect }
+      : { text: name, detail: null };
+  });
+}
+
 export function buildCharacterCard(c: Character, ref: CreationReference, withDescriptions: boolean, rates?: CurrencyRates | null): CharacterCard {
   const d = derived(c, ref);
   const list = (label: string, entries: CardEntry[]): CardRow => ({ label, text: entries.map(e => e.text).join(', '), entries });
@@ -45,20 +56,13 @@ export function buildCharacterCard(c: Character, ref: CreationReference, withDes
     else gear.push(label + note);
   }
 
-  const kin = ref.kin.find(k => same(k.name, c.kin));
-  const kinEntries = c.kinAbilities.map((name): CardEntry => {
-    const ability = kin?.abilities.find(a => same(a.name, name));
-    return withDescriptions && ability
-      ? { text: ability.wp === null ? name : `${name} (${ability.wp} WP)`, detail: ability.effect }
-      : { text: name, detail: null };
-  });
   const bonus = d.damageBonuses.map(formatDamageBonus).join(', ');
 
   const rows: CardRow[] = [
     text('Attributes', ATTRIBUTES.map(a => `${a} ${c.attributes[a]}`).join(' ')),
     text('Ratings', [`HP ${d.hpMax}`, `WP ${d.wpMax}`, `Movement ${d.movement}`, ...(bonus ? [`Damage Bonus ${bonus}`] : []), `Carrying capacity ${d.capacity}`].join(' · ')),
     text('Skills', skills.join(', ')),
-    list('Abilities', [...kinEntries, ...abilityEntries(c.abilities, ref, withDescriptions)]),
+    list('Abilities', [...kinEntries(c, ref, withDescriptions), ...abilityEntries(c.abilities, ref, withDescriptions)]),
     list('Spells', spellEntries(c.spells, ref, withDescriptions)),
     text('Weapons', weapons.join(', ')),
     text('Armour', armour.join(', ')),

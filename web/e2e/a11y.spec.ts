@@ -88,6 +88,10 @@ for (const viewport of viewports) {
       const box = (await exportDialog.boundingBox())!;
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+      // The filled-in sheet PDF is made in the browser (fetching the sheet, fonts and parchment) and downloaded.
+      await exportDialog.getByRole('button', { name: 'Download', exact: true }).click();
+      const [pdf] = await Promise.all([page.waitForEvent('download'), exportDialog.getByRole('button', { name: 'Download PDF' }).click()]);
+      expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);
       await exportDialog.getByRole('button', { name: 'Close' }).click();
       await expect(exportDialog).toBeHidden();
 

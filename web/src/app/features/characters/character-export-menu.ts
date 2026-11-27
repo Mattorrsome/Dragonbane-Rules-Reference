@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { Character, CreationReference } from '../../character/character';
 import { buildCharacterCard, characterCardToMarkdown, characterCardToText } from '../../character/character-card';
+import { SHEET_ASSETS } from '../../character/pdf/sheet-assets';
 import { CurrencyRatesService } from '../../core/currency-rates';
 import { ExportMenu } from '../../shared/export-menu';
 import { CharacterCardView } from './character-card-view';
@@ -16,7 +17,7 @@ function readOption(): boolean {
   }
 }
 
-/** Copy or download one character as a card image, plain text or Markdown, with or without descriptions. */
+/** Copy or download one character as a card image, plain text or Markdown, with or without descriptions; or download the filled-in sheet PDF. */
 @Component({
   selector: 'app-character-export-menu',
   imports: [ExportMenu, CharacterCardView],
@@ -26,14 +27,18 @@ function readOption(): boolean {
 export class CharacterExportMenu {
   readonly character = input.required<Character>();
   readonly ref = input.required<CreationReference>();
-  /** Task 18 passes the PDF maker; null until then. */
-  readonly pdf = input<(() => Promise<Blob>) | null>(null);
 
   private readonly rates = inject(CurrencyRatesService).rates;
+  private readonly sheetAssets = inject(SHEET_ASSETS);
   protected readonly descriptions = signal(readOption());
   protected readonly card = computed(() => buildCharacterCard(this.character(), this.ref(), this.descriptions(), this.rates()));
   protected readonly toText = () => characterCardToText(this.card());
   protected readonly toMarkdown = () => characterCardToMarkdown(this.card());
+  /** pdf-lib and fontkit (about 420 kB compressed) load only when a PDF is asked for. */
+  protected readonly pdf = async () => {
+    const [{ buildSheetPdf }, assets] = await Promise.all([import('../../character/pdf/sheet-pdf'), this.sheetAssets()]);
+    return new Blob([await buildSheetPdf(this.character(), this.ref(), this.rates(), assets)], { type: 'application/pdf' });
+  };
 
   protected setDescriptions(on: boolean): void {
     this.descriptions.set(on);

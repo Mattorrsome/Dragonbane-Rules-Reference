@@ -28,4 +28,16 @@ describe('CharacterExportMenu', () => {
     host.querySelector<HTMLInputElement>('#export-descriptions')!.click();
     expect(localStorage.getItem('dragonbane.characterExport.descriptions')).toBe('true');
   });
+
+  it('offers the sheet PDF under Download', () => {
+    const fixture = TestBed.createComponent(CharacterExportMenu);
+    fixture.componentRef.setInput('character', hero);
+    fixture.componentRef.setInput('ref', creationRef);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    [...host.querySelectorAll('button')].find(b => b.textContent?.trim() === 'Download')!.click();
+    fixture.detectChanges();
+    expect(host.querySelector('button[aria-label="Download PDF"]')).not.toBeNull();
+  });
 });
