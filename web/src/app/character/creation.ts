@@ -42,6 +42,11 @@ const HARMONISM = 'Harmonism';
 const TRICKS_FROM_GENERAL_MAGIC = ['Alchemy', 'Enchanting'];
 const ALCHEMY = 'Alchemy';
 const DOSE = ', dose';
+/** "FOCUS TONIC" → "FOCUS TONIC, dose": an alchemist's finished dose as the gear holds it. */
+export const doseName = (recipe: string) => `${recipe}${DOSE}`;
+const ENCHANTED = 'Enchanted: ';
+/** "KEEN EDGE" → "Enchanted: KEEN EDGE + PERMANENCE": the note on an enchanter's item. */
+export const enchantNote = (spell: string) => `${ENCHANTED}${spell} + PERMANENCE`;
 const SIMPLE_CLOTHES: GearItem = { name: 'Simple clothes', quantity: 1, note: '' };
 
 const has = (names: readonly string[], name: string) => names.some(n => same(n, name));
@@ -250,7 +255,7 @@ function rechoose(c: Creation, entries: GearEntryDto[], choices: Record<number, 
 export function setAlchemistDoses(c: Creation, recipes: string[]): Creation {
   const known = c.character.spells.filter(s => s.kind === 'Recipe').map(s => s.name);
   if (!isAlchemist(c) || recipes.length !== DOSES || !recipes.every(r => has(known, r))) return c;
-  const doses = recipes.map(r => ({ name: `${known.find(k => same(k, r))}${DOSE}`, quantity: 1, note: '' }));
+  const doses = recipes.map(r => ({ name: doseName(known.find(k => same(k, r))!), quantity: 1, note: '' }));
   return withCharacter(c, { gear: [...c.character.gear.filter(g => !isDose(g)), ...doses] });
 }
 
@@ -258,6 +263,14 @@ export function setAlchemistDoses(c: Creation, recipes: string[]): Creation {
 export function setItemNote(c: Creation, itemIndex: number, note: string): Creation {
   if (!c.character.gear[itemIndex]) return c;
   return withCharacter(c, { gear: c.character.gear.map((g, i) => (i === itemIndex ? { ...g, note } : g)) });
+}
+
+/** An enchanter's one enchanted item: clears every enchantment note, then marks `itemIndex` (-1 for none) with the spell. */
+export function setEnchantment(c: Creation, itemIndex: number, spell: string): Creation {
+  return withCharacter(c, {
+    gear: c.character.gear.map((g, i) =>
+      i === itemIndex && spell ? { ...g, note: enchantNote(spell) } : g.note.startsWith(ENCHANTED) ? { ...g, note: '' } : g),
+  });
 }
 
 /**

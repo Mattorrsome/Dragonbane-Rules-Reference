@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, InjectionToken, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, InjectionToken, input, Signal, signal, viewChild } from '@angular/core';
 import { toBlob } from 'html-to-image';
 import { download, fileName } from './file';
 
@@ -7,6 +7,28 @@ export const CARD_RENDERER = new InjectionToken<(node: HTMLElement) => Promise<B
   // pixelRatio 2: crisp when pasted into notes or a VTT.
   factory: () => node => toBlob(node, { pixelRatio: 2 }),
 });
+
+/** An export option (a checkbox) remembered between exports under `key`, when the browser allows it. */
+export function rememberedFlag(key: string): { value: Signal<boolean>; set: (on: boolean) => void } {
+  let saved = false;
+  try {
+    saved = localStorage.getItem(key) === 'true';
+  } catch {
+    // Storage blocked: start unticked.
+  }
+  const value = signal(saved);
+  return {
+    value: value.asReadonly(),
+    set: on => {
+      value.set(on);
+      try {
+        localStorage.setItem(key, String(on));
+      } catch {
+        // Storage blocked: keep the choice for this dialog only.
+      }
+    },
+  };
+}
 
 export const PDF_FAILED = 'The PDF could not be made.';
 const BLOCKED = 'Your browser blocked the clipboard. Use Download instead.';

@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output } from '@angular/core';
 import { GearPackageDto, MagicSchoolDto, ProfessionDto } from '../../api/models';
 import { CreationReference } from '../../character/character';
-import { Creation, DOSES, Step, chooseGearPackage, setAlchemistDoses, setItemNote, unchanged } from '../../character/creation';
+import {
+  Creation, DOSES, Step, chooseGearPackage, doseName, enchantNote, setAlchemistDoses, setEnchantment, unchanged,
+} from '../../character/creation';
 import { DiceRoller } from '../../dice/dice-roller';
 import { same } from '../../hero/hero';
 
-const doseName = (recipe: string) => `${recipe}, dose`;
-const enchantNote = (spell: string) => `Enchanted: ${spell} + PERMANENCE`;
 const valueOf = (event: Event) => (event.target as HTMLSelectElement).value;
 
 /** The creator's Gear step: the package, the choices inside it, an alchemist's doses and an enchanter's item. */
@@ -79,9 +79,6 @@ export class CreationGear {
     const value = valueOf(event);
     const next = { ...this.enchantment(), [part]: part === 'item' ? Number(value) : value };
     this.enchantment.set(next);
-    let c = this.creation();
-    c.character.gear.forEach((g, i) => { if (g.note.startsWith('Enchanted: ')) c = setItemNote(c, i, ''); });
-    if (next.item >= 0 && next.spell) c = setItemNote(c, next.item, enchantNote(next.spell));
-    this.changed.emit(unchanged(c));
+    this.changed.emit(unchanged(setEnchantment(this.creation(), next.item, next.spell)));
   }
 }

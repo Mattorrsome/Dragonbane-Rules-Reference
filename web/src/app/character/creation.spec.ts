@@ -4,8 +4,9 @@ import { seededRandom } from '../dice/seeded-random';
 import { Attribute } from '../hero/hero';
 import { creationRef as ref, fixture } from './character.fixture';
 import {
-  Creation, chooseGearPackage, creationProblems, stepDone, finishCreation, newCreation, professionSkillList, resolveGearPackage,
-  schoolsAvailable, setAge, setAlchemistDoses, setAttributes, setHeroicAbility, setItemNote, setKin, setProfession,
+  Creation, chooseGearPackage, creationProblems, doseName, stepDone, finishCreation, newCreation, professionSkillList,
+  resolveGearPackage, schoolsAvailable, setAge, setAlchemistDoses, setAttributes, setEnchantment, setHeroicAbility, setItemNote,
+  setKin, setProfession,
   setSchool, spellOptions, swapAttributes, toggleSkill, toggleSpell,
 } from './creation';
 
@@ -254,6 +255,24 @@ describe('gear', () => {
     const marked = setItemNote(c, 0, 'Enchanted: KEEN EDGE + PERMANENCE');
     expect(marked.character.gear[0]).toEqual({ name: 'Staff', quantity: 1, note: 'Enchanted: KEEN EDGE + PERMANENCE' });
     expect(setItemNote(c, 99, 'x')).toBe(c);
+  });
+
+  it('an enchanter enchants one item: another item or spell moves the note; -1 or no spell clears it', () => {
+    let c = setSchool(start('Mage', scores({ STR: 13 })), school('Enchanting'), ref).creation;
+    c = chooseGearPackage(c, profession('Mage').gearPackages[0], ref, seeded()).creation;
+    const notes = (x: Creation) => x.character.gear.map(g => g.note).filter(Boolean);
+
+    const staff = setEnchantment(c, 0, 'KEEN EDGE');
+    expect(staff.character.gear[0].note).toBe('Enchanted: KEEN EDGE + PERMANENCE');
+    const moved = setEnchantment(staff, 1, 'KEEN EDGE');
+    expect(notes(moved)).toEqual(['Enchanted: KEEN EDGE + PERMANENCE']);
+    expect(moved.character.gear[1].note).toBe('Enchanted: KEEN EDGE + PERMANENCE');
+    expect(notes(setEnchantment(moved, -1, 'KEEN EDGE'))).toEqual([]);
+    expect(notes(setEnchantment(moved, 1, ''))).toEqual([]);
+  });
+
+  it('doseName names a finished dose as the gear holds it', () => {
+    expect(doseName('FOCUS TONIC')).toBe('FOCUS TONIC, dose');
   });
 
   it('choices belong to their package: another package starts from none, the same package keeps them', () => {

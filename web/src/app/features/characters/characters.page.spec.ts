@@ -73,7 +73,7 @@ describe('CharactersPage', () => {
     const name = page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim();
     expect(ref.kin.flatMap(k => k.names)).toContain(name);
     expect(ref.kin.some(k => page.summary().includes(`Kin: ${k.name}`))).toBe(true);
-    expect(Number(/HP: (\d+)/.exec(page.summary())![1])).toBeGreaterThan(0);
+    expect(Number(/HP (\d+)/.exec(page.summary())![1])).toBeGreaterThan(0);
     expect(page.host.querySelectorAll('.step-done').length).toBe(11);
   });
 
@@ -127,17 +127,17 @@ describe('CharactersPage', () => {
     await page.choose('cc-swap-b', 'CHA');
     await page.click('Swap');
 
-    expect(page.summary()).toMatch(/STR: 3(?!\d)/);
-    expect(page.summary()).toMatch(/CHA: 18(?!\d)/);
+    expect(page.summary()).toMatch(/STR 3(?!\d)/);
+    expect(page.summary()).toMatch(/CHA 18(?!\d)/);
     expect(page.button('Swap').disabled).toBe(true);
   });
 
   it('the summary shows dashes, not placeholder scores, until the attributes are set', async () => {
     const page = await render();
 
-    expect(page.summary()).toMatch(/STR: –\s*CON: –/);
-    expect(page.summary()).toContain('HP: –');
-    expect(page.summary()).not.toContain('HP: 10');
+    expect(page.summary()).toContain('STR – CON –');
+    expect(page.summary()).toContain('HP –');
+    expect(page.summary()).not.toContain('HP 10');
     await page.click('Random character');
     expect(page.summary()).not.toContain('–');
   });
@@ -272,7 +272,7 @@ describe('CharactersPage', () => {
       await page.click('Add heroic ability');
       await page.type('ce-count-robust', '2');
 
-      expect(page.summary()).toContain('HP: 15');
+      expect(page.summary()).toContain('HP 15');
     });
 
     it('raising CON raises HP', async () => {
@@ -280,7 +280,7 @@ describe('CharactersPage', () => {
 
       await page.type('ce-attr-CON', '13');
 
-      expect(page.summary()).toContain('HP: 13');
+      expect(page.summary()).toContain('HP 13');
     });
 
     it('a skill can be set to 18 but not 19', async () => {
@@ -290,6 +290,14 @@ describe('CharactersPage', () => {
       expect(page.box('ce-skill-awareness').value).toBe('18');
       await page.type('ce-skill-awareness', '19');
       expect(page.box('ce-skill-awareness').value).toBe('18');
+    });
+
+    it('raising an untrained skill shows it in the preview', async () => {
+      const page = await edit();
+
+      await page.type('ce-skill-awareness', '15');
+
+      expect(page.summary()).toContain('Awareness 15');
     });
 
     it('Save keeps the id and replaces the saved character; money is stored as copper', async () => {

@@ -4,7 +4,9 @@
   @if (c.nickname) {
     <p class="npc-card-description">“{{ c.nickname }}”</p>
   }
-  <p class="npc-card-description">{{ c.identity }}</p>
+  @if (c.identity) {
+    <p class="npc-card-description">{{ c.identity }}</p>
+  }
   @for (row of c.rows; track row.label) {
     @if (hasDetail(row.entries)) {
       <div class="npc-card-row">
