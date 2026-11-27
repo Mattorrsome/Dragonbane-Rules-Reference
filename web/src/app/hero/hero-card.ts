@@ -18,11 +18,14 @@ export function entryLines(entries: readonly CardEntry[], markdown: boolean): st
   });
 }
 
-/** Non-stacking abilities in their own order, then Robust, then Focused; stacking ones show "×N" and never a description. */
-export function abilityEntries(abilities: readonly Ability[], ref: HeroReference, withDescriptions: boolean): CardEntry[] {
+/**
+ * Non-stacking abilities in their own order, then Robust, then Focused; stacking ones show "×N" and no description
+ * unless `describeStacking` (the PDF's description pages describe every ability).
+ */
+export function abilityEntries(abilities: readonly Ability[], ref: HeroReference, withDescriptions: boolean, describeStacking = false): CardEntry[] {
   return stackingLast(abilities).map(a => {
-    if (isStacking(a.name)) return { text: `${a.name} ×${a.count}`, detail: null };
     const ability = ref.abilities.find(h => h.name.toLowerCase() === a.name.toLowerCase());
+    if (isStacking(a.name)) return { text: `${a.name} ×${a.count}`, detail: describeStacking && withDescriptions && ability ? ability.effect : null };
     return withDescriptions && ability
       ? { text: `${a.name} (${ability.wp} WP)`, detail: ability.effect }
       : { text: a.name, detail: null };

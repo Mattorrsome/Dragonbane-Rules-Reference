@@ -5,7 +5,8 @@ import { Character, CreationReference } from '../character';
 import { creationRef } from '../character.fixture';
 import { SHEET_FIELDS, SheetField } from './sheet-fields';
 import { SheetAssets } from './sheet-assets';
-import { buildSheetPdf, fitText, HAND_FONT_OPTIONS, sheetValues } from './sheet-pdf';
+import { abilityEntries } from '../../hero/hero-card';
+import { buildSheetPdf, drawable, fitText, HAND_FONT_OPTIONS, sheetValues } from './sheet-pdf';
 
 // The real assets from public/ (the test runner's working directory is web/).
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(path: string): Uint8Array } } })
@@ -108,13 +109,38 @@ describe('sheetValues', () => {
     expect([v['money:gold'], v['money:silver'], v['money:copper']]).toEqual(['12', '3', '4']);
     expect([v.armour, v['armour:rating'], v.helmet, v['helmet:rating']]).toEqual(['Leather armour', '1', 'Open helmet', '1']);
   });
+
+  it('writes abilities as names only, with no count for Robust or Focused', () => {
+    const v = sheetValues(full(), ref, RATES);
+
+    expect([v['abilities:1'], v['abilities:2'], v['abilities:3'], v['abilities:4']]).toEqual(['Adaptive', 'Veteran', 'Robust', 'Alarm']);
+  });
+});
+
+describe('the description pages', () => {
+  it('describe Robust and Focused too, which the cards leave undescribed', () => {
+    const robust = [{ name: 'Robust', count: 2 }];
+
+    expect(abilityEntries(robust, ref, true, true)).toEqual([{ text: 'Robust ×2', detail: 'Robust effect.' }]);
+    expect(abilityEntries(robust, ref, true)).toEqual([{ text: 'Robust ×2', detail: null }]);
+  });
+});
+
+async function handFont() {
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+  return doc.embedFont(assets().font, HAND_FONT_OPTIONS);
+}
+
+describe('drawable', () => {
+  it('turns each character Caveat lacks into "?" and runs of white space into one space', async () => {
+    expect(drawable(await handFont())('Ærwyn  ✨\nthe Bold')).toBe('Ærwyn ? the Bold');
+  });
 });
 
 describe('fitText', () => {
   it('never writes wider than its box, shrinking, wrapping and then cutting with "…"', async () => {
-    const doc = await PDFDocument.create();
-    doc.registerFontkit(fontkit);
-    const font = await doc.embedFont(assets().font, HAND_FONT_OPTIONS);
+    const font = await handFont();
     const long = 'Fainthearted. You always stay at the back of the group, and never once lead the way into a dark place. '.repeat(3);
 
     // One field of each box shape: measuring is slow, and same-shaped rows fit alike.
@@ -127,6 +153,12 @@ describe('fitText', () => {
     }
     expect(fitText(font, long, SHEET_FIELDS.kin).lines[0]).toMatch(/…$/);
     expect(fitText(font, 'Human', SHEET_FIELDS.kin)).toEqual({ size: SHEET_FIELDS.kin.size, lines: ['Human'] });
+  });
+
+  it('finishes on a box narrower than one letter', async () => {
+    const fitted = fitText(await handFont(), 'W Wide', { x: 0, y: 0, width: 1, size: 16 });
+
+    expect(fitted.lines).toHaveLength(1);
   });
 });
 

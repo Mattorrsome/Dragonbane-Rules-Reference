@@ -1,7 +1,7 @@
 import fontkit from '@pdf-lib/fontkit';
 import { PDFDocument, PDFFont, PDFImage, PDFPage, rgb } from 'pdf-lib';
 import { CurrencyRates } from '../../core/currency-rates';
-import { ATTRIBUTES, DAMAGE_BONUS_ATTRIBUTES, findItem, same } from '../../hero/hero';
+import { ATTRIBUTES, DAMAGE_BONUS_ATTRIBUTES, findItem, same, stackingLast } from '../../hero/hero';
 import { abilityEntries, CardEntry, spellEntries } from '../../hero/hero-card';
 import { COINS, splitCoins } from '../../money/coins';
 import { Character, CreationReference, derived, skillLevel } from '../character';
@@ -26,9 +26,10 @@ export function sheetValues(c: Character, ref: CreationReference, rates?: Curren
   for (const a of ATTRIBUTES) v[`attribute:${a}`] = String(c.attributes[a]);
   for (const a of DAMAGE_BONUS_ATTRIBUTES) v[`damageBonus:${a}`] = d.damageBonuses.find(b => b.attribute === a)?.dice ?? '–';
 
-  const names = [...kinEntries(c, ref, false), ...abilityEntries(c.abilities, ref, false), ...spellEntries(c.spells, ref, false)];
+  // Names only, as the user asked: no "×N" for Robust or Focused (the ratings already count them).
+  const names = [...c.kinAbilities, ...stackingLast(c.abilities).map(a => a.name), ...spellEntries(c.spells, ref, false).map(e => e.text)];
   // The sheet has 15 lines; page 2 describes every one.
-  names.slice(0, 15).forEach((e, i) => (v[`abilities:${i + 1}` as SheetField] = e.text));
+  names.slice(0, 15).forEach((name, i) => (v[`abilities:${i + 1}` as SheetField] = name));
 
   for (const skill of ref.skills) {
     const field = `skill:${skill.name}` as SheetField;
@@ -71,7 +72,7 @@ function wrap(font: PDFFont, text: string, size: number, width: number): string[
   let line = '';
   for (let word of text.split(' ').filter(Boolean)) {
     while (!fits(word)) {
-      let cut = word.length - 1;
+      let cut = Math.max(1, word.length - 1);
       while (cut > 1 && !fits(word.slice(0, cut))) cut--;
       if (line) lines.push(line);
       lines.push(word.slice(0, cut));
@@ -109,7 +110,7 @@ export function fitText(font: PDFFont, text: string, box: SheetBox): { size: num
 }
 
 /** Single-spaced text with each character the font cannot draw as "?". */
-function drawable(font: PDFFont): (text: string) => string {
+export function drawable(font: PDFFont): (text: string) => string {
   const chars = new Set(font.getCharacterSet());
   return text => Array.from(text.replace(/\s+/g, ' ').trim(), ch => (chars.has(ch.codePointAt(0)!) ? ch : '?')).join('');
 }
@@ -141,7 +142,7 @@ export async function buildSheetPdf(c: Character, ref: CreationReference, rates:
     });
   }
 
-  const abilities = [...kinEntries(c, ref, true), ...abilityEntries(c.abilities, ref, true)];
+  const abilities = [...kinEntries(c, ref, true), ...abilityEntries(c.abilities, ref, true, true)];
   const spells = spellEntries(c.spells, ref, true);
   const overflow = placeGear(c, ref).overflow;
   if (!abilities.length && !spells.length && !overflow.length) return save();
