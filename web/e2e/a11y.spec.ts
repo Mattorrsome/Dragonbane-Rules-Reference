@@ -305,7 +305,7 @@ test('app menu opens, closes on Escape back to its button, and switches apps', a
   await menu.getByRole('link', { name: 'NPC Manager' }).click();
   await expect(page).toHaveURL(/\/npcs$/);
   await expect(menu).toBeHidden();
-  await expect(page.locator('.nav-brand')).toHaveText('NPC Manager');
+  await expect(page.locator('.nav-brand')).toHaveText('Dragonbane NPC Manager');
   await expect(page.getByRole('navigation', { name: 'Sections' })).toHaveCount(0);
 });
 

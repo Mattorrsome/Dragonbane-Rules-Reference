@@ -41,6 +41,7 @@ describe('App shell', () => {
     expect(menu.hasAttribute('popover')).toBe(true);
     expect([...menu.querySelectorAll('a')].map(a => a.textContent?.trim())).toEqual(['Rules Reference', 'NPC Manager', 'Character Creator']);
     expect(hrefs(host, '#app-menu a')).toEqual(['/reference', '/npcs', '/characters']);
+    expect([...menu.querySelectorAll('a')].some(a => a.textContent?.includes('Dragonbane'))).toBe(false);
     const button = host.querySelector('button.menu-button')!;
     expect(button.getAttribute('popovertarget')).toBe('app-menu');
     expect(button.getAttribute('aria-label')).toBe('Menu');
@@ -48,18 +49,18 @@ describe('App shell', () => {
 
   it('brand shows the current app; the NPC Manager has no section tabs or coin select', async () => {
     let host = await at('/npcs');
-    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('NPC Manager');
+    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Dragonbane NPC Manager');
     expect(host.querySelector('nav[aria-label="Sections"]')).toBeNull();
     expect(host.querySelector('select#coin-standard')).toBeNull();
 
     host = await at('/reference/spells');
-    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Rules Reference');
+    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Dragonbane Rules Reference');
     expect(host.querySelector('nav[aria-label="Sections"]')).not.toBeNull();
   });
 
   it('brand reads Character Creator on /characters', async () => {
     const host = await at('/characters');
-    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Character Creator');
+    expect(host.querySelector('.nav-brand')?.textContent?.trim()).toBe('Dragonbane Character Creator');
     expect(host.querySelector('nav[aria-label="Sections"]')).toBeNull();
   });
 

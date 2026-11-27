@@ -9,7 +9,7 @@
           <a [routerLink]="app.path" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="menu.hidePopover()">{{ app.label }}</a>
         }
       </nav>
-      <a class="nav-brand" [routerLink]="currentApp().path">{{ currentApp().label }}</a>
+      <a class="nav-brand" [routerLink]="currentApp().path">Dragonbane {{ currentApp().label }}</a>
     </div>
     @if (currentApp().path === '/reference') {
       <nav class="nav-links" aria-label="Sections">
