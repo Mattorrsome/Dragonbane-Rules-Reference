@@ -8,7 +8,9 @@ import { CurrencyRatesService } from '../../core/currency-rates';
 import { spellLabel } from '../../hero/hero-card';
 import { addSpell, ATTRIBUTES, Attribute, findItem, isStacking, removeSpell, same, SpellRef } from '../../hero/hero';
 import { Coin, COINS, splitCoins } from '../../money/coins';
-import { ChipPicker } from '../../shared/chip-picker';
+import { PickerDialog } from '../../shared/picker-dialog';
+import { learnableSpells } from '../../character/creation';
+import { abilityGroups, gearGroups, spellGroups } from '../../hero/picker-groups';
 import { slug } from '../../shared/text';
 import { CharacterSummary } from './character-summary';
 
@@ -30,7 +32,7 @@ const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(mi
  */
 @Component({
   selector: 'app-character-editor',
-  imports: [ChipPicker, CharacterSummary],
+  imports: [PickerDialog, CharacterSummary],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './character-editor.html',
 })
@@ -63,11 +65,11 @@ export class CharacterEditor {
     return rates && splitCoins(this.draft().copper, rates);
   });
 
-  protected readonly abilityOptions = computed(() => this.ref().abilities.map(a => a.name));
-  protected readonly gearOptions = computed(() => this.ref().equipment.map(i => i.name));
-  private readonly spellOptions = computed(() =>
-    this.ref().spells.map(s => ({ label: spellLabel(s), spell: { name: s.name, school: s.school, kind: s.kind } as SpellRef })));
-  protected readonly spellLabels = computed(() => this.spellOptions().map(o => o.label));
+  protected readonly abilityPicks = computed(() => abilityGroups(this.ref().abilities, this.draft().abilities.map(a => a.name)));
+  /** Only the spells the character's held schools allow; spells already known from elsewhere stay as chips and can be removed. */
+  protected readonly learnable = computed(() => learnableSpells(this.draft(), this.ref()));
+  protected readonly spellPicks = computed(() => spellGroups(this.learnable(), this.draft().spells));
+  protected readonly gearPicks = computed(() => gearGroups(this.ref().equipment, this.ref().categories, this.draft().gear.map(g => g.name)));
 
   constructor() {
     afterNextRender(() => this.heading().nativeElement.focus());
@@ -111,16 +113,18 @@ export class CharacterEditor {
     return ability?.prerequisite && !same(ability.prerequisite, 'None') ? `Prerequisite: ${ability.prerequisite}` : null;
   }
 
-  protected readonly acceptAbility = (text: string): boolean => {
-    const ability = this.ref().abilities.find(a => same(a.name, text));
-    if (ability) this.draft.update(d => setCharacterAbility(d, ability.name, (d.abilities.find(a => same(a.name, ability.name))?.count ?? 0) + 1));
-    return !!ability;
+  protected readonly acceptAbility = (id: string): string | null => {
+    const ability = this.ref().abilities.find(a => same(a.name, id));
+    if (!ability) return 'Not found.';
+    this.draft.update(d => setCharacterAbility(d, ability.name, (d.abilities.find(a => same(a.name, ability.name))?.count ?? 0) + 1));
+    return null;
   };
 
-  protected readonly acceptSpell = (text: string): boolean => {
-    const option = this.spellOptions().find(o => same(o.label, text));
-    if (option) this.draft.update(d => addSpell(d, option.spell));
-    return !!option;
+  protected readonly acceptSpell = (id: string): string | null => {
+    const spell = this.learnable().find(s => same(spellLabel(s), id));
+    if (!spell) return 'Not found.';
+    this.draft.update(d => addSpell(d, { name: spell.name, school: spell.school, kind: spell.kind } as SpellRef));
+    return null;
   };
 
   protected removeSpell(spell: SpellRef): void {
@@ -128,16 +132,16 @@ export class CharacterEditor {
   }
 
   /** An Equipment item; one already carried goes up by one. */
-  protected readonly acceptGear = (text: string): boolean => {
-    const item = findItem(this.ref(), text);
-    if (!item) return false;
+  protected readonly acceptGear = (id: string): string | null => {
+    const item = findItem(this.ref(), id);
+    if (!item) return 'Not found.';
     this.draft.update(d => {
       const at = d.gear.findIndex(g => same(g.name, item.name));
       return at < 0
         ? { ...d, gear: [...d.gear, { name: item.name, quantity: 1, note: '' }] }
         : { ...d, gear: d.gear.map((g, i) => (i === at ? { ...g, quantity: g.quantity + 1 } : g)) };
     });
-    return true;
+    return null;
   };
 
   protected setQuantity(index: number, event: Event): void {

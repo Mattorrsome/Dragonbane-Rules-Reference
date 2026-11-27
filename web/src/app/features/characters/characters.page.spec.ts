@@ -244,13 +244,27 @@ describe('CharactersPage', () => {
       await page.click('Edit Aodhan');
       const editor = page.host.querySelector('app-character-editor')!;
       const box = (id: string) => editor.querySelector<HTMLInputElement>(`#${id}`)!;
+      const fieldset = (legend: string) =>
+        [...editor.querySelectorAll('fieldset')].find(f => f.querySelector('legend')?.textContent?.trim() === legend)!;
+      const options = (legend: string) => [...fieldset(legend).querySelectorAll<HTMLElement>('[role="option"]')];
+      /** Opens the fieldset's add dialog and picks the option whose text starts with `label`. */
+      const pick = async (legend: string, label: string) => {
+        options(legend).find(o => o.textContent!.trim().startsWith(label))!.click();
+        await TestBed.inject(ApplicationRef).whenStable();
+      };
       const type = async (id: string, value: string, event = 'input') => {
         box(id).value = value;
         box(id).dispatchEvent(new Event(event));
         await TestBed.inject(ApplicationRef).whenStable();
       };
-      return { ...page, editor, box, type };
+      return { ...page, editor, box, type, fieldset, options, pick };
     }
+
+    beforeEach(() => {
+      // jsdom has no modal dialog.
+      HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
+      HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; };
+    });
 
     it('Export opens the export menu for that character in a dialog, and Close empties it', async () => {
       HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
@@ -281,8 +295,7 @@ describe('CharactersPage', () => {
     it('Robust 2 shows HP 15 in the summary', async () => {
       const page = await edit();
 
-      await page.type('ce-ability-to-add', 'Robust');
-      await page.click('Add heroic ability');
+      await page.pick('Heroic abilities', 'Robust');
       await page.type('ce-count-robust', '2');
 
       expect(page.summary()).toContain('HP 15');
@@ -364,10 +377,61 @@ describe('CharactersPage', () => {
     it('shows a heroic ability prerequisite as text in its chip', async () => {
       const page = await edit();
 
-      await page.type('ce-ability-to-add', 'Veteran');
-      await page.click('Add heroic ability');
+      await page.pick('Heroic abilities', 'Veteran');
 
       expect(page.editor.querySelector('.chips[aria-label="Heroic abilities"]')!.textContent).toContain('Prerequisite: Any weapon skill 12');
+    });
+
+    it('with no school skill, the Spells fieldset explains and has no Add spell button', async () => {
+      TestBed.inject(CharacterStore).save({ ...aodhan, skills: [] });
+      const page = await edit();
+
+      expect(page.fieldset('Spells').textContent).toContain('Learning spells needs a magic school skill at level 1 or more.');
+      expect(page.button('Add spell…')).toBeUndefined();
+    });
+
+    it('with Animism 1, the spell dialog lists Animism and General Magic but not Elementalism', async () => {
+      const page = await edit();
+      await page.type('ce-skill-animism', '1');
+
+      const groups = [...page.fieldset('Spells').querySelectorAll('.picker-group-heading')].map(h => h.textContent!.trim());
+      expect(groups).toEqual(['Animism', 'General Magic']);
+    });
+
+    it('a known spell from another school stays a chip, can be removed, and shows as added only when listed', async () => {
+      TestBed.inject(CharacterStore).save({ ...aodhan, spells: [{ name: 'FIREBALL', school: 'Elementalism', kind: 'Spell' }] });
+      const page = await edit();
+      const chips = () => page.fieldset('Spells').querySelector('.chips')!.textContent;
+
+      expect(chips()).toContain('Fireball');
+      expect(page.options('Spells').some(o => o.textContent!.includes('added'))).toBe(false);
+
+      await page.pick('Spells', 'Cure');
+      expect(page.options('Spells').find(o => o.textContent!.includes('Cure'))!.textContent).toContain('added');
+
+      await page.click('Remove Fireball (Elementalism)');
+      expect(chips()).not.toContain('Fireball');
+    });
+
+    it('picking a gear item adds the chip, and picking it again raises its quantity', async () => {
+      // The shared fixture carries no equipment; add a Torch for this test only.
+      ref.categories.push({ id: 1, name: 'General gear' } as (typeof ref.categories)[number]);
+      ref.equipment.push({
+        id: 1, categoryId: 1, name: 'Torch', costCopper: 1, costUnit: null, costOrMore: false, costText: '1 copper', supply: 'Common',
+        weight: null, effect: null, weapon: null, armour: null,
+      } as (typeof ref.equipment)[number]);
+      try {
+        const page = await edit();
+
+        await page.pick('Gear', 'Torch');
+        await page.pick('Gear', 'Torch');
+
+        const qty = page.fieldset('Gear').querySelector<HTMLInputElement>('input[aria-label="Torch quantity"]')!;
+        expect(qty.value).toBe('2');
+      } finally {
+        ref.categories.pop();
+        ref.equipment.pop();
+      }
     });
 
     it('the creator draft survives Edit then Cancel', async () => {

@@ -46,7 +46,7 @@
 
     <fieldset class="chip-group">
       <legend>Heroic abilities</legend>
-      <app-chip-picker pickerId="ce-ability" noun="heroic ability" [options]="abilityOptions()" [accept]="acceptAbility" />
+      <app-picker-dialog buttonLabel="Add heroic ability…" heading="Add a heroic ability" [groups]="abilityPicks()" [accept]="acceptAbility" />
       <ul class="chips" aria-label="Heroic abilities">
         @for (ability of d.abilities; track ability.name) {
           <li>
@@ -64,7 +64,11 @@
 
     <fieldset class="chip-group">
       <legend>Spells</legend>
-      <app-chip-picker pickerId="ce-spell" noun="spell" [options]="spellLabels()" [accept]="acceptSpell" />
+      @if (learnable().length) {
+        <app-picker-dialog buttonLabel="Add spell…" heading="Add a spell" [groups]="spellPicks()" [accept]="acceptSpell" />
+      } @else {
+        <p>Learning spells needs a magic school skill at level 1 or more.</p>
+      }
       <ul class="chips" aria-label="Spells">
         @for (spell of d.spells; track spellLabel(spell)) {
           <li>
@@ -77,7 +81,7 @@
 
     <fieldset class="chip-group">
       <legend>Gear</legend>
-      <app-chip-picker pickerId="ce-gear" noun="gear item" [options]="gearOptions()" [accept]="acceptGear" />
+      <app-picker-dialog buttonLabel="Add gear…" heading="Add gear" [groups]="gearPicks()" [accept]="acceptGear" />
       <ul class="chips gear-chips" aria-label="Gear">
         @for (item of d.gear; track $index; let i = $index) {
           <li>

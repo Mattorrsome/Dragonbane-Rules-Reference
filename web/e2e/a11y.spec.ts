@@ -100,11 +100,14 @@ for (const viewport of viewports) {
       await expect(page.locator('#edit-open')).toBeVisible();
       await expect(page.locator('app-character-editor h2')).toBeFocused();
       // A count box beside the gear chips (each with a quantity and a note) the random character carries.
-      await page.locator('#ce-ability-to-add').fill('Robust');
-      await page.getByRole('button', { name: 'Add heroic ability' }).click();
+      const addAbility = async (name: string) => {
+        await page.getByRole('button', { name: 'Add heroic ability…' }).click();
+        await page.getByRole('dialog').getByRole('combobox').fill(name);
+        await page.getByRole('option', { name }).click();
+      };
+      await addAbility('Robust');
       await expect(page.locator('#ce-count-robust')).toBeVisible();
-      await page.locator('#ce-ability-to-add').fill('Veteran');
-      await page.getByRole('button', { name: 'Add heroic ability' }).click();
+      await addAbility('Veteran');
       await expect(page.locator('app-character-editor .chips li', { hasText: 'Veteran' }).locator('.chip-detail')).toContainText('Prerequisite');
       await check();
     });
