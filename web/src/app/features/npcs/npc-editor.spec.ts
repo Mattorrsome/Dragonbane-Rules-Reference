@@ -38,7 +38,7 @@ function render(npc: Npc) {
   };
   const chips = (list: string) => [...host.querySelectorAll(`[aria-label="${list}"] li`)].map(li => li.querySelector('.chip-name')?.textContent?.trim());
   const preview = () => host.querySelector('app-npc-card')!;
-  return { host, field, button, type, choose, click, chips, preview, saved, cancelled: () => cancelled };
+  return { host, update, field, button, type, choose, click, chips, preview, saved, cancelled: () => cancelled };
 }
 
 describe('NpcEditor', () => {
@@ -69,37 +69,53 @@ describe('NpcEditor', () => {
     expect(e.chips('Skills')).toEqual(['Brawling', 'Hammers']);
   });
 
-  it('adding a weapon adds its skill at 5', () => {
+  const options = (host: HTMLElement, legend: string) =>
+    [...host.querySelectorAll('fieldset')].find(f => f.querySelector('legend')?.textContent?.trim() === legend)!.querySelectorAll<HTMLElement>('[role=option]');
+  /** Picks the option whose text starts with `label` in the fieldset's add dialog. */
+  const pick = (e: ReturnType<typeof render>, legend: string, label: string) => {
+    [...options(e.host, legend)].find(o => o.textContent!.trim().startsWith(label))!.click();
+    e.update();
+  };
+
+  it('adding a weapon through the dialog adds its skill at 5', () => {
     const e = render(fromTypical(GUARD, ref));
 
-    e.type(e.field('Gear to add'), 'Short bow');
-    e.click('Add gear');
+    pick(e, 'Gear', 'Short bow');
 
     expect(e.chips('Gear')).toEqual(['Broadsword', 'Studded leather', 'Short bow']);
     expect(e.field<HTMLInputElement>('Bows level').value).toBe('5');
-    expect(e.field<HTMLInputElement>('Gear to add').value).toBe('');
   });
 
-  it('adds skills at 5, abilities and spells picked from the list', () => {
+  it('gear text that matches nothing is offered and added as typed', () => {
+    const e = render(fromTypical(GUARD, ref));
+    const gear = [...e.host.querySelectorAll('fieldset')].find(f => f.querySelector('legend')?.textContent?.trim() === 'Gear')!;
+    const filter = gear.querySelector<HTMLInputElement>('input[type=search]')!;
+
+    e.type(filter, 'Rope of holding');
+    expect([...options(e.host, 'Gear')].map(o => o.textContent!.trim())).toEqual(['Add “Rope of holding”']);
+    options(e.host, 'Gear')[0].click();
+    e.update();
+
+    expect(e.chips('Gear')).toEqual(['Broadsword', 'Studded leather', 'Rope of holding']);
+  });
+
+  it('adds skills at 5 through the chip picker, abilities and all spells through the dialog', () => {
     const e = render(fromTypical(GUARD, ref));
 
     e.type(e.field('Skill to add'), 'evade');
     e.click('Add skill');
     expect(e.field<HTMLInputElement>('Evade level').value).toBe('5');
 
-    e.type(e.field('Heroic ability to add'), 'Veteran');
-    e.click('Add heroic ability');
+    pick(e, 'Heroic abilities', 'Veteran');
     expect(e.chips('Heroic abilities')).toEqual(['Veteran']);
 
-    const options = [...e.host.querySelectorAll('#spell-options option')].map(o => (o as HTMLOptionElement).value);
-    expect(options).toContain('Dispel (General Magic)');
-    expect(options).toContain('Erase (Symbolism, trick)');
-    e.type(e.field('Spell to add'), 'Dispel (General Magic)');
-    e.click('Add spell');
+    const spells = [...options(e.host, 'Spells')].map(o => o.textContent!.trim());
+    expect(spells.length).toBe(ref.spells.length);
+    pick(e, 'Spells', 'Dispel');
     expect(e.chips('Spells')).toEqual(['Dispel (General Magic)']);
   });
 
-  it('refuses a skill, ability or spell that is not in the list', () => {
+  it('refuses a skill that is not in the list', () => {
     const e = render(fromTypical(GUARD, ref));
 
     e.type(e.field('Skill to add'), 'Juggling');
@@ -145,28 +161,15 @@ describe('NpcEditor', () => {
     expect(e.preview().querySelector('.entry-detail')).toBeNull();
   });
 
-  it('each picker sits above its chips with an unlabelled box and a plain "Add" button', () => {
+  it('the skill picker sits above its chips; the others open an add dialog', () => {
     const e = render(fromTypical(BANDIT_CHIEF, ref));
 
-    for (const group of e.host.querySelectorAll('fieldset.chip-group')) {
-      expect(group.querySelector('.picker')!.compareDocumentPosition(group.querySelector('ul.chips')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-      expect(group.querySelector('.picker label')).toBeNull();
-      expect(group.querySelector('.picker .btn')?.textContent?.trim()).toBe('Add');
-    }
-    expect(e.field('Gear to add')).not.toBeNull();
-    expect(e.button('Add gear').textContent?.trim()).toBe('Add');
-  });
-
-  it('a clear button empties the picker box and appears only while it holds text', () => {
-    const e = render(fromTypical(BANDIT_CHIEF, ref));
-    const box = e.field<HTMLInputElement>('Spell to add');
-
-    expect(e.button('Clear spell')).toBeUndefined();
-    e.type(box, 'Dis');
-    e.click('Clear spell');
-
-    expect(box.value).toBe('');
-    expect(e.button('Clear spell')).toBeUndefined();
+    const skills = e.host.querySelector('fieldset.chip-group')!;
+    expect(skills.querySelector('.picker')!.compareDocumentPosition(skills.querySelector('ul.chips')!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(e.button('Add heroic ability…')).toBeDefined();
+    expect(e.button('Add gear…')).toBeDefined();
+    expect(e.button('Add spell…')).toBeDefined();
+    expect(e.host.querySelector('#ability-to-add, #gear-to-add, #spell-to-add')).toBeNull();
   });
 
   it('each chip shows its description as a tooltip', () => {

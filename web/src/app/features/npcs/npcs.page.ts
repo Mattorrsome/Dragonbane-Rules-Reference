@@ -30,7 +30,7 @@ export class NpcsPage {
   private readonly abilities = httpResource<HeroicAbilityDto[]>(() => '/api/heroic-abilities');
   private readonly equipment = httpResource<EquipmentItemDto[]>(() => '/api/equipment');
   private readonly categories = httpResource<EquipmentCategoryDto[]>(() => '/api/equipment-categories');
-  private readonly spells =httpResource<SpellDto[]>(() => '/api/spells');
+  private readonly spells = httpResource<SpellDto[]>(() => '/api/spells');
 
   /** Everything NPC names are looked up in; undefined until all of it has loaded. */
   protected readonly ref = computed<NpcReference | undefined>(() => {

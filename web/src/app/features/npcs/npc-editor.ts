@@ -4,7 +4,9 @@ import { addSpell, DAMAGE_BONUS_ATTRIBUTES, describeItem, findItem, isStacking, 
 import { spellLabel } from '../../hero/hero-card';
 import { addGear, NEW_WEAPON_SKILL_LEVEL, Npc, NpcReference, NpcSpellRef, removeGear, setAbilityCount, setDamageBonus } from '../../npc/npc';
 import { buildCard } from '../../npc/npc-card';
+import { abilityGroups, gearGroups, spellGroups } from '../../hero/picker-groups';
 import { ChipPicker } from '../../shared/chip-picker';
+import { PickerDialog } from '../../shared/picker-dialog';
 import { NpcCardView } from './npc-card-view';
 
 type Picker = 'skill' | 'ability' | 'gear' | 'spell';
@@ -18,7 +20,7 @@ function typedInteger(event: Event): number | null {
 /** Edits a copy of an NPC with a live card preview; emits the edited NPC on Save. */
 @Component({
   selector: 'app-npc-editor',
-  imports: [ChipPicker, NpcCardView],
+  imports: [ChipPicker, PickerDialog, NpcCardView],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './npc-editor.html',
 })
@@ -36,19 +38,16 @@ export class NpcEditor {
   protected readonly spellOptions = computed(() =>
     this.ref().spells.map((s: SpellDto) => ({ label: spellLabel(s), spell: { name: s.name, school: s.school, kind: s.kind } })),
   );
-  /** Each picker's list: Reference names, and for spells the unique labels. */
-  protected readonly options = computed<Record<Picker, string[]>>(() => ({
-    skill: this.ref().skills.map(s => s.name),
-    ability: this.ref().abilities.map(a => a.name),
-    gear: this.ref().equipment.map(i => i.name),
-    spell: this.spellOptions().map(o => o.label),
-  }));
-  protected readonly accepts: Record<Picker, (text: string) => boolean> = {
-    skill: text => this.add('skill', text),
-    ability: text => this.add('ability', text),
-    gear: text => this.add('gear', text),
-    spell: text => this.add('spell', text),
-  };
+  /** Skills stay a type-a-name chip picker; abilities, gear and spells pick through the dialog. */
+  protected readonly options = computed(() => ({ skill: this.ref().skills.map(s => s.name) }));
+  protected readonly accepts = { skill: (text: string) => this.add('skill', text) };
+
+  protected readonly abilityPicks = computed(() => abilityGroups(this.ref().abilities, this.draft().abilities.map(a => a.name)));
+  protected readonly spellPicks = computed(() => spellGroups(this.ref().spells, this.draft().spells));
+  protected readonly gearPicks = computed(() => gearGroups(this.ref().equipment, this.ref().categories, this.draft().gear));
+  protected readonly acceptAbility = (id: string) => (this.add('ability', id) ? null : 'Not found.');
+  protected readonly acceptGear = (id: string) => (this.add('gear', id) ? null : 'Not found.');
+  protected readonly acceptSpell = (id: string) => (this.add('spell', id) ? null : 'Not found.');
 
   protected readonly isStacking = isStacking;
   protected readonly bonusAttributes = DAMAGE_BONUS_ATTRIBUTES;

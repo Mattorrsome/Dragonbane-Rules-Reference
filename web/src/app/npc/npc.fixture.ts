@@ -272,7 +272,12 @@ export const NPC_REFERENCE: {
         "At a round's start, retain the previous round's initiative card instead of drawing. No action.",
     },
   ],
-  categories: [],
+  categories: [
+    { id: 1, name: 'Weapons' },
+    { id: 2, name: 'Armour' },
+    { id: 3, name: 'Gear' },
+    { id: 7, name: 'Ranged' },
+  ] as EquipmentCategoryDto[],
   equipment: [
     {
       id: 1,

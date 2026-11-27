@@ -51,7 +51,7 @@
 
     <fieldset class="chip-group">
       <legend>Heroic abilities</legend>
-      <app-chip-picker pickerId="ability" noun="heroic ability" [options]="options()['ability']" [accept]="accepts['ability']" />
+      <app-picker-dialog buttonLabel="Add heroic ability…" heading="Add a heroic ability" [groups]="abilityPicks()" [accept]="acceptAbility" />
       <ul class="chips" aria-label="Heroic abilities">
         @for (ability of d.abilities; track ability.name) {
           <li [attr.title]="tip('ability', ability.name)">
@@ -67,7 +67,7 @@
 
     <fieldset class="chip-group">
       <legend>Gear</legend>
-      <app-chip-picker pickerId="gear" noun="gear" [options]="options()['gear']" [accept]="accepts['gear']" />
+      <app-picker-dialog buttonLabel="Add gear…" heading="Add gear" [groups]="gearPicks()" [custom]="true" [accept]="acceptGear" />
       <ul class="chips" aria-label="Gear">
         @for (item of d.gear; track $index) {
           <li [attr.title]="tip('gear', item)">
@@ -80,7 +80,7 @@
 
     <fieldset class="chip-group">
       <legend>Spells</legend>
-      <app-chip-picker pickerId="spell" noun="spell" [options]="options()['spell']" [accept]="accepts['spell']" />
+      <app-picker-dialog buttonLabel="Add spell…" heading="Add a spell" [groups]="spellPicks()" [accept]="acceptSpell" />
       <ul class="chips" aria-label="Spells">
         @for (spell of d.spells; track spellLabel(spell)) {
           <li [attr.title]="spellTip(spell)">
