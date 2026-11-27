@@ -173,6 +173,8 @@ export class CharactersPage {
     return abilityGroups(abilities, this.creation().character.abilities.map(a => a.name));
   });
   protected readonly acceptAbility = (id: string): string | null => {
+    // Re-picking the held ability changes nothing.
+    if (this.creation().character.abilities.some(a => a.name === id)) return null;
     this.update(setHeroicAbility(this.creation(), id));
     return null;
   };
@@ -285,6 +287,7 @@ export class CharactersPage {
   protected startCreation(): void {
     this.creation.set(newCreation());
     this.cleared.set([]);
+    this.saveStatus.set('');
     this.show('create');
   }
 
@@ -303,6 +306,7 @@ export class CharactersPage {
 
   protected edit(c: SavedCharacter): void {
     this.editing.set(c);
+    this.saveStatus.set('');
     this.show('edit');
   }
 

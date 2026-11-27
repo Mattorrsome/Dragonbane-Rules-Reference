@@ -465,6 +465,11 @@ input[type='checkbox'] {
       height: 1.5rem;
       background: currentColor;
       mask: url('/d6.svg') center / contain no-repeat;
+
+      /* Windows high-contrast drops author colours, so the mask would draw nothing. */
+      @media (forced-colors: active) {
+        background: ButtonText;
+      }
     }
 
     &:hover:not(:disabled):not([aria-disabled='true']),
@@ -1351,18 +1356,13 @@ html {
 }
 
 /* ================ CHARACTER CREATOR ================ */
-/* The intro line with Random character beside it; the steps and the summary below use the NPC editor's grid. */
+/* The action button above the steps; the steps and the summary below use the NPC editor's grid. */
 .creation-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
-
-  p {
-    flex: 1 1 20rem;
-    margin: 0;
-  }
 }
 
 .creation-steps {

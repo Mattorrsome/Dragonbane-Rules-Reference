@@ -516,6 +516,17 @@ for (const viewport of viewports) {
       await page.keyboard.press('Escape');
       await expect(opener).toBeFocused();
       await focusReturns(page, opener);
+
+      // With text in the filter the first Escape only clears it (type=search); the second closes, and focus goes back.
+      await opener.click();
+      const filter = dialog.getByRole('combobox', { name: 'Filter' });
+      await filter.fill('xyz');
+      await page.keyboard.press('Escape');
+      await expect(filter).toHaveValue('');
+      await expect(dialog).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(page.locator('dialog.picker-dialog[open]')).toBeHidden();
+      await expect(opener).toBeFocused();
     });
 
     test('creator gear package picker is axe-clean and returns focus; the brand does not overflow', async ({ page }) => {

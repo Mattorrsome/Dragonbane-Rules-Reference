@@ -158,7 +158,7 @@ describe('CharactersPage', () => {
   it('the heroic ability dialog sets the ability and names it on its button', async () => {
     const page = await create();
     await page.choose('cc-profession', 'Artisan');
-    expect(page.button('Choose heroic ability…')).toBeTruthy();
+    expect(page.button('Heroic ability: Choose heroic ability…')).toBeTruthy();
     expect(page.host.querySelector('#cc-ability')).toBeNull();
     const step = page.host.querySelectorAll('.creation-step')[6];
     expect(page.options(step).map(o => o.textContent!.trim())).toEqual(['Master Blacksmith', 'Master Carpenter', 'Master Tanner']);
@@ -166,7 +166,7 @@ describe('CharactersPage', () => {
     expect(await page.pick(step, 'Master Carpenter')).toBeNull();
 
     expect(page.summary()).toContain('Master Carpenter');
-    expect(page.button('Master Carpenter (change)')).toBeTruthy();
+    expect(page.button('Heroic ability: Master Carpenter (change)')).toBeTruthy();
   });
 
   it('titles the page Dragonbane Character Creator, with a section and a roll button per step in book order', async () => {
@@ -233,6 +233,37 @@ describe('CharactersPage', () => {
     expect(button().textContent).toContain('3–4');
     expect(page.summary()).toContain('Short sword');
     expect(page.summary()).toContain('Light crossbow');
+  });
+
+  it('the package dialog marks the held package, and Enter on open keeps it without a re-roll', async () => {
+    const page = await create();
+    await page.choose('cc-profession', 'Fighter');
+    const dialog = () => gearDialog(page, 'Gear package (D6)');
+    dialog().querySelector('button')!.click();
+    await page.pick(dialog(), '3–4');
+    const before = page.summary();
+
+    dialog().querySelector('button')!.click();
+    await page.fixture.whenStable();
+    const added = page.options(dialog()).filter(o => o.querySelector('.picker-added'));
+    expect(added.map(o => o.textContent!.trim())).toEqual([expect.stringMatching(/^3–4.*added$/)]);
+    dialog().querySelector('input')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await page.fixture.whenStable();
+
+    expect(dialog().querySelector('button')!.textContent).toContain('3–4');
+    expect(page.summary()).toBe(before);
+  });
+
+  it('the option dialog marks the held option', async () => {
+    const page = await create();
+    await page.choose('cc-profession', 'Fighter');
+    gearDialog(page, 'Gear package (D6)').querySelector('button')!.click();
+    await page.pick(gearDialog(page, 'Gear package (D6)'), '1–2');
+
+    const choice = page.host.querySelector('app-creation-gear button[aria-label^="Choose: "]')!;
+    const marked = page.options(choice.closest('app-picker-dialog')!).map(o => !!o.querySelector('.picker-added'));
+    expect(marked[0]).toBe(true);
+    expect(marked.filter(Boolean).length).toBe(1);
   });
 
   it('a choice inside the gear package swaps that item and keeps the money', async () => {
@@ -325,7 +356,7 @@ describe('CharactersPage', () => {
       await page.click('Create character');
       expect(page.host.querySelector('app-character-summary .npc-card-name')!.textContent!.trim()).toBe('Unnamed hero');
       expect(page.button('Save').disabled).toBe(true);
-      await page.click('Random character');
+      // The old "Saved X." does not sit above the new creation.
       expect(page.host.querySelector('.save-status')!.textContent!.trim()).toBe('');
     });
 
@@ -511,6 +542,9 @@ describe('CharactersPage', () => {
       expect(page.host.querySelector('.save-status')).toBe(status);
       expect(status.getAttribute('role')).toBe('status');
       expect(status.textContent).toContain('Saved Aodhan.');
+
+      await page.click('Edit Aodhan');
+      expect(status.textContent!.trim()).toBe('');
     });
 
     it('shows a heroic ability prerequisite as text in its chip', async () => {
@@ -525,7 +559,7 @@ describe('CharactersPage', () => {
       TestBed.inject(CharacterStore).save({ ...aodhan, skills: [] });
       const page = await edit();
 
-      expect(page.fieldset('Spells').textContent).toContain('Learning spells needs a magic school skill at level 1 or more.');
+      expect(page.fieldset('Spells').textContent).toContain('Learning spells needs a magic school (its skill at level 1 or more, or Performance 12 and Magic Talent for Harmonism).');
       expect(page.button('Add spell…')).toBeUndefined();
     });
 

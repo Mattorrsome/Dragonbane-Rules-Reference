@@ -67,7 +67,7 @@
       @if (learnable().length) {
         <app-picker-dialog buttonLabel="Add spell…" heading="Add a spell" [groups]="spellPicks()" [accept]="acceptSpell" />
       } @else {
-        <p>Learning spells needs a magic school skill at level 1 or more.</p>
+        <p>Learning spells needs a magic school (its skill at level 1 or more, or Performance 12 and Magic Talent for Harmonism).</p>
       }
       <ul class="chips" aria-label="Spells">
         @for (spell of d.spells; track spellLabel(spell)) {
