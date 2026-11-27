@@ -222,18 +222,24 @@ describe('CharactersPage', () => {
     await page.choose('cc-profession', 'Fighter');
 
     expect(page.host.querySelector('#cc-gear')).toBeNull();
-    await page.click('Choose gear package…');
-    await page.pick(gearDialog(page, 'Choose gear package'), '3–4');
+    const button = () => gearDialog(page, 'Gear package (D6)').querySelector('button')!;
+    expect(button().getAttribute('aria-label')).toContain('Gear package (D6)');
+    button().click();
+    // Rolled entries are listed as written.
+    expect(gearDialog(page, 'Gear package (D6)').textContent).toContain('1D6 silver');
+    await page.pick(gearDialog(page, 'Gear package (D6)'), '3–4');
 
-    expect(gearDialog(page, '3–4').querySelector('button')!.textContent).toContain('3–4');
-    expect(page.summary()).toContain('Gear');
+    expect(button().getAttribute('aria-label')).toContain('Gear package (D6)');
+    expect(button().textContent).toContain('3–4');
+    expect(page.summary()).toContain('Short sword');
+    expect(page.summary()).toContain('Light crossbow');
   });
 
   it('a choice inside the gear package swaps that item and keeps the money', async () => {
     const page = await create();
     await page.choose('cc-profession', 'Fighter');
-    await page.click('Choose gear package…');
-    await page.pick(gearDialog(page, 'Choose gear package'), '1–2');
+    gearDialog(page, 'Gear package (D6)').querySelector('button')!.click();
+    await page.pick(gearDialog(page, 'Gear package (D6)'), '1–2');
     const money = /Money: ([^\n]*?)(?=Weakness|$)/.exec(page.summary())![1];
 
     const choice = [...page.host.querySelectorAll('app-creation-gear button[aria-label^="Choose: "]')][0] as HTMLButtonElement;
