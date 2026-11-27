@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, linkedSignal, signal, viewChild } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import {
-  AgeDto, AppearanceDto, EquipmentItemDto, HeroicAbilityDto, KinDto, MagicSchoolDto, MementoDto, ProfessionDto, SkillDto,
+  AgeDto, AppearanceDto, EquipmentCategoryDto, EquipmentItemDto, HeroicAbilityDto, KinDto, MagicSchoolDto, MementoDto, ProfessionDto, SkillDto,
   SpellDto, WeaknessDto,
 } from '../../api/models';
 import { Character, CreationReference, SavedCharacter } from '../../character/character';
@@ -74,6 +74,7 @@ export class CharactersPage {
     abilities: httpResource<HeroicAbilityDto[]>(() => '/api/heroic-abilities'),
     equipment: httpResource<EquipmentItemDto[]>(() => '/api/equipment'),
     spells: httpResource<SpellDto[]>(() => '/api/spells'),
+    categories: httpResource<EquipmentCategoryDto[]>(() => '/api/equipment-categories'),
     kin: httpResource<KinDto[]>(() => '/api/kin'),
     professions: httpResource<ProfessionDto[]>(() => '/api/professions'),
     ages: httpResource<AgeDto[]>(() => '/api/ages'),

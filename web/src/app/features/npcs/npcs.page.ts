@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { httpResource } from '@angular/common/http';
-import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../../api/models';
+import { EquipmentCategoryDto, EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../../api/models';
 import { describeItem, stackingLast } from '../../hero/hero';
 import { fromTypical, Npc, NpcReference, SavedNpc } from '../../npc/npc';
 import { download } from '../../shared/file';
@@ -29,12 +29,13 @@ export class NpcsPage {
   private readonly skills = httpResource<SkillDto[]>(() => '/api/skills');
   private readonly abilities = httpResource<HeroicAbilityDto[]>(() => '/api/heroic-abilities');
   private readonly equipment = httpResource<EquipmentItemDto[]>(() => '/api/equipment');
-  private readonly spells = httpResource<SpellDto[]>(() => '/api/spells');
+  private readonly categories = httpResource<EquipmentCategoryDto[]>(() => '/api/equipment-categories');
+  private readonly spells =httpResource<SpellDto[]>(() => '/api/spells');
 
   /** Everything NPC names are looked up in; undefined until all of it has loaded. */
   protected readonly ref = computed<NpcReference | undefined>(() => {
-    const [skills, abilities, equipment, spells] = [this.skills.value(), this.abilities.value(), this.equipment.value(), this.spells.value()];
-    return skills && abilities && equipment && spells ? { skills, abilities, equipment, spells } : undefined;
+    const [skills, abilities, equipment, categories, spells] = [this.skills.value(), this.abilities.value(), this.equipment.value(), this.categories.value(), this.spells.value()];
+    return skills && abilities && equipment && categories && spells ? { skills, abilities, equipment, categories, spells } : undefined;
   });
 
   /** The NPC open in the editor: a copy of a typical one (no id) or a saved one. */

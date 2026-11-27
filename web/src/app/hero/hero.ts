@@ -1,4 +1,4 @@
-import { EquipmentItemDto, HeroicAbilityDto, SkillDto, SpellDto, SpellKind } from '../api/models';
+import { EquipmentCategoryDto, EquipmentItemDto, HeroicAbilityDto, SkillDto, SpellDto, SpellKind } from '../api/models';
 
 /** A spell by name, school and kind: names alone are not unique (the Erase trick and the ERASE spell). */
 export interface SpellRef {
@@ -25,6 +25,7 @@ export interface HeroReference {
   skills: SkillDto[];
   abilities: HeroicAbilityDto[];
   equipment: EquipmentItemDto[];
+  categories: EquipmentCategoryDto[];
   spells: SpellDto[];
 }
 

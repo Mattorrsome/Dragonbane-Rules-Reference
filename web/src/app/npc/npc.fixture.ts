@@ -1,4 +1,4 @@
-import { EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../api/models';
+import { EquipmentCategoryDto, EquipmentItemDto, HeroicAbilityDto, NpcDto, SkillDto, SpellDto } from '../api/models';
 
 // Copied from the API (real rows from the imported markdown) for the NPC rule tests.
 
@@ -163,6 +163,7 @@ export const NPC_REFERENCE: {
   skills: SkillDto[];
   abilities: HeroicAbilityDto[];
   equipment: EquipmentItemDto[];
+  categories: EquipmentCategoryDto[];
   spells: SpellDto[];
 } = {
   skills: [
@@ -271,6 +272,7 @@ export const NPC_REFERENCE: {
         "At a round's start, retain the previous round's initiative card instead of drawing. No action.",
     },
   ],
+  categories: [],
   equipment: [
     {
       id: 1,

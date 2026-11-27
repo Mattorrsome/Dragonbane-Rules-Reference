@@ -26,7 +26,7 @@ describe('CharactersPage', () => {
     const fixture = TestBed.createComponent(CharactersPage);
     TestBed.tick();
     const rows: Record<string, object> = {
-      skills: ref.skills, 'heroic-abilities': ref.abilities, equipment: ref.equipment, spells: ref.spells, kin: ref.kin,
+      skills: ref.skills, 'heroic-abilities': ref.abilities, equipment: ref.equipment, 'equipment-categories': ref.categories, spells: ref.spells, kin: ref.kin,
       professions: ref.professions, ages: ref.ages, 'magic-schools': ref.schools, mementos: ref.mementos,
       weaknesses: ref.weaknesses, appearances: ref.appearances,
     };

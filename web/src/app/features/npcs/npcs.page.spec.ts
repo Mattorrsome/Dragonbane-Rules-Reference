@@ -32,6 +32,7 @@ describe('NpcsPage', () => {
     http.expectOne('/api/skills').flush(ref.skills);
     http.expectOne('/api/heroic-abilities').flush(ref.abilities);
     http.expectOne('/api/equipment').flush(ref.equipment);
+    http.expectOne('/api/equipment-categories').flush(ref.categories);
     http.expectOne('/api/spells').flush(ref.spells);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;

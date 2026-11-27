@@ -195,6 +195,7 @@ export const creationRef: CreationReference = {
     ability('Musician', 'Performance 12'), ability('Veteran', 'Any weapon skill 12'), ability('Robust', 'None'), ability('Focused', 'None'),
   ],
   equipment: [],
+  categories: [],
   mementos: MEMENTOS.map((text, i) => ({ id: i + 1, roll: i + 1, text })),
   weaknesses: WEAKNESSES.map(([name, text], i) => ({ id: i + 1, roll: i + 1, name, text })),
   appearances: APPEARANCES.map((text, i) => ({ id: i + 1, roll: i + 1, text })),
