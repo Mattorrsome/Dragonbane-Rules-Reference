@@ -210,17 +210,40 @@ describe('CharactersPage', () => {
     expect(status.textContent).toContain(`Removed Crossbows: not on the ${profession} skill list.`);
   });
 
+  /** The gear step's picker dialog whose button reads (or is labelled) `name`. */
+  const gearDialog = (page: Awaited<ReturnType<typeof create>>, name: string) =>
+    [...page.host.querySelectorAll('app-creation-gear app-picker-dialog')].find(d => {
+      const b = d.querySelector('button')!;
+      return (b.getAttribute('aria-label') ?? b.textContent?.trim())?.startsWith(name);
+    })!;
+
+  it('choosing a gear package through the dialog sets it and adds its items', async () => {
+    const page = await create();
+    await page.choose('cc-profession', 'Fighter');
+
+    expect(page.host.querySelector('#cc-gear')).toBeNull();
+    await page.click('Choose gear package…');
+    await page.pick(gearDialog(page, 'Choose gear package'), '3–4');
+
+    expect(gearDialog(page, '3–4').querySelector('button')!.textContent).toContain('3–4');
+    expect(page.summary()).toContain('Gear');
+  });
+
   it('a choice inside the gear package swaps that item and keeps the money', async () => {
     const page = await create();
     await page.choose('cc-profession', 'Fighter');
-    await page.choose('cc-gear', '1');
+    await page.click('Choose gear package…');
+    await page.pick(gearDialog(page, 'Choose gear package'), '1–2');
     const money = /Money: ([^\n]*?)(?=Weakness|$)/.exec(page.summary())![1];
 
-    await page.choose('cc-option-1', '1');
+    const choice = [...page.host.querySelectorAll('app-creation-gear button[aria-label^="Choose: "]')][0] as HTMLButtonElement;
+    expect(choice.getAttribute('aria-label')).toMatch(/^Choose: .+ or .+, currently /);
+    await page.pick(choice.closest('app-picker-dialog')!, 'Morningstar');
 
     expect(page.summary()).toContain('Morningstar');
     expect(page.summary()).not.toContain('Battleaxe');
     expect(/Money: ([^\n]*?)(?=Weakness|$)/.exec(page.summary())![1]).toBe(money);
+    expect(choice.getAttribute('aria-label')).toMatch(/currently Morningstar$/);
   });
 
   it('Save is disabled on a fresh page and lists what is missing', async () => {

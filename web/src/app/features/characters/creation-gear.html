@@ -2,23 +2,16 @@
 @let ch = c.character;
 @if (profession(); as p) {
   <div class="field">
-    <label for="cc-gear">Gear package (D6)</label>
-    <select id="cc-gear" (change)="choosePackage($event)">
-      <option value="" [selected]="c.gearPackage === null" disabled>Choose a gear package</option>
-      @for (pkg of p.gearPackages; track pkg.rollFrom) {
-        <option [value]="pkg.rollFrom" [selected]="pkg.rollFrom === c.gearPackage">
-          {{ packageLabel(pkg) }}
-        </option>
-      }
-    </select>
+    <p class="field-label">Gear package (D6)</p>
+    <app-picker-dialog [buttonLabel]="selectedPackage() ? packageLabel(selectedPackage()!) : 'Choose gear package…'"
+      heading="Choose a gear package" [groups]="packageGroups()" [accept]="choosePackage" />
   </div>
   @for (e of packageEntries(); track $index; let i = $index) {
     @if (e.options.length > 1) {
       <div class="field">
-        <label [for]="'cc-option-' + i">Choose: {{ e.options.join(' or ') }}</label>
-        <select [id]="'cc-option-' + i" (change)="chooseOption(i, $event)">
-          @for (o of e.options; track $index; let j = $index) { <option [value]="j" [selected]="j === (c.packageChoices[i] ?? 0)">{{ o }}</option> }
-        </select>
+        @let current = e.options[c.packageChoices[i] ?? 0];
+        <app-picker-dialog [buttonLabel]="current" [buttonAriaLabel]="'Choose: ' + e.options.join(' or ') + ', currently ' + current"
+          heading="Choose an option" [groups]="optionGroups(e)" [accept]="chooseOption(i)" />
       </div>
     }
   }

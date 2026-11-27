@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output } from '@angular/core';
-import { GearPackageDto, MagicSchoolDto, ProfessionDto } from '../../api/models';
+import { GearEntryDto, GearPackageDto, MagicSchoolDto, ProfessionDto } from '../../api/models';
 import { CreationReference } from '../../character/character';
 import {
   Creation, DOSES, Step, chooseGearPackage, doseName, enchantNote, setAlchemistDoses, setEnchantment, unchanged,
 } from '../../character/creation';
 import { DiceRoller } from '../../dice/dice-roller';
-import { same } from '../../hero/hero';
+import { findItem, same } from '../../hero/hero';
+import { PickerGroup, gearDescription } from '../../hero/picker-groups';
+import { PickerDialog } from '../../shared/picker-dialog';
 
 const valueOf = (event: Event) => (event.target as HTMLSelectElement).value;
 
@@ -13,6 +15,7 @@ const valueOf = (event: Event) => (event.target as HTMLSelectElement).value;
 @Component({
   selector: 'app-creation-gear',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [PickerDialog],
   templateUrl: './creation-gear.html',
   // Its fields sit in the step body's flow, as they did before it was its own component.
   host: { style: 'display: contents' },
@@ -31,6 +34,7 @@ export class CreationGear {
     const pkg = this.profession()?.gearPackages.find(p => p.rollFrom === c.gearPackage);
     return pkg ? [...pkg.entries, ...(this.school()?.extras.flatMap(x => x.entries) ?? [])] : [];
   });
+  protected readonly selectedPackage = computed(() => this.profession()?.gearPackages.find(p => p.rollFrom === this.creation().gearPackage));
   protected readonly recipes = computed(() => this.creation().character.spells.filter(s => s.kind === 'Recipe').map(s => s.name));
   /** The three dose boxes: the doses held, else what has been chosen so far. Reset only when the gear changes. */
   protected readonly doses = linkedSignal({
@@ -56,16 +60,44 @@ export class CreationGear {
     return `${pkg.rollFrom}–${pkg.rollTo}: ${pkg.entries.filter(e => e.kind === 'Item').map(e => e.options.join(' or ')).join(', ')}`;
   }
 
-  protected choosePackage(event: Event): void {
-    const pkg = this.profession()?.gearPackages.find(p => String(p.rollFrom) === valueOf(event));
-    if (pkg) this.changed.emit(chooseGearPackage(this.creation(), pkg, this.ref(), this.roller));
+  /** One line per entry as written: "2D6 silver", "Field ration", "Broadsword or Battleaxe". */
+  private entryLine(e: GearEntryDto): string {
+    const amount = e.diceCount && e.diceSides ? `${e.diceCount}D${e.diceSides}` : e.quantity > 1 ? String(e.quantity) : '';
+    return [amount, e.kind === 'Silver' ? 'silver' : e.options.join(' or ')].filter(Boolean).join(' ');
   }
 
+  protected readonly packageGroups = computed<PickerGroup[]>(() => [{
+    heading: 'Gear packages',
+    items: (this.profession()?.gearPackages ?? []).map(pkg => ({
+      id: String(pkg.rollFrom), label: this.packageLabel(pkg), description: pkg.entries.map(e => this.entryLine(e)).join('\n'), added: false,
+    })),
+  }]);
+
+  /** The options of a "Choose: X or Y" entry, each with its item's line. */
+  protected optionGroups(entry: GearEntryDto): PickerGroup[] {
+    return [{
+      heading: 'Options',
+      items: entry.options.map((o, i) => {
+        const item = findItem(this.ref(), o);
+        return { id: String(i), label: o, description: item ? gearDescription(item) : '', added: false };
+      }),
+    }];
+  }
+
+  protected readonly choosePackage = (id: string): string | null => {
+    const pkg = this.profession()?.gearPackages.find(p => String(p.rollFrom) === id);
+    if (pkg) this.changed.emit(chooseGearPackage(this.creation(), pkg, this.ref(), this.roller));
+    return null;
+  };
+
   /** A choice inside the held package: only that item changes. */
-  protected chooseOption(entry: number, event: Event): void {
-    const c = this.creation();
-    const pkg = this.profession()?.gearPackages.find(p => p.rollFrom === c.gearPackage);
-    if (pkg) this.changed.emit(chooseGearPackage(c, pkg, this.ref(), this.roller, { ...c.packageChoices, [entry]: Number(valueOf(event)) }));
+  protected chooseOption(entry: number): (id: string) => string | null {
+    return id => {
+      const c = this.creation();
+      const pkg = this.profession()?.gearPackages.find(p => p.rollFrom === c.gearPackage);
+      if (pkg) this.changed.emit(chooseGearPackage(c, pkg, this.ref(), this.roller, { ...c.packageChoices, [entry]: Number(id) }));
+      return null;
+    };
   }
 
   protected chooseDose(index: number, event: Event): void {
