@@ -18,7 +18,7 @@
     @if (message(); as text) { <p class="field-error" role="alert">{{ text }}</p> }
     <div class="picker-dialog-panes">
       <div class="picker-dialog-list" tabindex="0">
-        @if (!shown().length) { <p>No matches</p> }
+        @if (!shown().length) { <p role="status">No matches</p> }
         <div role="listbox" [id]="id + '-list'" [attr.aria-labelledby]="id + '-title'" [hidden]="!options().length">
           @for (group of shown(); track group.heading; let g = $index) {
             <div role="group" [attr.aria-labelledby]="id + '-group-' + g">
@@ -45,7 +45,7 @@
 
 <ng-template #option let-item>
   <div role="option" class="picker-option" [id]="optionId(item)" [attr.aria-selected]="item === activeItem()"
-    (click)="pick(item)" (mouseenter)="hover(item)">
+    (click)="pick(item)" (mousemove)="hover(item)">
     {{ item.label }} @if (item.added) { <span class="picker-added">added</span> }
   </div>
 </ng-template>

@@ -26,13 +26,14 @@ describe('PickerDialog', () => {
     HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; };
   });
 
-  async function render(accept: (id: string) => string | null = () => null, custom = false) {
+  async function render(accept: (id: string) => string | null = () => null, custom = false, startOnAdded = false, data = groups) {
     const fixture = TestBed.createComponent(PickerDialog);
     fixture.componentRef.setInput('buttonLabel', 'Add spell…');
     fixture.componentRef.setInput('heading', 'Add a spell');
-    fixture.componentRef.setInput('groups', groups);
+    fixture.componentRef.setInput('groups', data);
     fixture.componentRef.setInput('accept', accept);
     fixture.componentRef.setInput('custom', custom);
+    fixture.componentRef.setInput('startOnAdded', startOnAdded);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
     document.body.append(host);
@@ -73,6 +74,21 @@ describe('PickerDialog', () => {
     expect(title.textContent).toContain('Add a spell');
     expect(document.activeElement).toBe(p.filter());
     expect(p.host.querySelector(`label[for="${p.filter().id}"]`)!.textContent!.trim()).toBe('Filter');
+  });
+
+  it('opens on the first option, or on the added one with startOnAdded', async () => {
+    const later: PickerGroup[] = [{ heading: 'Packages', items: [
+      { id: 'a', label: 'Alpha', description: '', added: false },
+      { id: 'b', label: 'Beta', description: '', added: true },
+    ] }];
+    const plain = await render(() => null, false, false, later);
+    await plain.open();
+    expect(plain.active()!.textContent).toContain('Alpha');
+    document.body.replaceChildren();
+
+    const added = await render(() => null, false, true, later);
+    await added.open();
+    expect(added.active()!.textContent).toContain('Beta');
   });
 
   it('lists a labelled group per heading with its options, marking added ones', async () => {
@@ -122,7 +138,7 @@ describe('PickerDialog', () => {
     expect(pane().querySelector('p')!.textContent).toBe('Rank 1\n\nA ball of fire.');
     expect(pane().querySelector('p')!.classList).toContain('multiline');
 
-    p.options()[3].dispatchEvent(new MouseEvent('mouseenter'));
+    p.options()[3].dispatchEvent(new MouseEvent('mousemove'));
     await p.stable();
 
     expect(pane().querySelector('h3')!.textContent).toBe('Catlike');

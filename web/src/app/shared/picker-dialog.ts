@@ -26,6 +26,8 @@ export class PickerDialog {
   readonly accept = input.required<(id: string) => string | null>();
   /** Offers the filter text itself when nothing matches. */
   readonly custom = input(false);
+  /** For single-choice pickers: opens on the option already chosen, so Enter alone keeps it. */
+  readonly startOnAdded = input(false);
 
   /** Makes the element ids unique on the page. */
   protected readonly id = `picker-dialog-${nextId++}`;
@@ -63,9 +65,16 @@ export class PickerDialog {
   protected open(filterBox: HTMLInputElement): void {
     this.filter.set('');
     this.message.set(null);
-    this.active.set(0);
+    this.active.set(this.startOnAdded() ? Math.max(0, this.options().findIndex(i => i.added)) : 0);
     toggleDialog(this.dialog().nativeElement, true);
     filterBox.focus();
+    this.scrollToActive();
+  }
+
+  private scrollToActive(): void {
+    const item = this.activeItem();
+    // jsdom has no scrollIntoView.
+    if (item) this.dialog().nativeElement.querySelector(`#${this.optionId(item)}`)?.scrollIntoView?.({ block: 'nearest' });
   }
 
   protected type(event: Event): void {
@@ -76,9 +85,7 @@ export class PickerDialog {
   protected move(step: number, event: Event): void {
     event.preventDefault();
     this.active.set(Math.max(0, Math.min(this.options().length - 1, this.active() + step)));
-    const item = this.activeItem();
-    // jsdom has no scrollIntoView.
-    if (item) this.dialog().nativeElement.querySelector(`#${this.optionId(item)}`)?.scrollIntoView?.({ block: 'nearest' });
+    this.scrollToActive();
   }
 
   protected enter(event: Event): void {

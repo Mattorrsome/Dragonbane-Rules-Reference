@@ -69,24 +69,25 @@ export class CreationGear {
   protected readonly packageGroups = computed<PickerGroup[]>(() => [{
     heading: 'Gear packages',
     items: (this.profession()?.gearPackages ?? []).map(pkg => ({
-      id: String(pkg.rollFrom), label: this.packageLabel(pkg), description: pkg.entries.map(e => this.entryLine(e)).join('\n'), added: false,
+      id: String(pkg.rollFrom), label: this.packageLabel(pkg), description: pkg.entries.map(e => this.entryLine(e)).join('\n'), added: pkg.rollFrom === this.creation().gearPackage,
     })),
   }]);
 
   /** The options of a "Choose: X or Y" entry, each with its item's line. */
-  protected optionGroups(entry: GearEntryDto): PickerGroup[] {
+  protected optionGroups(entry: GearEntryDto, entryIndex: number): PickerGroup[] {
     return [{
       heading: 'Options',
       items: entry.options.map((o, i) => {
         const item = findItem(this.ref(), o);
-        return { id: String(i), label: o, description: item ? gearDescription(item) : '', added: false };
+        return { id: String(i), label: o, description: item ? gearDescription(item) : '', added: i === (this.creation().packageChoices[entryIndex] ?? 0) };
       }),
     }];
   }
 
   protected readonly choosePackage = (id: string): string | null => {
     const pkg = this.profession()?.gearPackages.find(p => String(p.rollFrom) === id);
-    if (pkg) this.changed.emit(chooseGearPackage(this.creation(), pkg, this.ref(), this.roller));
+    // The held package again changes nothing: no re-roll.
+    if (pkg && pkg.rollFrom !== this.creation().gearPackage) this.changed.emit(chooseGearPackage(this.creation(), pkg, this.ref(), this.roller));
     return null;
   };
 
@@ -95,7 +96,7 @@ export class CreationGear {
     return id => {
       const c = this.creation();
       const pkg = this.profession()?.gearPackages.find(p => p.rollFrom === c.gearPackage);
-      if (pkg) this.changed.emit(chooseGearPackage(c, pkg, this.ref(), this.roller, { ...c.packageChoices, [entry]: Number(id) }));
+      if (pkg && Number(id) !== (c.packageChoices[entry] ?? 0)) this.changed.emit(chooseGearPackage(c, pkg, this.ref(), this.roller, { ...c.packageChoices, [entry]: Number(id) }));
       return null;
     };
   }

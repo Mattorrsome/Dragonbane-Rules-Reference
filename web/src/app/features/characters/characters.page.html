@@ -165,8 +165,9 @@
                           </ul>
                         </fieldset>
                       } @else if (p.heroicAbilities.length > 1) {
-                        <app-picker-dialog [buttonLabel]="ch.abilities[0] ? ch.abilities[0].name + ' (change)' : 'Choose heroic ability…'"
-                          heading="Choose a heroic ability" [groups]="abilityPicks()" [accept]="acceptAbility" />
+                        @let abilityButton = ch.abilities[0] ? ch.abilities[0].name + ' (change)' : 'Choose heroic ability…';
+                        <app-picker-dialog [buttonLabel]="abilityButton" [buttonAriaLabel]="'Heroic ability: ' + abilityButton"
+                          heading="Choose a heroic ability" [groups]="abilityPicks()" [accept]="acceptAbility" [startOnAdded]="true" />
                       } @else if (p.heroicAbilities.length) {
                         <p>Heroic ability: {{ p.heroicAbilities[0] }}.</p>
                       }
