@@ -1,7 +1,7 @@
 import { AgeDto, GearEntryDto, GearPackageDto, KinDto, MagicSchoolDto, ProfessionDto, SkillDto, SpellDto } from '../api/models';
 import { DiceRoller, rollDice } from '../dice/dice-roller';
 import { ATTRIBUTES, Attribute, SpellRef, addSpell, removeSpell, same, sameSpell } from '../hero/hero';
-import { Character, CreationReference, GearItem } from './character';
+import { Character, CreationReference, GearItem, skillLevel } from './character';
 import { applyAge, baseChance } from './rules';
 
 /** A character being built step by step, with what the finished character does not need to remember. */
@@ -187,12 +187,20 @@ export function spellOptions(c: Creation, ref: CreationReference): SpellDto[] {
 }
 
 /**
- * Every spell (all ranks, tricks and recipes) of the schools whose skill the character holds at level 1 or more, plus
- * General Magic: all of it for any school outside Harmonism, Alchemy and Enchanting; else its tricks for Alchemy or
- * Enchanting; none for Harmonism alone.
+ * Every spell (all ranks, tricks and recipes) of the schools the character holds, plus General Magic: all of it for
+ * any school outside Harmonism, Alchemy and Enchanting; else its tricks for Alchemy or Enchanting; none for Harmonism
+ * alone. A school is held with its own skill at level 1 or more. Harmonism has no skill of its own: it is held by a
+ * harmonist, or by anyone with Performance at its required level and Magic Talent.
  */
 export function learnableSpells(c: Character, ref: CreationReference): SpellDto[] {
-  const held = ref.schools.filter(s => s.skill && c.skills.some(k => same(k.name, s.skill!) && k.level >= 1));
+  const performance = ref.skills.find(s => same(s.name, 'Performance'));
+  const holds = (s: MagicSchoolDto) => {
+    if (s.skill) return c.skills.some(k => same(k.name, s.skill!) && k.level >= 1);
+    return same(s.name, HARMONISM) && (same(c.school ?? '', s.name)
+      || (!!performance && skillLevel(c, performance) >= (s.requiredSkillLevel ?? 0)
+        && c.abilities.some(a => same(a.name, 'Magic Talent'))));
+  };
+  const held = ref.schools.filter(holds);
   if (!held.length) return [];
   const own = ref.spells.filter(s => held.some(h => same(s.school, h.name)));
   const general = ref.spells.filter(s => same(s.school, GENERAL_MAGIC));

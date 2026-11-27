@@ -411,8 +411,16 @@ describe('learnableSpells', () => {
     expect(got).toContain('MAGIC SHIELD');
   });
 
-  it('Harmonism alone takes no General Magic', () => {
-    expect(names(learnableSpells(withSkills(['Harmonism', 1]), ref))).toEqual(names(ofSchool('Harmonism')));
+  it('a harmonist gets Harmonism spells and no General Magic', () => {
+    const c = { ...withSkills(), school: 'Harmonism' };
+    expect(names(learnableSpells(c, ref))).toEqual(names(ofSchool('Harmonism')));
+  });
+
+  it('Performance 12 with Magic Talent learns Harmonism spells; without it, none', () => {
+    const c = withSkills(['Performance', 12]);
+    expect(learnableSpells(c, ref)).toEqual([]);
+    const talented = { ...c, abilities: [{ name: 'Magic Talent', count: 1 }] };
+    expect(names(learnableSpells(talented, ref))).toEqual(names(ofSchool('Harmonism')));
   });
 
   it('Enchanting alone takes only the General Magic tricks', () => {
