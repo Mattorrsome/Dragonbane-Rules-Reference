@@ -63,6 +63,9 @@ describe('CharactersPage', () => {
       'Kin', 'Profession', 'Age', 'Name', 'Attributes', 'Skills', 'Heroic ability or magic', 'Weakness', 'Memento', 'Gear', 'Appearance',
     ]);
     expect(page.button('Roll Heroic ability or magic')).toBeTruthy();
+    const step = page.button('Roll Heroic ability or magic');
+    expect(step.classList).toContain('btn-dice');
+    expect(step.textContent).not.toContain('🎲');
   });
 
   it('Random character fills the summary: a name, a kin and HP above 0', async () => {

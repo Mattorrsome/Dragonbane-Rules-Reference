@@ -208,9 +208,7 @@
                 }
               </div>
             </details>
-            <button type="button" class="btn btn-secondary btn-small step-roll" [attr.aria-label]="'Roll ' + s.label" (click)="roll(s.step)">
-              <span aria-hidden="true">🎲</span>
-            </button>
+            <button type="button" class="btn btn-dice step-roll" [attr.aria-label]="'Roll ' + s.label" (click)="roll(s.step)"></button>
           </div>
         }
 

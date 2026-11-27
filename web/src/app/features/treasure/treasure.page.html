@@ -20,7 +20,7 @@
           [standard]="coins.standard()" [rates]="rates()!" />
       }
       <div class="dialog-actions">
-        <button type="button" class="btn btn-primary" [attr.aria-disabled]="rolling() || null" (click)="rollAgain()">Re-roll</button>
+        <button type="button" class="btn btn-dice" aria-label="Re-roll" [attr.aria-disabled]="rolling() || null" (click)="rollAgain()"></button>
       </div>
     </div>
   </dialog>
@@ -49,8 +49,8 @@
               <td data-label="Treasure"><span class="capitalise">{{ entry.name }}</span></td>
               <td data-label="Value or Effect" class="multiline">{{ entry.effectText }}</td>
               <td>
-                <button type="button" class="btn btn-secondary btn-small" [disabled]="!ready()"
-                  [attr.aria-label]="'Roll ' + entry.name + ' (' + entry.roll + ')'" (click)="rollEntry(entry)">Roll</button>
+                <button type="button" class="btn btn-dice" [disabled]="!ready()"
+                  [attr.aria-label]="'Roll ' + entry.name + ' (' + entry.roll + ')'" (click)="rollEntry(entry)"></button>
               </td>
             </tr>
           }

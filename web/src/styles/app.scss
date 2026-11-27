@@ -446,6 +446,38 @@ input[type='checkbox'] {
     cursor: not-allowed;
     transform: none;
   }
+
+  /* Icon-only d6 button: the SVG is a mask so the die takes the text colour. */
+  .btn-dice {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    background: transparent;
+    border-color: var(--accent);
+    color: var(--accent);
+
+    &::before {
+      content: '';
+      width: 1.5rem;
+      height: 1.5rem;
+      background: currentColor;
+      mask: url('/d6.svg') center / contain no-repeat;
+    }
+
+    &:hover:not(:disabled):not([aria-disabled='true']),
+    &:focus-visible {
+      background: var(--accent);
+      color: var(--bone-white);
+    }
+
+    &[aria-disabled='true'] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
 }
 
 .btn-small {
@@ -1273,10 +1305,6 @@ html {
     position: absolute;
     top: 0.25rem;
     right: 0;
-    width: auto;
-    min-width: 2.75rem;
-    min-height: 2.75rem;
-    padding: 0;
   }
 
   .step-body {

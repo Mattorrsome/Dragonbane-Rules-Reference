@@ -249,6 +249,13 @@ describe('TreasurePage', () => {
     expect(page.dialog().querySelector('h2')?.textContent?.trim()).toBe('40 - Rat');
   });
 
+  it('the row roll button is an empty d6 icon button named by its aria-label', async () => {
+    const page = await render();
+    const row = page.host.querySelector<HTMLButtonElement>('button[aria-label="Roll Rat (40)"]')!;
+    expect(row.classList).toContain('btn-dice');
+    expect(row.textContent?.trim()).toBe('');
+  });
+
   it('title heads the dialog, an icon Close floats in the corner, Re-roll sits at the bottom', async () => {
     const page = await render();
     await page.roll('Rat', 40, 2);
@@ -262,7 +269,9 @@ describe('TreasurePage', () => {
     expect(dialog.firstElementChild).toBe(close);
     const body = dialog.querySelector('.dialog-body')!;
     expect(body.lastElementChild?.classList).toContain('dialog-actions');
-    expect(body.lastElementChild?.textContent?.trim()).toBe('Re-roll');
+    expect(page.button('Re-roll').classList).toContain('btn-dice');
+    expect(page.button('Re-roll').textContent?.trim()).toBe('');
+    expect(body.lastElementChild?.contains(page.button('Re-roll'))).toBe(true);
   });
 
   it('the before-roll text ends in a colon instead of its full stop', async () => {
