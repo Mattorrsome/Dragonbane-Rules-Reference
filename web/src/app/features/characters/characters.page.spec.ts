@@ -223,13 +223,13 @@ describe('CharactersPage', () => {
 
     expect(page.host.querySelector('#cc-gear')).toBeNull();
     const button = () => gearDialog(page, 'Gear package (D6)').querySelector('button')!;
-    expect(button().getAttribute('aria-label')).toContain('Gear package (D6)');
+    expect(button().getAttribute('aria-label')).toBe('Gear package (D6): Choose gear package…');
     button().click();
     // Rolled entries are listed as written.
     expect(gearDialog(page, 'Gear package (D6)').textContent).toContain('1D6 silver');
     await page.pick(gearDialog(page, 'Gear package (D6)'), '3–4');
 
-    expect(button().getAttribute('aria-label')).toContain('Gear package (D6)');
+    expect(button().getAttribute('aria-label')).toBe('Gear package (D6): ' + button().textContent!.trim());
     expect(button().textContent).toContain('3–4');
     expect(page.summary()).toContain('Short sword');
     expect(page.summary()).toContain('Light crossbow');

@@ -3,8 +3,8 @@
 @if (profession(); as p) {
   <div class="field">
     <p class="field-label">Gear package (D6)</p>
-    <app-picker-dialog [buttonLabel]="selectedPackage() ? packageLabel(selectedPackage()!) : 'Choose gear package…'"
-      [buttonAriaLabel]="'Gear package (D6): ' + (selectedPackage() ? packageLabel(selectedPackage()!) : 'none chosen')" heading="Choose a gear package" [groups]="packageGroups()" [accept]="choosePackage" />
+    @let packageButton = selectedPackage() ? packageLabel(selectedPackage()!) : 'Choose gear package…';
+    <app-picker-dialog [buttonLabel]="packageButton" [buttonAriaLabel]="'Gear package (D6): ' + packageButton" heading="Choose a gear package" [groups]="packageGroups()" [accept]="choosePackage" />
   </div>
   @for (e of packageEntries(); track $index; let i = $index) {
     @if (e.options.length > 1) {
