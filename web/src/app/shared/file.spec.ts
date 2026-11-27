@@ -2,23 +2,23 @@ import { download, fileName } from './file';
 
 describe('fileName', () => {
   it('slugs the NPC name', () => {
-    expect(fileName('Grok', 'png')).toBe('grok.png');
-    expect(fileName("Old Tom's Bandit #2", 'md')).toBe('old-toms-bandit-2.md');
-    expect(fileName('  Skarde   the Grim ', 'txt')).toBe('skarde-the-grim.txt');
+    expect(fileName('Grok', 'png', 'npc')).toBe('grok.png');
+    expect(fileName("Old Tom's Bandit #2", 'md', 'npc')).toBe('old-toms-bandit-2.md');
+    expect(fileName('  Skarde   the Grim ', 'txt', 'npc')).toBe('skarde-the-grim.txt');
   });
 
-  it('falls back to "npc" when nothing usable is left', () => {
-    expect(fileName('', 'txt')).toBe('npc.txt');
-    expect(fileName('★ ★', 'png')).toBe('npc.png');
+  it('falls back to the fallback name when nothing usable is left', () => {
+    expect(fileName('', 'txt', 'npc')).toBe('npc.txt');
+    expect(fileName('★ ★', 'png', 'npc')).toBe('npc.png');
   });
 
   it('handles the pdf and json extensions and a custom fallback', () => {
-    expect(fileName('Aodhan', 'pdf')).toBe('aodhan.pdf');
+    expect(fileName('Aodhan', 'pdf', 'character')).toBe('aodhan.pdf');
     expect(fileName('!!', 'json', 'character')).toBe('character.json');
   });
 
   it('keeps letters with accents', () => {
-    expect(fileName('Ásgerd', 'md')).toBe('ásgerd.md');
+    expect(fileName('Ásgerd', 'md', 'npc')).toBe('ásgerd.md');
   });
 });
 

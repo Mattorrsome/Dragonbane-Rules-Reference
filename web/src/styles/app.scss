@@ -1203,6 +1203,10 @@ html {
       background: var(--accent);
       color: var(--bone-white);
     }
+
+    &[aria-disabled='true'] {
+      cursor: progress;
+    }
   }
 }
 

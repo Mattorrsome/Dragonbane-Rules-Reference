@@ -179,6 +179,16 @@ describe('CharactersPage', () => {
       expect(page.host.querySelector('.characters-table tbody')!.textContent).toContain(name);
     });
 
+    it('Save keeps keyboard focus on the page: it moves to the My characters heading', async () => {
+      const page = await render();
+      await page.click('Random character');
+      page.button('Save').focus();
+
+      await page.click('Save');
+
+      expect(document.activeElement).toBe(page.host.querySelector('#my-characters-heading'));
+    });
+
     it('Delete asks in the page and removes only that character', async () => {
       const page = await render();
       const store = TestBed.inject(CharacterStore);

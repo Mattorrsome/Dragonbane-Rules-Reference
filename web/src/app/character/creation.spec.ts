@@ -355,6 +355,14 @@ describe('stepDone', () => {
     expect(stepDone(mage, ref).skills).toBe(false);
   });
 
+  it('skills are not done before an age is chosen: the free skill count is unknown', () => {
+    let c = setProfession(setKin(newCreation(), fixture(ref.kin, 'Human')), profession('Fighter'), ref).creation;
+    c = pick(c, 'Axes', 'Bows', 'Brawling', 'Crossbows', 'Evade', 'Hammers');
+    expect(stepDone(c, ref).skills).toBe(false);
+    c = pick(setAge(c, age('Young'), ref).creation, 'Awareness', 'Bartering');
+    expect(stepDone(c, ref).skills).toBe(true);
+  });
+
   it('gear waits for an alchemist\'s three doses', () => {
     let c = learn(setSchool(start('Mage'), school('Alchemy'), ref).creation, 'FOCUS TONIC');
     c = chooseGearPackage(c, profession('Mage').gearPackages[0], ref, seeded()).creation;
@@ -367,7 +375,7 @@ describe('creationProblems', () => {
   it('lists every missing step of a new creation', () => {
     expect(creationProblems(newCreation(), ref)).toEqual([
       'Choose a kin.', 'Choose a profession.', 'Choose an age.', 'Choose or type a name.', 'Roll or enter the attributes.',
-      'Pick 6 more profession skills.', 'Choose a gear package.',
+      'Pick 6 more profession skills.', 'Choose an age: it sets the number of free skills.', 'Choose a gear package.',
     ]);
   });
 

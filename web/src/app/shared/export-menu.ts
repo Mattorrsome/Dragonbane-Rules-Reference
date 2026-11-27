@@ -52,6 +52,7 @@ export class ExportMenu {
 
   private readonly render = inject(CARD_RENDERER);
   protected readonly status = signal('');
+  protected readonly makingPdf = signal(false);
   protected readonly modes = ['copy', 'download'] as const;
   /** Whose formats are showing: Copy's, Download's, or neither. */
   protected readonly mode = signal<'copy' | 'download' | null>(null);
@@ -88,12 +89,18 @@ export class ExportMenu {
     this.status.set('');
   }
 
+  /** While one is made the PDF button is aria-disabled (it keeps focus) and does nothing, so it cannot download twice. */
   protected async downloadPdf(): Promise<void> {
+    if (this.makingPdf()) return;
+    this.makingPdf.set(true);
+    this.status.set('Making the PDF…');
     try {
       download(await this.pdf()!(), this.name('pdf'));
       this.status.set('');
     } catch {
       this.status.set(PDF_FAILED);
+    } finally {
+      this.makingPdf.set(false);
     }
   }
 

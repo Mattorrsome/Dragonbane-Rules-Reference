@@ -45,7 +45,7 @@ describe('ExportMenu', () => {
       await fixture.whenStable();
     };
     const formats = () => [...host.querySelectorAll('.export-options button')].map(b => b.textContent?.trim());
-    return { host, click, button, formats };
+    return { host, click, button, formats, stable: () => fixture.whenStable() };
   }
 
   it('projects the options and the card, and with no pdf Download offers Image, Text and Markdown', async () => {
@@ -77,6 +77,27 @@ describe('ExportMenu', () => {
     await m.click('Download PDF');
 
     expect(downloads).toEqual(['grok-the-bold.pdf']);
+  });
+
+  it('while the PDF is being made, says so and disables its button, so a second click cannot download twice', async () => {
+    let made = 0;
+    let finish!: (blob: Blob) => void;
+    const m = await render(() => (made++, new Promise<Blob>(resolve => (finish = resolve))));
+
+    await m.click('Download');
+    await m.click('Download PDF');
+    await m.click('Download PDF');
+
+    expect(m.host.querySelector('.export-status')?.textContent).toBe('Making the PDF…');
+    expect(m.button('Download PDF')!.getAttribute('aria-disabled')).toBe('true');
+    finish(new Blob(['pdf']));
+    await new Promise(resolve => setTimeout(resolve));
+    await m.stable();
+
+    expect(made).toBe(1);
+    expect(downloads).toEqual(['grok-the-bold.pdf']);
+    expect(m.button('Download PDF')!.hasAttribute('aria-disabled')).toBe(false);
+    expect(m.host.querySelector('.export-status')?.textContent).toBe('');
   });
 
   it('a pdf maker that rejects shows the failure and downloads nothing', async () => {

@@ -333,6 +333,7 @@ export function stepProblems(c: Creation, ref: CreationReference): { step: Creat
 
   const limits = skillLimits(c, ref);
   if (c.professionSkills.length < limits.profession) add('skills', `Pick ${plural(limits.profession - c.professionSkills.length, 'profession skill')}.`);
+  if (!ch.age) add('skills', 'Choose an age: it sets the number of free skills.');
   if (c.freeSkills.length < limits.free) add('skills', `Pick ${plural(limits.free - c.freeSkills.length, 'free skill')}.`);
   if (school?.startingSkills.length && school.skill && !has(c.professionSkills, school.skill)) {
     add('skills', `Train ${school.skill}: a mage's school skill is one of the six profession skills.`);

@@ -90,7 +90,7 @@ export function withAbilityCount(abilities: readonly Ability[], name: string, co
   };
 }
 
-export const sameSpell =(a: SpellRef, b: SpellRef) => a.name === b.name && a.school === b.school && a.kind === b.kind;
+export const sameSpell = (a: SpellRef, b: SpellRef) => a.name === b.name && a.school === b.school && a.kind === b.kind;
 
 export function addSpell<T extends { spells: SpellRef[] }>(x: T, spell: SpellRef): T {
   return x.spells.some(s => sameSpell(s, spell)) ? x : { ...x, spells: [...x.spells, { ...spell }] };

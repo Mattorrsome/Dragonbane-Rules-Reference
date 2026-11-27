@@ -42,7 +42,7 @@ describe('parseListFile', () => {
   });
 
   it('names the repeated id', () => {
-    expect(() => parse('[{"id":"a","name":"A"},{"id":"a","name":"x"}]')).toThrow('thing 2 ("x") has the same id as thing 1.');
+    expect(() => parse('[{"id":"a","name":"A"},{"id":"a","name":"x"}]')).toThrow('Thing 2 ("x") has the same id as Thing 1.');
   });
 
   it('passes a failing entry check through', () => {

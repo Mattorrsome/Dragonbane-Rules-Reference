@@ -263,6 +263,8 @@ export class CharactersPage {
     this.creation.set(newCreation());
     this.cleared.set([]);
     this.saveStatus.set(`Saved ${saved.name || 'the character'}.`);
+    // Save is now disabled (the fresh creator lists what is missing); keep focus in the page, beside the new row.
+    this.myHeading()?.nativeElement.focus();
   }
 
   /** Opens the editor on a saved character; closing it returns focus to this Edit button. */

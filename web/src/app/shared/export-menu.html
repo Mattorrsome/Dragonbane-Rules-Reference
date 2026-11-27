@@ -19,7 +19,7 @@
           <button type="button" [attr.aria-label]="verb + ' text'" (click)="m === 'copy' ? copyText(false) : downloadText(false)">Text</button>
           <button type="button" [attr.aria-label]="verb + ' Markdown'" (click)="m === 'copy' ? copyText(true) : downloadText(true)">Markdown</button>
           @if (m === 'download' && pdf()) {
-            <button type="button" aria-label="Download PDF" (click)="downloadPdf()">PDF</button>
+            <button type="button" aria-label="Download PDF" [attr.aria-disabled]="makingPdf() || null" (click)="downloadPdf()">PDF</button>
           }
         </div>
       }

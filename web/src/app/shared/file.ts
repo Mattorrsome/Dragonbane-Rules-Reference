@@ -1,5 +1,5 @@
 /** "Old Tom's Bandit #2" → "old-toms-bandit-2.md": lower case, apostrophes dropped, other non-letters become dashes. */
-export function fileName(name: string, ext: 'png' | 'txt' | 'md' | 'pdf' | 'json', fallback = 'npc'): string {
+export function fileName(name: string, ext: 'png' | 'txt' | 'md' | 'pdf' | 'json', fallback: string): string {
   const slug = name
     .toLocaleLowerCase()
     .replace(/['’]/g, '')

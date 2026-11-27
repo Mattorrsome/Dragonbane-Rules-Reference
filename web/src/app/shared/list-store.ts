@@ -18,10 +18,11 @@ export function parseListFile<T extends Entry>(text: string, check: (entry: unkn
   if (!parsed.length) throw new Error(`That file holds no ${noun}s.`);
 
   const firstWithId = new Map<string, number>();
+  const Noun = noun.charAt(0).toLocaleUpperCase() + noun.slice(1);
   return parsed.map((entry, i) => {
     const item = check(entry, i + 1);
     const earlier = firstWithId.get(item.id);
-    if (earlier) throw new Error(`${noun} ${i + 1} ("${item.name}") has the same id as ${noun} ${earlier}.`);
+    if (earlier) throw new Error(`${Noun} ${i + 1} ("${item.name}") has the same id as ${Noun} ${earlier}.`);
     firstWithId.set(item.id, i + 1);
     return item;
   });
