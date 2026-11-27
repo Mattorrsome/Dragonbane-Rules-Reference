@@ -1,0 +1,51 @@
+<button type="button" class="btn btn-secondary btn-small" [attr.aria-label]="buttonAriaLabel()" (click)="open(filterBox)">{{ buttonLabel() }}</button>
+
+<!--
+  The filter is a combobox whose list is always expanded while there are options: focus stays in the box and
+  aria-activedescendant names the active option, so the options themselves are never focused.
+-->
+<dialog #dialog class="app-dialog picker-dialog" [attr.aria-labelledby]="id + '-title'" (mousedown)="backdrop.pressStart($event)" (click)="backdrop.closeOnBackdrop($event)">
+  <button type="button" class="dialog-close" aria-label="Close" (click)="dialog.close()"></button>
+  <div class="dialog-body">
+    <h2 [id]="id + '-title'" class="npc-heading">{{ heading() }}</h2>
+    <div class="picker-dialog-filter">
+      <label [for]="id + '-filter'">Filter</label>
+      <input #filterBox type="search" role="combobox" autocomplete="off" aria-autocomplete="list" [id]="id + '-filter'"
+        [attr.aria-controls]="id + '-list'" [attr.aria-expanded]="options().length > 0"
+        [attr.aria-activedescendant]="activeItem() ? optionId(activeItem()!) : null" [value]="filter()" (input)="type($event)"
+        (keydown.arrowdown)="move(1, $event)" (keydown.arrowup)="move(-1, $event)" (keydown.enter)="enter($event)" />
+    </div>
+    @if (message(); as text) { <p class="field-error" role="alert">{{ text }}</p> }
+    <div class="picker-dialog-panes">
+      <div class="picker-dialog-list">
+        @if (!shown().length) { <p>No matches</p> }
+        <div role="listbox" [id]="id + '-list'" [attr.aria-labelledby]="id + '-title'" [hidden]="!options().length">
+          @for (group of shown(); track group.heading; let g = $index) {
+            <div role="group" [attr.aria-labelledby]="id + '-group-' + g">
+              <div role="presentation" class="picker-group-heading" [id]="id + '-group-' + g">{{ group.heading }}</div>
+              @for (item of group.items; track item.id) {
+                <ng-container *ngTemplateOutlet="option; context: { $implicit: item }" />
+              }
+            </div>
+          }
+          @if (customItem(); as item) {
+            <ng-container *ngTemplateOutlet="option; context: { $implicit: item }" />
+          }
+        </div>
+      </div>
+      <div class="picker-dialog-description">
+        @if (activeItem(); as item) {
+          <h3>{{ item.label }}</h3>
+          @if (item.description) { <p class="multiline">{{ item.description }}</p> }
+        }
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<ng-template #option let-item>
+  <div role="option" class="picker-option" [id]="optionId(item)" [attr.aria-selected]="item === activeItem()"
+    (click)="pick(item)" (mouseenter)="hover(item)">
+    {{ item.label }} @if (item.added) { <span class="picker-added">added</span> }
+  </div>
+</ng-template>

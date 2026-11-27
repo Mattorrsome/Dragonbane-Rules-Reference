@@ -1173,6 +1173,88 @@ html {
   }
 }
 
+/* ================ PICKER DIALOG ================ */
+/*
+ * Filter on top, the list left and the active option's description right; stacked on narrow screens. The box keeps
+ * one height so filtering does not resize it, and only the list and the description scroll.
+ */
+.picker-dialog {
+  margin: 6vh auto auto;
+  width: min(56rem, 100vw - 3.5rem);
+  height: min(40rem, 100dvh - 6vh - 1rem);
+
+  h2 {
+    margin-top: 0;
+    /* Clear of the half of Close that hangs inside the corner. */
+    padding-right: 1.5rem;
+  }
+
+  .field-error {
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
+.picker-dialog-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.picker-dialog-panes {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--spacing-md);
+  min-height: 0;
+
+  @media (max-width: 48rem) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.picker-dialog-list,
+.picker-dialog-description {
+  overflow-y: auto;
+}
+
+.picker-dialog-list {
+  border: 1px solid var(--parchment-darker);
+
+  > p {
+    margin: var(--spacing-xs);
+  }
+}
+
+.picker-dialog-description h3 {
+  margin-top: 0;
+}
+
+.picker-group-heading {
+  padding: var(--spacing-xs) var(--spacing-xs) 0.25rem;
+  color: var(--ink-light);
+  font-weight: 700;
+}
+
+/* The active option; focus stays in the filter box, so this highlight is the keyboard's focus indicator. */
+.picker-option {
+  padding: 0.25rem var(--spacing-sm);
+  cursor: pointer;
+
+  &[aria-selected='true'] {
+    background: var(--accent);
+    color: var(--bone-white);
+  }
+}
+
+.picker-added {
+  margin-left: var(--spacing-xs);
+  font-size: 0.9em;
+  font-style: italic;
+}
+
 /* ================ NPC EXPORT ================ */
 .export-dialog {
   margin: 6vh auto auto;
