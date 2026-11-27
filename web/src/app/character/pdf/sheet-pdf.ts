@@ -120,16 +120,21 @@ const INK = rgb(0x23 / 255, 0x1f / 255, 0x20 / 255);
 const RED = rgb(0xe7 / 255, 0x2f / 255, 0x32 / 255);
 const MARGIN = 56;
 
-/** The filled-in sheet, then parchment pages describing the abilities, spells and the gear that had no row. */
-export async function buildSheetPdf(c: Character, ref: CreationReference, rates: CurrencyRates | null | undefined, assets: SheetAssets): Promise<Uint8Array<ArrayBuffer>> {
+/**
+ * The filled-in sheet, then pages describing the abilities, spells and the gear that had no row. Colour: sheet page 1 and
+ * parchment pages with red headings. Printer friendly: sheet page 2 and plain black-on-white pages. Both sheet pages share a layout.
+ */
+export async function buildSheetPdf(c: Character, ref: CreationReference, rates: CurrencyRates | null | undefined, assets: SheetAssets, printer = false): Promise<Uint8Array<ArrayBuffer>> {
   const doc = await PDFDocument.load(assets.sheet);
+  // Take the page before removing the other: pdf-lib's page list keeps the removed page until the document is saved.
+  const sheet = doc.getPage(printer ? 1 : 0);
+  doc.removePage(printer ? 0 : 1);
   // pdf-lib saves into a plain ArrayBuffer; the cast lets the bytes go straight into a Blob.
   const save = () => doc.save() as Promise<Uint8Array<ArrayBuffer>>;
   doc.registerFontkit(fontkit);
   doc.setTitle(c.name);
   const hand = await doc.embedFont(assets.font, HAND_FONT_OPTIONS);
   const handText = drawable(hand);
-  const sheet = doc.getPage(0);
 
   for (const [field, value] of Object.entries(sheetValues(c, ref, rates)) as [SheetField, string][]) {
     const text = handText(value);
@@ -149,13 +154,14 @@ export async function buildSheetPdf(c: Character, ref: CreationReference, rates:
 
   // Whole, not subset: a subset Colus draws its letters spaced apart.
   const heading = await doc.embedFont(assets.heading);
-  const parchment = await doc.embedPng(assets.parchment);
+  const parchment = printer ? null : await doc.embedPng(assets.parchment);
+  const accent = printer ? INK : RED;
   const flow = new Flow(doc, sheet.getSize(), parchment);
-  flow.write(heading, c.name, 26, RED);
+  flow.write(heading, c.name, 26, accent);
   const section = (title: string, entries: CardEntry[]) => {
     if (!entries.length) return;
     flow.gap(10);
-    flow.write(heading, title, 17, RED);
+    flow.write(heading, title, 17, accent);
     for (const e of entries) {
       flow.gap(5);
       flow.write(hand, e.text, 17, INK);
@@ -168,21 +174,23 @@ export async function buildSheetPdf(c: Character, ref: CreationReference, rates:
   return save();
 }
 
-/** Writes wrapped lines down parchment pages of the sheet's size, starting a new page when one is full. */
+/** Writes wrapped lines down pages of the sheet's size (parchment, or plain white with no tile), starting a new page when one is full. */
 class Flow {
   private page!: PDFPage;
   private y = 0;
 
-  constructor(private readonly doc: PDFDocument, private readonly size: { width: number; height: number }, private readonly tile: PDFImage) {
+  constructor(private readonly doc: PDFDocument, private readonly size: { width: number; height: number }, private readonly tile: PDFImage | null) {
     this.newPage();
   }
 
   private newPage(): void {
     const { width, height } = this.size;
     this.page = this.doc.addPage([width, height]);
-    // The tile scaled to the page width, repeated down it, as the app's scroll does.
-    const tileHeight = this.tile.height * (width / this.tile.width);
-    for (let top = height; top > 0; top -= tileHeight) this.page.drawImage(this.tile, { x: 0, y: top - tileHeight, width, height: tileHeight });
+    if (this.tile) {
+      // The tile scaled to the page width, repeated down it, as the app's scroll does.
+      const tileHeight = this.tile.height * (width / this.tile.width);
+      for (let top = height; top > 0; top -= tileHeight) this.page.drawImage(this.tile, { x: 0, y: top - tileHeight, width, height: tileHeight });
+    }
     this.y = height - MARGIN;
   }
 

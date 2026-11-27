@@ -20,12 +20,13 @@ export class CharacterExportMenu {
   private readonly rates = inject(CurrencyRatesService).rates;
   private readonly sheetAssets = inject(SHEET_ASSETS);
   protected readonly descriptions = rememberedFlag('dragonbane.characterExport.descriptions');
+  protected readonly printer = rememberedFlag('dragonbane.characterExport.printerFriendly');
   protected readonly card = computed(() => buildCharacterCard(this.character(), this.ref(), this.descriptions.value(), this.rates()));
   protected readonly toText = () => characterCardToText(this.card());
   protected readonly toMarkdown = () => characterCardToMarkdown(this.card());
   /** pdf-lib and fontkit (about 420 kB compressed) load only when a PDF is asked for. */
   protected readonly pdf = async () => {
     const [{ buildSheetPdf }, assets] = await Promise.all([import('../../character/pdf/sheet-pdf'), this.sheetAssets()]);
-    return new Blob([await buildSheetPdf(this.character(), this.ref(), this.rates(), assets)], { type: 'application/pdf' });
+    return new Blob([await buildSheetPdf(this.character(), this.ref(), this.rates(), assets, this.printer.value())], { type: 'application/pdf' });
   };
 }

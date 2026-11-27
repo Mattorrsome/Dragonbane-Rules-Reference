@@ -1,5 +1,5 @@
 import fontkit from '@pdf-lib/fontkit';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDict, PDFDocument, PDFName } from 'pdf-lib';
 import { EquipmentItemDto } from '../../api/models';
 import { Character, CreationReference } from '../character';
 import { creationRef } from '../character.fixture';
@@ -181,5 +181,44 @@ describe('buildSheetPdf', () => {
     const pdf = await PDFDocument.load(await buildSheetPdf(c, ref, RATES, assets()));
 
     expect(pdf.getPageCount()).toBeGreaterThanOrEqual(2);
+  });
+
+  describe('colour or printer friendly', () => {
+    const COLOUR = [600, 800] as const;
+    const PRINTER = [500, 700] as const;
+    /** Two blank pages of different sizes, so the size says which one was kept. */
+    async function twoPages(): Promise<SheetAssets> {
+      const doc = await PDFDocument.create();
+      doc.addPage([...COLOUR]);
+      doc.addPage([...PRINTER]);
+      return { ...assets(), sheet: buffer(await doc.save()) };
+    }
+    const bare = (): Character => ({ ...aodhan(), kinAbilities: [], spells: [], gear: [] });
+    const hasImage = (page: ReturnType<PDFDocument['getPage']>) => !!page.node.Resources()?.lookup(PDFName.of('XObject'), PDFDict)?.keys().length;
+
+    it('colour keeps page 1 of the sheet and draws the parchment', async () => {
+      const pdf = await PDFDocument.load(await buildSheetPdf(aodhan(), ref, RATES, await twoPages(), false));
+
+      expect(pdf.getPage(0).getSize()).toEqual({ width: COLOUR[0], height: COLOUR[1] });
+      expect(pdf.getPage(1).getSize()).toEqual({ width: COLOUR[0], height: COLOUR[1] });
+      expect(hasImage(pdf.getPage(1))).toBe(true);
+    });
+
+    it('printer friendly keeps page 2 of the sheet and its description pages draw no image', async () => {
+      const pdf = await PDFDocument.load(await buildSheetPdf(aodhan(), ref, RATES, await twoPages(), true));
+
+      expect(pdf.getPageCount()).toBeGreaterThanOrEqual(2);
+      for (const page of pdf.getPages()) {
+        expect(page.getSize()).toEqual({ width: PRINTER[0], height: PRINTER[1] });
+        expect(hasImage(page)).toBe(false);
+      }
+    });
+
+    it('a character with nothing to describe is one page either way', async () => {
+      for (const printer of [false, true]) {
+        const pdf = await PDFDocument.load(await buildSheetPdf(bare(), ref, RATES, await twoPages(), printer));
+        expect(pdf.getPageCount(), String(printer)).toBe(1);
+      }
+    });
   });
 });

@@ -4,6 +4,10 @@
       <input id="export-descriptions" type="checkbox" [checked]="descriptions.value()" (change)="descriptions.set($any($event.target).checked)" />
       <label for="export-descriptions">Include spell and heroic ability descriptions</label>
     </div>
+    <div class="field-check">
+      <input id="export-printer" type="checkbox" [checked]="printer.value()" (change)="printer.set($any($event.target).checked)" />
+      <label for="export-printer">Printer-friendly PDF (black and white)</label>
+    </div>
   </ng-container>
   <app-character-card [card]="card()" />
 </app-export-menu>

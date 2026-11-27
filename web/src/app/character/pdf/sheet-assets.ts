@@ -1,7 +1,7 @@
 import { InjectionToken } from '@angular/core';
 
 export interface SheetAssets {
-  /** Page 2 of DB-Character-Sheet.pdf. */
+  /** Both pages of DB-Character-Sheet.pdf: 1 colour, 2 printer friendly. */
   sheet: ArrayBuffer;
   /** Caveat, the handwriting. */
   font: ArrayBuffer;
